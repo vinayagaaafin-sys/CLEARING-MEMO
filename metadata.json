@@ -1,0 +1,6 @@
+{
+  "name": "ClearLedger Treasury",
+  "description": "Enterprise Corporate Cheque Clearing, Realization Lifecycle & Multi-Page A4 Bank Deposit Memo Engine",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
