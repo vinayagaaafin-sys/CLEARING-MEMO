@@ -51,6 +51,12 @@ import { SettingsView } from './components/SettingsView';
 import { SystemAuditLogView } from './components/SystemAuditLogView';
 import { deleteDocumentBlob } from './services/documentBlobStore';
 import {
+  loadTreasuryStateFromSupabase,
+  replaceTreasuryStateInSupabase,
+  subscribeToTreasurySync,
+  syncTreasuryStateDiff,
+} from './services/supabaseTreasurySync';
+import {
   appendDeduplicatedDayBookEntries,
   buildDayBookDedupeKey,
   exportFullBackupJson,
@@ -136,23 +142,24 @@ export default function App() {
     (Extract<ParsedBackupResult, { ok: true }> & { fileName: string }) | null
   >(null);
 
-  useEffect(() => {
-    saveTreasuryState(state);
-  }, [state]);
+  const prevStateRef = useRef<TreasuryState>(state);
+  const skipNextSupabaseSyncRef = useRef(false);
+  const supabaseHydratedRef = useRef(false);
+  const pendingLocalEditBeforeHydrationRef = useRef(false);
 
-  // Support secure document share links (?doc=...&company=...&token=...)
-  useEffect(() => {
+  const resolveDeepLinkDocument = (targetState: TreasuryState) => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const docId = params.get('doc');
     const compId = params.get('company');
     const token = params.get('token');
     if (!docId || !compId) return;
-    const targetComp = state.companies.find((c) => c.id === compId);
+    const targetComp = targetState.companies.find((c) => c.id === compId);
     const foundDoc = targetComp?.documents?.find(
       (d) => d.id === docId && (!token || d.shareToken === token)
     );
     if (targetComp && foundDoc) {
+      skipNextSupabaseSyncRef.current = true;
       setState((prev) =>
         prev.activeCompanyId === targetComp.id
           ? prev
@@ -165,6 +172,67 @@ export default function App() {
       setActiveModule('customers');
       setDeepLinkDoc(foundDoc);
     }
+  };
+
+  useEffect(() => {
+    const prev = prevStateRef.current;
+    prevStateRef.current = state;
+    saveTreasuryState(state);
+
+    if (skipNextSupabaseSyncRef.current) {
+      skipNextSupabaseSyncRef.current = false;
+      return;
+    }
+
+    if (!supabaseHydratedRef.current) {
+      if (prev !== state) {
+        pendingLocalEditBeforeHydrationRef.current = true;
+      }
+      return;
+    }
+
+    if (prev !== state) {
+      void syncTreasuryStateDiff(prev, state);
+    }
+  }, [state]);
+
+  // Hydrate from Supabase and subscribe to cross-device Realtime updates
+  useEffect(() => {
+    let active = true;
+    const initialSnapshot = state;
+
+    void loadTreasuryStateFromSupabase(initialSnapshot).then((remoteState) => {
+      if (!active) return;
+      supabaseHydratedRef.current = true;
+      if (
+        remoteState &&
+        !pendingLocalEditBeforeHydrationRef.current
+      ) {
+        skipNextSupabaseSyncRef.current = true;
+        setState(remoteState);
+        resolveDeepLinkDocument(remoteState);
+      } else if (pendingLocalEditBeforeHydrationRef.current) {
+        void syncTreasuryStateDiff(initialSnapshot, prevStateRef.current);
+      }
+    });
+
+    const unsubscribe = subscribeToTreasurySync((remoteState) => {
+      if (!active) return;
+      skipNextSupabaseSyncRef.current = true;
+      setState(remoteState);
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+    // Run once on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Support secure document share links (?doc=...&company=...&token=...)
+  useEffect(() => {
+    resolveDeepLinkDocument(state);
     // Run once on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2180,7 +2248,9 @@ export default function App() {
 
   const handleResetDemoData = () => {
     const fresh = resetTreasuryState();
+    skipNextSupabaseSyncRef.current = true;
     setState(fresh);
+    void replaceTreasuryStateInSupabase(fresh);
     setEditingCheque(null);
     setActiveModule('dashboard');
   };
@@ -2212,13 +2282,16 @@ export default function App() {
 
   const handleConfirmRestoreBackup = () => {
     if (!pendingRestore) return;
-    setState(pendingRestore.state);
-    saveTreasuryState(pendingRestore.state);
+    const restored = pendingRestore.state;
+    skipNextSupabaseSyncRef.current = true;
+    setState(restored);
+    saveTreasuryState(restored);
+    void replaceTreasuryStateInSupabase(restored);
     setEditingCheque(null);
     setCustomerNavSelection(null);
     setBackupNotice({
       type: 'success',
-      message: `Backup restored from "${pendingRestore.fileName}" — ${pendingRestore.companyCount} ${pendingRestore.companyCount === 1 ? 'company' : 'companies'}, ${pendingRestore.batchCount} batches, ${pendingRestore.chequeCount} cheques, and ${pendingRestore.dayBookCount} Day Book entries loaded.`,
+      message: `Backup restored & synced from "${pendingRestore.fileName}" — ${pendingRestore.companyCount} ${pendingRestore.companyCount === 1 ? 'company' : 'companies'}, ${pendingRestore.batchCount} batches, ${pendingRestore.chequeCount} cheques, and ${pendingRestore.dayBookCount} Day Book entries loaded.`,
     });
     setPendingRestore(null);
   };

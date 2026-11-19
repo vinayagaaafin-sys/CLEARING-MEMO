@@ -827,7 +827,7 @@ export function SettingsView({
             Restore Sample Corporate Dataset
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Resets LocalStorage back to the initial 15 corporate cheques (~₹3.45 Cr) and 3 company bank accounts.
+            Resets all workspace data and synced database records back to the initial 15 corporate cheques (~₹3.45 Cr) and 3 company bank accounts.
           </p>
         </div>
         {confirmReset ? (
