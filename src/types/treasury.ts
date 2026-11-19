@@ -191,6 +191,67 @@ export interface CustomerDocument {
   lastSharedTo?: string;
 }
 
+export interface BankHoliday {
+  id: string;
+  date: string; // YYYY-MM-DD
+  name: string;
+  category: 'National' | 'Tamil Nadu' | 'Custom';
+  isDefault?: boolean;
+}
+
+export type ScheduledChequeStatus =
+  | 'Scheduled'
+  | 'In Clearing'
+  | 'Cleared'
+  | 'Returned / Bounced';
+
+export type ScheduleFrequency = 'Monthly' | 'Weekly' | 'Custom';
+
+export interface ScheduledChequeItem {
+  id: string;
+  chequeNumber: string;
+  originalDate: string; // YYYY-MM-DD
+  effectiveDate: string; // YYYY-MM-DD
+  shiftReason?: string;
+  amount: number;
+  status: ScheduledChequeStatus;
+  clearingBatchId?: string;
+  clearingBatchRef?: string;
+  clearingChequeId?: string;
+  sentToClearingAt?: string;
+}
+
+export interface ScheduleScanDocument {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedAt: string;
+  label?: string;
+  thumbnailDataUrl?: string;
+}
+
+export interface CustomerChequeSchedule {
+  id: string;
+  customerName: string;
+  customerCode?: string;
+  loanRefNo: string;
+  draweeBank: string;
+  draweeBranch: string;
+  micrCode?: string;
+  companyBankAccountId?: string;
+  holidayAutoShift: boolean;
+  mode: 'auto' | 'manual';
+  frequency?: ScheduleFrequency;
+  customIntervalDays?: number;
+  startDate?: string;
+  cheques: ScheduledChequeItem[];
+  scannedDocuments: ScheduleScanDocument[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CompanyWorkspace {
   id: string;
   profile: CorporateProfile;
@@ -201,6 +262,8 @@ export interface CompanyWorkspace {
   customers?: CustomerProfile[];
   documents?: CustomerDocument[];
   letters?: Record<string, unknown>[];
+  chequeSchedules?: CustomerChequeSchedule[];
+  bankHolidays?: BankHoliday[];
 }
 
 export type SystemAuditAction =
@@ -221,7 +284,12 @@ export type SystemAuditAction =
   | 'DOCUMENT_DELETED'
   | 'DOCUMENT_SHARED'
   | 'NOC_LETTER_GENERATED'
-  | 'DD_CANCELLATION_GENERATED';
+  | 'DD_CANCELLATION_GENERATED'
+  | 'SCHEDULE_CREATED'
+  | 'SCHEDULE_UPDATED'
+  | 'SCHEDULE_DELETED'
+  | 'SCHEDULED_CHEQUES_SENT_TO_CLEARING'
+  | 'BANK_HOLIDAY_UPDATED';
 
 export interface SystemAuditLogEntry {
   id: string;

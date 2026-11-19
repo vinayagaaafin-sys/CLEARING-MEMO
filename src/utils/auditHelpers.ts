@@ -20,6 +20,11 @@ export const AUDIT_ACTION_LABELS: Record<SystemAuditAction, string> = {
   DOCUMENT_SHARED: 'Document Shared via WhatsApp',
   NOC_LETTER_GENERATED: 'NOC Letter Generated',
   DD_CANCELLATION_GENERATED: 'DD Cancellation Letter Generated',
+  SCHEDULE_CREATED: 'Cheque Schedule Created',
+  SCHEDULE_UPDATED: 'Cheque Schedule Updated',
+  SCHEDULE_DELETED: 'Cheque Schedule Deleted',
+  SCHEDULED_CHEQUES_SENT_TO_CLEARING: 'Scheduled Cheques Sent to Clearing',
+  BANK_HOLIDAY_UPDATED: 'Bank Holiday Calendar Updated',
 };
 
 export const ALL_AUDIT_ACTIONS: SystemAuditAction[] = [
@@ -41,6 +46,11 @@ export const ALL_AUDIT_ACTIONS: SystemAuditAction[] = [
   'DOCUMENT_SHARED',
   'NOC_LETTER_GENERATED',
   'DD_CANCELLATION_GENERATED',
+  'SCHEDULE_CREATED',
+  'SCHEDULE_UPDATED',
+  'SCHEDULE_DELETED',
+  'SCHEDULED_CHEQUES_SENT_TO_CLEARING',
+  'BANK_HOLIDAY_UPDATED',
 ];
 
 export function formatAuditTimestamp(iso: string): string {

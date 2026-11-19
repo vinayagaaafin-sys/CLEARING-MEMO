@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   BarChart3,
   Building2,
+  CalendarCheck2,
   CheckCircle2,
   Download,
   FileCheck2,
@@ -16,15 +17,17 @@ import {
   ScrollText,
   ShieldCheck,
   Upload,
-  Users,
   X,
 } from 'lucide-react';
 import { AddCompanyModal } from './components/AddCompanyModal';
+import { BankHolidayDrawer } from './components/BankHolidayDrawer';
 import { ReconcileConfirmItem } from './components/BankStatementReconcileModal';
+import { CustomerScheduleView } from './components/CustomerScheduleView';
 import {
   CustomerInitialSelection,
   CustomersView,
 } from './components/CustomersView';
+import { SendToClearingSelection } from './components/DailyDepositScheduleWidget';
 import { DashboardView } from './components/DashboardView';
 import { DocumentPreviewModal } from './components/DocumentPreviewModal';
 import {
@@ -51,20 +54,28 @@ import {
   saveTreasuryState,
 } from './services/treasuryStore';
 import {
+  BankHoliday,
   ChequeEntry,
   ChequeStatus,
   ClearingBatch,
   CompanyBankAccount,
   CompanyWorkspace,
   CorporateProfile,
+  CustomerChequeSchedule,
   CustomerDocument,
   CustomerProfile,
   RecoveryPaymentRecord,
   RecoveryStatus,
+  ScheduledChequeStatus,
   SystemAuditLogEntry,
   TreasuryState,
   UserRole,
 } from './types/treasury';
+import {
+  getDefaultIndianBankHolidays,
+  recalculateScheduleDates,
+  toIsoDate,
+} from './utils/bankHolidays';
 import { getCustomerKey } from './utils/customerHelpers';
 import {
   formatIndianDate,
@@ -76,6 +87,7 @@ import {
 type ActiveModule =
   | 'dashboard'
   | 'entry'
+  | 'schedules'
   | 'customers'
   | 'memo'
   | 'return-ack'
@@ -101,6 +113,7 @@ export default function App() {
   const [editingCheque, setEditingCheque] = useState<ChequeEntry | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showAddCompanyModal, setShowAddCompanyModal] = useState(false);
+  const [showBankHolidayDrawer, setShowBankHolidayDrawer] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>('Admin');
   const [customerNavSelection, setCustomerNavSelection] =
     useState<CustomerInitialSelection | null>(null);
@@ -785,10 +798,39 @@ export default function App() {
         };
       });
 
+      const linkedStatus: ScheduledChequeStatus | null =
+        status === 'Cleared'
+          ? 'Cleared'
+          : status === 'Returned / Bounced'
+          ? 'Returned / Bounced'
+          : status === 'Draft' ||
+            status === 'Submitted to Bank' ||
+            status === 'Re-Deposited'
+          ? 'In Clearing'
+          : null;
+
+      const updatedIdSet = new Set(chequeIds);
+      const nextChequeSchedules = linkedStatus
+        ? (targetComp.chequeSchedules || []).map((sch) => ({
+            ...sch,
+            cheques: (sch.cheques || []).map((item) =>
+              item.clearingChequeId && updatedIdSet.has(item.clearingChequeId)
+                ? { ...item, status: linkedStatus }
+                : item
+            ),
+          }))
+        : targetComp.chequeSchedules;
+
       return {
         ...prev,
         companies: prev.companies.map((comp) =>
-          comp.id === targetComp.id ? { ...comp, cheques: nextCheques } : comp
+          comp.id === targetComp.id
+            ? {
+                ...comp,
+                cheques: nextCheques,
+                chequeSchedules: nextChequeSchedules,
+              }
+            : comp
         ),
         auditLogs:
           newLogs.length > 0
@@ -818,6 +860,10 @@ export default function App() {
         { cleared: number; returned: number }
       >();
       const newLogs: SystemAuditLogEntry[] = [];
+      const reconciledStatusByChequeId = new Map<
+        string,
+        'Cleared' | 'Returned / Bounced'
+      >();
       let totalCleared = 0;
       let totalReturned = 0;
 
@@ -868,6 +914,8 @@ export default function App() {
             })
           );
 
+          reconciledStatusByChequeId.set(c.id, 'Cleared');
+
           return {
             ...c,
             status: 'Cleared' as ChequeStatus,
@@ -897,6 +945,8 @@ export default function App() {
             newValue: 'Returned / Bounced',
           })
         );
+
+        reconciledStatusByChequeId.set(c.id, 'Returned / Bounced');
 
         return {
           ...c,
@@ -977,11 +1027,29 @@ export default function App() {
         },
       });
 
+      const nextChequeSchedules =
+        reconciledStatusByChequeId.size > 0
+          ? (targetComp.chequeSchedules || []).map((sch) => ({
+              ...sch,
+              cheques: (sch.cheques || []).map((item) => {
+                const synced = item.clearingChequeId
+                  ? reconciledStatusByChequeId.get(item.clearingChequeId)
+                  : undefined;
+                return synced ? { ...item, status: synced } : item;
+              }),
+            }))
+          : targetComp.chequeSchedules;
+
       return {
         ...prev,
         companies: prev.companies.map((comp) =>
           comp.id === targetComp.id
-            ? { ...comp, cheques: nextCheques, batches: nextBatches }
+            ? {
+                ...comp,
+                cheques: nextCheques,
+                batches: nextBatches,
+                chequeSchedules: nextChequeSchedules,
+              }
             : comp
         ),
         auditLogs: [uploadSummaryLog, ...newLogs, ...(prev.auditLogs || [])],
@@ -1022,6 +1090,21 @@ export default function App() {
             : {
                 ...comp,
                 cheques: comp.cheques.filter((c) => c.id !== chequeId),
+                chequeSchedules: (comp.chequeSchedules || []).map((sch) => ({
+                  ...sch,
+                  cheques: (sch.cheques || []).map((item) =>
+                    item.clearingChequeId === chequeId
+                      ? {
+                          ...item,
+                          status: 'Scheduled' as ScheduledChequeStatus,
+                          clearingBatchId: undefined,
+                          clearingBatchRef: undefined,
+                          clearingChequeId: undefined,
+                          sentToClearingAt: undefined,
+                        }
+                      : item
+                  ),
+                })),
               }
         ),
         auditLogs: [log, ...(prev.auditLogs || [])],
@@ -1919,10 +2002,425 @@ export default function App() {
     });
   };
 
+  const handleSaveSchedule = (
+    payload: Omit<CustomerChequeSchedule, 'id' | 'createdAt' | 'updatedAt'>,
+    existingId?: string
+  ) => {
+    const now = new Date().toISOString();
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const existingSchedules = targetComp.chequeSchedules || [];
+      const existing = existingId
+        ? existingSchedules.find((s) => s.id === existingId)
+        : undefined;
+
+      const totalVal = (payload.cheques || []).reduce(
+        (sum, item) => sum + item.amount,
+        0
+      );
+
+      if (existing) {
+        const updated: CustomerChequeSchedule = {
+          ...existing,
+          ...payload,
+          id: existing.id,
+          createdAt: existing.createdAt,
+          updatedAt: now,
+        };
+        const log = createAuditEntry({
+          timestamp: now,
+          companyId: targetComp.id,
+          companyName: targetComp.profile.companyName,
+          customerName: updated.customerName,
+          actionType: 'SCHEDULE_UPDATED',
+          actor: currentActorName,
+          description: `Updated PDC/EMI cheque schedule for ${updated.customerName} (${updated.loanRefNo}) — ${updated.cheques.length} cheques (${formatINR(totalVal)}).`,
+        });
+        return {
+          ...prev,
+          companies: prev.companies.map((comp) =>
+            comp.id !== targetComp.id
+              ? comp
+              : {
+                  ...comp,
+                  chequeSchedules: existingSchedules.map((s) =>
+                    s.id === existing.id ? updated : s
+                  ),
+                }
+          ),
+          auditLogs: [log, ...(prev.auditLogs || [])],
+        };
+      }
+
+      const created: CustomerChequeSchedule = {
+        ...payload,
+        id: `sch-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const log = createAuditEntry({
+        timestamp: now,
+        companyId: targetComp.id,
+        companyName: targetComp.profile.companyName,
+        customerName: created.customerName,
+        actionType: 'SCHEDULE_CREATED',
+        actor: currentActorName,
+        description: `Created PDC/EMI cheque schedule for ${created.customerName} (${created.loanRefNo}) — ${created.cheques.length} cheques (${formatINR(totalVal)}).`,
+      });
+      return {
+        ...prev,
+        companies: prev.companies.map((comp) =>
+          comp.id !== targetComp.id
+            ? comp
+            : {
+                ...comp,
+                chequeSchedules: [created, ...existingSchedules],
+              }
+        ),
+        auditLogs: [log, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const handleDeleteSchedule = (scheduleId: string) => {
+    const now = new Date().toISOString();
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const existing = (targetComp.chequeSchedules || []).find(
+        (s) => s.id === scheduleId
+      );
+      if (!existing) return prev;
+
+      for (const doc of existing.scannedDocuments || []) {
+        void deleteDocumentBlob(doc.id);
+      }
+
+      const log = createAuditEntry({
+        timestamp: now,
+        companyId: targetComp.id,
+        companyName: targetComp.profile.companyName,
+        customerName: existing.customerName,
+        actionType: 'SCHEDULE_DELETED',
+        actor: currentActorName,
+        description: `Deleted PDC/EMI cheque schedule for ${existing.customerName} (${existing.loanRefNo}).`,
+      });
+
+      return {
+        ...prev,
+        companies: prev.companies.map((comp) =>
+          comp.id !== targetComp.id
+            ? comp
+            : {
+                ...comp,
+                chequeSchedules: (comp.chequeSchedules || []).filter(
+                  (s) => s.id !== scheduleId
+                ),
+              }
+        ),
+        auditLogs: [log, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const handleAddBankHoliday = (holiday: Omit<BankHoliday, 'id'>) => {
+    const now = new Date().toISOString();
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const currentHolidays = targetComp.bankHolidays || [];
+      const existsIdx = currentHolidays.findIndex(
+        (h) => h.date === holiday.date
+      );
+      const nextHoliday: BankHoliday = {
+        ...holiday,
+        id:
+          existsIdx >= 0
+            ? currentHolidays[existsIdx].id
+            : `hol-${holiday.date}-${Math.random().toString(36).slice(2, 6)}`,
+      };
+      const nextHolidays =
+        existsIdx >= 0
+          ? currentHolidays.map((h, idx) =>
+              idx === existsIdx ? nextHoliday : h
+            )
+          : [...currentHolidays, nextHoliday];
+      const nextSchedules = recalculateScheduleDates(
+        targetComp.chequeSchedules || [],
+        nextHolidays
+      );
+      const log = createAuditEntry({
+        timestamp: now,
+        companyId: targetComp.id,
+        companyName: targetComp.profile.companyName,
+        actionType: 'BANK_HOLIDAY_UPDATED',
+        actor: currentActorName,
+        description: `Added bank holiday "${holiday.name}" (${formatIndianDate(holiday.date)}) and recalculated pending scheduled cheque dates.`,
+      });
+      return {
+        ...prev,
+        companies: prev.companies.map((comp) =>
+          comp.id !== targetComp.id
+            ? comp
+            : {
+                ...comp,
+                bankHolidays: nextHolidays,
+                chequeSchedules: nextSchedules,
+              }
+        ),
+        auditLogs: [log, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const handleDeleteBankHoliday = (holidayId: string) => {
+    const now = new Date().toISOString();
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const targetHol = (targetComp.bankHolidays || []).find(
+        (h) => h.id === holidayId
+      );
+      if (!targetHol) return prev;
+      const nextHolidays = (targetComp.bankHolidays || []).filter(
+        (h) => h.id !== holidayId
+      );
+      const nextSchedules = recalculateScheduleDates(
+        targetComp.chequeSchedules || [],
+        nextHolidays
+      );
+      const log = createAuditEntry({
+        timestamp: now,
+        companyId: targetComp.id,
+        companyName: targetComp.profile.companyName,
+        actionType: 'BANK_HOLIDAY_UPDATED',
+        actor: currentActorName,
+        description: `Removed bank holiday "${targetHol.name}" (${formatIndianDate(targetHol.date)}) and recalculated pending scheduled cheque dates.`,
+      });
+      return {
+        ...prev,
+        companies: prev.companies.map((comp) =>
+          comp.id !== targetComp.id
+            ? comp
+            : {
+                ...comp,
+                bankHolidays: nextHolidays,
+                chequeSchedules: nextSchedules,
+              }
+        ),
+        auditLogs: [log, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const handleRestoreDefaultHolidays = () => {
+    const now = new Date().toISOString();
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const defaults = getDefaultIndianBankHolidays();
+      const nextSchedules = recalculateScheduleDates(
+        targetComp.chequeSchedules || [],
+        defaults
+      );
+      const log = createAuditEntry({
+        timestamp: now,
+        companyId: targetComp.id,
+        companyName: targetComp.profile.companyName,
+        actionType: 'BANK_HOLIDAY_UPDATED',
+        actor: currentActorName,
+        description: `Restored default Indian & Tamil Nadu bank holiday calendar (${defaults.length} dates) and recalculated pending scheduled cheque dates.`,
+      });
+      return {
+        ...prev,
+        companies: prev.companies.map((comp) =>
+          comp.id !== targetComp.id
+            ? comp
+            : {
+                ...comp,
+                bankHolidays: defaults,
+                chequeSchedules: nextSchedules,
+              }
+        ),
+        auditLogs: [log, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const handleSendScheduledChequesToClearing = (
+    selections: SendToClearingSelection[],
+    depositDate: string,
+    companyBankAccountId: string
+  ) => {
+    if (selections.length === 0) return;
+    const now = new Date().toISOString();
+    const selectionKeySet = new Set(
+      selections.map((s) => `${s.scheduleId}::${s.scheduledChequeId}`)
+    );
+
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const schedules = targetComp.chequeSchedules || [];
+      const bankId =
+        companyBankAccountId ||
+        targetComp.bankAccounts.find((b) => b.isDefault)?.id ||
+        targetComp.bankAccounts[0]?.id ||
+        '';
+
+      // Find an existing unlocked Clearing Batch matching depositDate + bankId
+      let targetBatch = targetComp.batches.find(
+        (b) =>
+          !b.isLocked &&
+          b.depositDate === depositDate &&
+          b.companyBankAccountId === bankId
+      );
+      let createdBatch: ClearingBatch | undefined;
+      if (!targetBatch) {
+        const nextSeq =
+          targetComp.batches.length +
+          (targetComp.id === 'comp-bharat-precision' ? 42 : 1);
+        createdBatch = {
+          id: `batch-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+          batchRef: generateBatchRef(depositDate, nextSeq),
+          depositDate,
+          companyBankAccountId: bankId,
+          makerName: targetComp.profile.defaultMaker,
+          checkerName: targetComp.profile.defaultChecker,
+          status: 'Draft',
+          isLocked: false,
+        };
+        targetBatch = createdBatch;
+      }
+
+      const newCheques: ChequeEntry[] = [];
+      let totalAddedAmount = 0;
+
+      const nextSchedules = schedules.map((sch) => {
+        let changed = false;
+        const nextItems = (sch.cheques || []).map((item) => {
+          const key = `${sch.id}::${item.id}`;
+          if (!selectionKeySet.has(key) || item.status !== 'Scheduled') {
+            return item;
+          }
+          changed = true;
+          const newChequeId = `chq-${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2, 7)}`;
+          const chequeEntry: ChequeEntry = {
+            id: newChequeId,
+            batchId: targetBatch!.id,
+            companyBankAccountId: bankId || sch.companyBankAccountId || '',
+            chequeDate: item.originalDate,
+            chequeNumber: item.chequeNumber,
+            micrCode: sch.micrCode || '',
+            draweeBank: sch.draweeBank,
+            draweeBranch: sch.draweeBranch,
+            clearingType:
+              item.amount >= 200000
+                ? 'High-Value Clearing'
+                : 'Local CTS Clearing',
+            partyName: sch.customerName,
+            customerCode: sch.customerCode || '',
+            invoiceRef: sch.loanRefNo,
+            amount: item.amount,
+            status: 'Draft',
+            presentationCount: 1,
+            remarks:
+              sch.notes ||
+              (item.shiftReason
+                ? `Scheduled PDC (${item.shiftReason})`
+                : 'Scheduled PDC Deposit'),
+            createdAt: now,
+            updatedAt: now,
+          };
+          newCheques.push(chequeEntry);
+          totalAddedAmount += item.amount;
+          return {
+            ...item,
+            status: 'In Clearing' as ScheduledChequeStatus,
+            clearingBatchId: targetBatch!.id,
+            clearingBatchRef: targetBatch!.batchRef,
+            clearingChequeId: newChequeId,
+            sentToClearingAt: now,
+          };
+        });
+        return changed ? { ...sch, cheques: nextItems, updatedAt: now } : sch;
+      });
+
+      if (newCheques.length === 0) return prev;
+
+      const newLogs: SystemAuditLogEntry[] = [];
+      if (createdBatch) {
+        newLogs.push(
+          createAuditEntry({
+            timestamp: now,
+            companyId: targetComp.id,
+            companyName: targetComp.profile.companyName,
+            batchId: createdBatch.id,
+            batchRef: createdBatch.batchRef,
+            actionType: 'BATCH_CREATED',
+            actor: currentActorName,
+            description: `Auto-created clearing batch ${createdBatch.batchRef} for ${formatIndianDate(depositDate)} from scheduled deposits.`,
+            newValue: 'Draft',
+          })
+        );
+      }
+
+      newLogs.push(
+        createAuditEntry({
+          timestamp: now,
+          companyId: targetComp.id,
+          companyName: targetComp.profile.companyName,
+          batchId: targetBatch.id,
+          batchRef: targetBatch.batchRef,
+          actionType: 'SCHEDULED_CHEQUES_SENT_TO_CLEARING',
+          actor: currentActorName,
+          description: `Sent ${newCheques.length} scheduled cheque${newCheques.length === 1 ? '' : 's'} (${formatINR(totalAddedAmount)}) to clearing batch ${targetBatch.batchRef}.`,
+          newValue: targetBatch.batchRef,
+        })
+      );
+
+      return {
+        ...prev,
+        companies: prev.companies.map((comp) =>
+          comp.id !== targetComp.id
+            ? comp
+            : {
+                ...comp,
+                batches: createdBatch
+                  ? [createdBatch, ...comp.batches]
+                  : comp.batches,
+                activeBatchId: targetBatch!.id,
+                cheques: [...comp.cheques, ...newCheques],
+                chequeSchedules: nextSchedules,
+              }
+        ),
+        auditLogs: [...newLogs, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const todayIso = toIsoDate(new Date());
+  const dueTodayScheduleCount = (activeCompany.chequeSchedules || []).reduce(
+    (sum, sch) =>
+      sum +
+      (sch.cheques || []).filter(
+        (chq) => chq.status === 'Scheduled' && chq.effectiveDate <= todayIso
+      ).length,
+    0
+  );
+
   const companyReturnedCount = activeCompany.cheques.filter(
     (c) => c.status === 'Returned / Bounced'
   ).length;
-  const companyDocumentCount = (activeCompany.documents || []).length;
 
   const navItems: {
     id: ActiveModule;
@@ -1933,10 +2431,10 @@ export default function App() {
     { id: 'dashboard', label: 'Clearing Dashboard', icon: LayoutDashboard },
     { id: 'entry', label: 'Rapid Cheque Entry', icon: FilePlus2 },
     {
-      id: 'customers',
-      label: 'Customers & Docs',
-      icon: Users,
-      count: companyDocumentCount,
+      id: 'schedules',
+      label: 'Customer Schedule',
+      icon: CalendarCheck2,
+      count: dueTodayScheduleCount,
     },
     { id: 'memo', label: 'Bank Deposit Memo', icon: Printer },
     {
@@ -1967,6 +2465,7 @@ export default function App() {
   const moduleTitleMap: Record<ActiveModule, string> = {
     dashboard: 'Clearing Schedule & Realization Ledger',
     entry: editingCheque ? 'Edit Instrument' : 'High-Speed Keyboard Cheque Entry',
+    schedules: 'Customer PDC / EMI Cheque Schedule & Daily Deposit Planner',
     customers: 'Customer Profiles, Document Vault & WhatsApp Sharing',
     memo: 'Official A4 Bank Deposit Memo (PDF)',
     'return-ack': 'Returned Cheque Bank Acknowledgement Letter (PDF)',
@@ -2292,6 +2791,27 @@ export default function App() {
               auditLogs={(state.auditLogs || []).filter(
                 (l) => l.companyId === activeCompany.id
               )}
+              chequeSchedules={activeCompany.chequeSchedules || []}
+              bankHolidays={activeCompany.bankHolidays || []}
+              onSendScheduledChequesToClearing={
+                handleSendScheduledChequesToClearing
+              }
+              onNavigateSchedules={() => setActiveModule('schedules')}
+            />
+          )}
+
+          {activeModule === 'schedules' && (
+            <CustomerScheduleView
+              key={activeCompany.id}
+              schedules={activeCompany.chequeSchedules || []}
+              bankAccounts={activeCompany.bankAccounts}
+              customers={activeCompany.customers || []}
+              cheques={activeCompany.cheques}
+              holidays={activeCompany.bankHolidays || []}
+              onSaveSchedule={handleSaveSchedule}
+              onDeleteSchedule={handleDeleteSchedule}
+              onOpenBankHolidays={() => setShowBankHolidayDrawer(true)}
+              onSendToClearingBatch={handleSendScheduledChequesToClearing}
             />
           )}
 
@@ -2414,10 +2934,22 @@ export default function App() {
               auditLogsCount={(state.auditLogs || []).length}
               onExportFullBackup={handleExportFullBackup}
               onRestoreBackupFile={handleRestoreBackupFile}
+              bankHolidaysCount={(activeCompany.bankHolidays || []).length}
+              onOpenBankHolidays={() => setShowBankHolidayDrawer(true)}
             />
           )}
         </main>
       </div>
+
+      <BankHolidayDrawer
+        isOpen={showBankHolidayDrawer}
+        onClose={() => setShowBankHolidayDrawer(false)}
+        holidays={activeCompany.bankHolidays || []}
+        schedules={activeCompany.chequeSchedules || []}
+        onAddHoliday={handleAddBankHoliday}
+        onDeleteHoliday={handleDeleteBankHoliday}
+        onRestoreDefaults={handleRestoreDefaultHolidays}
+      />
 
       {showAddCompanyModal && (
         <AddCompanyModal

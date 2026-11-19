@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Building2,
+  CalendarDays,
   Check,
   Download,
   HardDriveDownload,
@@ -34,6 +35,8 @@ interface SettingsViewProps {
   auditLogsCount?: number;
   onExportFullBackup: () => void;
   onRestoreBackupFile: (file: File) => void;
+  bankHolidaysCount?: number;
+  onOpenBankHolidays?: () => void;
 }
 
 export function SettingsView({
@@ -52,6 +55,8 @@ export function SettingsView({
   auditLogsCount = 0,
   onExportFullBackup,
   onRestoreBackupFile,
+  bankHolidaysCount = 0,
+  onOpenBankHolidays,
 }: SettingsViewProps) {
   const restoreInputRef = useRef<HTMLInputElement | null>(null);
   const [draftProfile, setDraftProfile] = useState<CorporateProfile>(profile);
@@ -166,6 +171,34 @@ export function SettingsView({
           </div>
         </div>
       </section>
+
+      {/* Bank Holiday Calendar & Auto-Shift Rules */}
+      {onOpenBankHolidays && (
+        <section className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-2.5">
+            <CalendarDays
+              className="w-4 h-4 text-slate-800 mt-0.5 shrink-0"
+              aria-hidden="true"
+            />
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Bank Holiday Calendar ({bankHolidaysCount} Configured)
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                All Sundays, 2nd &amp; 4th Saturdays, and configured Indian / Tamil Nadu bank holidays automatically shift scheduled PDC/EMI deposit dates to the next working bank day.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenBankHolidays}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+          >
+            <CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Bank Holidays</span>
+          </button>
+        </section>
+      )}
 
       {/* Multi-Company Directory */}
       <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">

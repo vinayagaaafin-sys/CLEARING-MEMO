@@ -1,4 +1,5 @@
 import { TreasuryState } from '../types/treasury';
+import { getDefaultIndianBankHolidays } from '../utils/bankHolidays';
 
 export const SEED_TREASURY_STATE: TreasuryState = {
   activeCompanyId: 'comp-default',
@@ -27,6 +28,9 @@ export const SEED_TREASURY_STATE: TreasuryState = {
       cheques: [],
       customers: [],
       documents: [],
+      letters: [],
+      chequeSchedules: [],
+      bankHolidays: getDefaultIndianBankHolidays(),
     },
   ],
   auditLogs: [],

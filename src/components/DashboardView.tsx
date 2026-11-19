@@ -25,11 +25,13 @@ import {
   XCircle,
 } from 'lucide-react';
 import {
+  BankHoliday,
   BatchStatus,
   ChequeEntry,
   ChequeStatus,
   ClearingBatch,
   CompanyBankAccount,
+  CustomerChequeSchedule,
   CustomerDocument,
   SystemAuditLogEntry,
 } from '../types/treasury';
@@ -48,6 +50,10 @@ import {
 } from './BankStatementReconcileModal';
 import { BatchLockModal } from './BatchLockModal';
 import { BounceModal } from './BounceModal';
+import {
+  DailyDepositScheduleWidget,
+  SendToClearingSelection,
+} from './DailyDepositScheduleWidget';
 import {
   RecoveryActionModal,
   RecoveryActionSubmission,
@@ -100,6 +106,14 @@ interface DashboardViewProps {
     linkChequeId?: string;
   }) => void;
   auditLogs?: SystemAuditLogEntry[];
+  chequeSchedules?: CustomerChequeSchedule[];
+  bankHolidays?: BankHoliday[];
+  onSendScheduledChequesToClearing?: (
+    selections: SendToClearingSelection[],
+    depositDate: string,
+    companyBankAccountId: string
+  ) => void;
+  onNavigateSchedules?: () => void;
 }
 
 export function DashboardView({
@@ -125,6 +139,10 @@ export function DashboardView({
   documents = [],
   onOpenCustomerDocuments,
   auditLogs = [],
+  chequeSchedules = [],
+  bankHolidays = [],
+  onSendScheduledChequesToClearing,
+  onNavigateSchedules,
 }: DashboardViewProps) {
   const [batchScope, setBatchScope] = useState<'active' | 'all'>('active');
   const [searchQuery, setSearchQuery] = useState('');
@@ -484,6 +502,17 @@ export function DashboardView({
 
   return (
     <div className="space-y-6">
+      {/* Top Priority Card: Today's Scheduled Cheques to Deposit */}
+      {onSendScheduledChequesToClearing && (
+        <DailyDepositScheduleWidget
+          schedules={chequeSchedules}
+          bankAccounts={bankAccounts}
+          holidays={bankHolidays}
+          onSendToClearingBatch={onSendScheduledChequesToClearing}
+          onNavigateSchedules={onNavigateSchedules}
+        />
+      )}
+
       {/* KPI Summary Strip - 4 clean flat cells with hairline dividers */}
       <section
         aria-label="Treasury KPIs"

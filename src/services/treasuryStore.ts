@@ -7,6 +7,7 @@ import {
   SystemAuditLogEntry,
   TreasuryState,
 } from '../types/treasury';
+import { getDefaultIndianBankHolidays } from '../utils/bankHolidays';
 import { formatIndianDate, formatINR } from '../utils/indianCurrency';
 
 const STORAGE_KEY = 'clearledger_treasury_state_v1';
@@ -236,6 +237,18 @@ function normalizeCompanyWorkspace(
     : seedCustomersByCompany.get(id) || [];
   const documents = Array.isArray(comp.documents) ? comp.documents : [];
   const letters = Array.isArray(comp.letters) ? comp.letters : [];
+  const chequeSchedules = Array.isArray(comp.chequeSchedules)
+    ? comp.chequeSchedules.map((sch) => ({
+        ...sch,
+        cheques: Array.isArray(sch.cheques) ? sch.cheques : [],
+        scannedDocuments: Array.isArray(sch.scannedDocuments)
+          ? sch.scannedDocuments
+          : [],
+      }))
+    : [];
+  const bankHolidays = Array.isArray(comp.bankHolidays)
+    ? comp.bankHolidays
+    : getDefaultIndianBankHolidays();
 
   const hasValidActiveBatch =
     typeof comp.activeBatchId === 'string' &&
@@ -257,6 +270,8 @@ function normalizeCompanyWorkspace(
     customers,
     documents,
     letters,
+    chequeSchedules,
+    bankHolidays,
   };
 }
 
@@ -346,6 +361,8 @@ export function loadTreasuryState(): TreasuryState {
           letters: c.letters || [],
           customers: c.customers || [],
           documents: c.documents || [],
+          chequeSchedules: c.chequeSchedules || [],
+          bankHolidays: c.bankHolidays || getDefaultIndianBankHolidays(),
         })),
         auditLogs: buildBackfillAuditLogs(SEED_TREASURY_STATE.companies),
       };
@@ -394,6 +411,8 @@ export function resetTreasuryState(): TreasuryState {
       letters: c.letters || [],
       customers: c.customers || [],
       documents: c.documents || [],
+      chequeSchedules: c.chequeSchedules || [],
+      bankHolidays: c.bankHolidays || getDefaultIndianBankHolidays(),
     })),
     auditLogs: buildBackfillAuditLogs(SEED_TREASURY_STATE.companies),
   };
