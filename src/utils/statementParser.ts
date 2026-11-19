@@ -2,7 +2,11 @@ import * as XLSX from 'xlsx';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { BOUNCE_REASONS } from '../data/indianBanks';
-import { ChequeEntry, ClearingBatch } from '../types/treasury';
+import {
+  ChequeEntry,
+  ClearingBatch,
+  DayBookVoucherType,
+} from '../types/treasury';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -39,18 +43,35 @@ export interface ParsedStatementRow {
   hasValidDate: boolean;
   narration: string;
   chequeNumber: string; // Primary extracted cheque token for display
+  rawRefNo?: string;
   extractedChequeNumbers: string[]; // All candidate tokens extracted from row
   chequeCandidates: ExtractedChequeCandidate[];
   debitAmount: number;
   creditAmount: number;
   amount: number;
   isCredit: boolean;
+  runningBalance?: number;
+  isSummaryRow?: 'OPENING' | 'CLOSING' | 'TOTAL';
   hasReturnKeyword: boolean;
   rowType: StatementRowType;
   isReturnEntry: boolean;
   isChargeEntry: boolean;
   detectedReason: string;
   debugInfo?: UnmatchedReturnDebugInfo;
+}
+
+export interface UnpostedStatementTx {
+  id: string;
+  rowIndex: number;
+  txDate: string; // YYYY-MM-DD
+  narration: string;
+  refNo: string;
+  amount: number;
+  direction: 'CR' | 'DR';
+  statementRunningBalance?: number;
+  suggestedVoucherType: DayBookVoucherType;
+  suggestedLedgerCategory: string;
+  suggestedPartyName?: string;
 }
 
 export interface ReconcileMatchCandidate {
@@ -70,8 +91,12 @@ export interface ReconcileMatchCandidate {
   alreadyReturned: boolean;
   matchedStatementNumber: string;
   associatedChargeAmount?: number;
+  associatedChargeDate?: string;
+  associatedChargeNarration?: string;
   duplicateRowsSkipped?: number;
   hasPassedAndReturnedPair?: boolean;
+  passedRowDate?: string;
+  passedRowNarration?: string;
 }
 
 export interface ReconcileClearedCandidate {
@@ -100,9 +125,13 @@ export interface StatementParseResult {
   clearedRowsDetected: number;
   clearedMatches: ReconcileClearedCandidate[];
   returnedMatches: ReconcileMatchCandidate[];
+  otherTransactions: UnpostedStatementTx[];
   unmatchedReturnRows: ParsedStatementRow[];
   ignoredChargeRows: ParsedStatementRow[];
   ignoredDuplicateRows: ParsedStatementRow[];
+  statementOpeningBalance?: number;
+  statementClosingBalance?: number;
+  statementClosingDate?: string;
 }
 
 const WHOLE_WORD_RETURN_REGEX =
@@ -301,6 +330,152 @@ function parseIndianOrNumericAmount(raw: unknown): number {
   if (!cleaned || cleaned === '-') return 0;
   const parsed = parseFloat(cleaned);
   return Number.isFinite(parsed) ? Math.abs(parsed) : 0;
+}
+
+function parseSignedBalance(raw: unknown): number | undefined {
+  if (typeof raw === 'number') {
+    return Number.isFinite(raw) ? raw : undefined;
+  }
+  if (typeof raw !== 'string') return undefined;
+  const str = raw.trim();
+  if (!str || str === '-') return undefined;
+  const isNegative =
+    str.startsWith('-') ||
+    /^\(.*\)$/.test(str) ||
+    (/\bDR\b/i.test(str) && !/\bCR\b/i.test(str));
+  const cleaned = str
+    .replace(/[\u20B9$€£]/g, '')
+    .replace(/\b(?:INR|RS\.?|CR|DR)\b/gi, '')
+    .replace(/[,\s()]/g, '')
+    .trim();
+  if (!cleaned || cleaned === '-') return undefined;
+  const parsed = parseFloat(cleaned);
+  if (!Number.isFinite(parsed)) return undefined;
+  return isNegative ? -Math.abs(parsed) : Math.abs(parsed);
+}
+
+function detectSummaryRowKind(
+  text: string
+): 'OPENING' | 'CLOSING' | 'TOTAL' | undefined {
+  const norm = text.trim();
+  if (!norm) return undefined;
+  if (
+    /\b(?:opening\s+bal(?:ance)?|brought\s+forward|bal(?:ance)?\s*b\/f|b\/f\s+bal(?:ance)?)\b/i.test(
+      norm
+    )
+  ) {
+    return 'OPENING';
+  }
+  if (
+    /\b(?:closing\s+bal(?:ance)?|carried\s+forward|bal(?:ance)?\s*c\/f|c\/f\s+bal(?:ance)?|ending\s+bal(?:ance)?)\b/i.test(
+      norm
+    )
+  ) {
+    return 'CLOSING';
+  }
+  if (
+    /^(?:total|grand\s+total|sub\s*total|statement\s+summary|txn\s+total)\b/i.test(
+      norm
+    ) ||
+    /\b(?:total\s+debits?|total\s+credits?|total\s+withdrawal|total\s+deposit)\b/i.test(
+      norm
+    )
+  ) {
+    return 'TOTAL';
+  }
+  return undefined;
+}
+
+function extractRefNumberFromRow(rawRef: string, narration: string): string {
+  const cleanedCol = rawRef.trim();
+  if (cleanedCol && cleanedCol !== '-' && cleanedCol !== '0') {
+    return cleanedCol.slice(0, 40);
+  }
+  // Common Indian bank statement UTR / UPI / NEFT / IMPS / RTGS / Chq refs
+  const refMatch = narration.match(
+    /\b(?:UTR|REF|UPI|IMPS|NEFT|RTGS|CHQ|TXN)[\s:/\-]*([A-Z0-9]{6,22})\b/i
+  );
+  if (refMatch?.[1]) {
+    return refMatch[1];
+  }
+  const slashToken = narration.match(/\/([A-Z0-9]{8,20})\b/);
+  if (slashToken?.[1]) {
+    return slashToken[1];
+  }
+  return '';
+}
+
+export function suggestOtherTxClassification(
+  narration: string,
+  direction: 'CR' | 'DR'
+): {
+  suggestedVoucherType: DayBookVoucherType;
+  suggestedLedgerCategory: string;
+} {
+  const text = narration || '';
+
+  // 1. Bank Charges / Fees / GST / SMS / AMC
+  if (
+    /\b(?:CHG|CHGS|CHRG|CHRGS|CHARGE|CHARGES|FEE|FEES|GST|CGST|SGST|IGST|SMS|AMC|FOLIO|PENALT(?:Y|IES)|COMMISSION|INCIDENTAL|MIN\s*BAL)\b/i.test(
+      text
+    )
+  ) {
+    if (direction === 'CR' && /\b(?:REV|REVERSAL|REFUND|WAIV)\b/i.test(text)) {
+      return {
+        suggestedVoucherType: 'Receipt',
+        suggestedLedgerCategory: 'Bank Charges Refund',
+      };
+    }
+    return {
+      suggestedVoucherType: 'Bank Charges',
+      suggestedLedgerCategory: 'Bank Charges',
+    };
+  }
+
+  // 2. Bank Interest
+  if (/\b(?:INT|INTEREST|INT\.?PD|INT\.?CR|INT\.?DR)\b/i.test(text)) {
+    return direction === 'CR'
+      ? {
+          suggestedVoucherType: 'Receipt',
+          suggestedLedgerCategory: 'Bank Interest',
+        }
+      : {
+          suggestedVoucherType: 'Payment',
+          suggestedLedgerCategory: 'Bank Interest & Finance Charges',
+        };
+  }
+
+  // 3. Cash / CDM / ATM (Contra)
+  if (/\b(?:CASH|CDM|ATM|SELF|CASH\s*DEP|CASH\s*WDL)\b/i.test(text)) {
+    return {
+      suggestedVoucherType: 'Contra',
+      suggestedLedgerCategory: 'Cash Deposit / Withdrawal',
+    };
+  }
+
+  // 4. Digital Transfers (UPI, NEFT, RTGS, IMPS, TRF)
+  if (/\b(?:UPI|NEFT|RTGS|IMPS|TRF|TRANSFER|FT)\b/i.test(text)) {
+    return direction === 'CR'
+      ? {
+          suggestedVoucherType: 'Receipt',
+          suggestedLedgerCategory: 'Customer / Sundry Receipt',
+        }
+      : {
+          suggestedVoucherType: 'Payment',
+          suggestedLedgerCategory: 'Vendor / Expense Payment',
+        };
+  }
+
+  // 5. Fallback by direction
+  return direction === 'CR'
+    ? {
+        suggestedVoucherType: 'Receipt',
+        suggestedLedgerCategory: 'Customer / Sundry Receipt',
+      }
+    : {
+        suggestedVoucherType: 'Payment',
+        suggestedLedgerCategory: 'Vendor / Expense Payment',
+      };
 }
 
 const MONTH_MAP: Record<string, string> = {
@@ -735,8 +910,59 @@ function parseTabularMatrix(matrix: unknown[][]): ParsedStatementRow[] {
     'bouncereason',
     'reasonofreturn',
   ]);
+  const balanceKey = findColumnKey(rawHeaders, [
+    'balance',
+    'runningbalance',
+    'closingbalance',
+    'availablebalance',
+    'availbalance',
+    'bal',
+    'balinr',
+    'balanceinr',
+  ]);
 
   const parsedRows: ParsedStatementRow[] = [];
+
+  // Also scan pre-header metadata rows for Opening / Closing Balance summary lines
+  for (let pre = 0; pre < headerIdx; pre++) {
+    const rawRow = matrix[pre];
+    if (!rawRow) continue;
+    const text = rawRow
+      .map((c) => String(c ?? '').trim())
+      .filter(Boolean)
+      .join(' ');
+    const summaryKind = detectSummaryRowKind(text);
+    if (summaryKind === 'OPENING' || summaryKind === 'CLOSING') {
+      const balMatch = text.match(
+        /(?<!\d)(-?\d{1,3}(?:,\d{2,3})*\.\d{1,2}|-?\d+\.\d{1,2})(?:\s*\(?(DR|CR)\)?\.?)?(?!\d)/i
+      );
+      const parsedBal = balMatch
+        ? parseSignedBalance(`${balMatch[1]} ${balMatch[2] || ''}`)
+        : undefined;
+      if (parsedBal !== undefined) {
+        parsedRows.push({
+          rowIndex: pre + 1,
+          txnDate: '',
+          hasValidDate: false,
+          narration: text,
+          chequeNumber: '',
+          extractedChequeNumbers: [],
+          chequeCandidates: [],
+          debitAmount: 0,
+          creditAmount: 0,
+          amount: 0,
+          isCredit: false,
+          runningBalance: parsedBal,
+          isSummaryRow: summaryKind,
+          hasReturnKeyword: false,
+          rowType: 'PASSED',
+          isReturnEntry: false,
+          isChargeEntry: false,
+          detectedReason: '',
+        });
+      }
+    }
+  }
 
   for (let r = headerIdx + 1; r < matrix.length; r++) {
     const rawRow = matrix[r];
@@ -828,6 +1054,27 @@ function parseTabularMatrix(matrix: unknown[][]): ParsedStatementRow[] {
         );
 
     const isChargeEntry = isReturnEntry && hasChargeKeywords(effectiveNarration);
+    const rawRefNo = chequeKey ? String(rowObj[chequeKey] ?? '').trim() : '';
+    const runningBalance = balanceKey
+      ? parseSignedBalance(rowObj[balanceKey])
+      : undefined;
+    const isSummaryRow = detectSummaryRowKind(effectiveNarration);
+
+    // For explicit Opening / Closing Balance rows, extract balance from balance col or fallback amount col
+    const effectiveRunningBalance =
+      runningBalance !== undefined
+        ? runningBalance
+        : isSummaryRow === 'OPENING' || isSummaryRow === 'CLOSING'
+        ? parseSignedBalance(
+            amountKey
+              ? rowObj[amountKey]
+              : creditKey && rowObj[creditKey]
+              ? rowObj[creditKey]
+              : debitKey
+              ? rowObj[debitKey]
+              : undefined
+          )
+        : undefined;
 
     parsedRows.push({
       rowIndex: r + 1,
@@ -835,17 +1082,23 @@ function parseTabularMatrix(matrix: unknown[][]): ParsedStatementRow[] {
       hasValidDate: parsedDate.hasValidDate,
       narration: effectiveNarration,
       chequeNumber,
+      rawRefNo,
       extractedChequeNumbers,
       chequeCandidates,
-      debitAmount,
-      creditAmount,
-      amount,
+      debitAmount: isSummaryRow ? 0 : debitAmount,
+      creditAmount: isSummaryRow ? 0 : creditAmount,
+      amount: isSummaryRow ? 0 : amount,
       isCredit,
-      hasReturnKeyword,
-      rowType,
-      isReturnEntry,
-      isChargeEntry,
-      detectedReason: isReturnEntry ? detectReturnReason(narration, reasonHint) : '',
+      runningBalance: effectiveRunningBalance,
+      isSummaryRow,
+      hasReturnKeyword: isSummaryRow ? false : hasReturnKeyword,
+      rowType: isSummaryRow ? 'PASSED' : rowType,
+      isReturnEntry: isSummaryRow ? false : isReturnEntry,
+      isChargeEntry: isSummaryRow ? false : isChargeEntry,
+      detectedReason:
+        !isSummaryRow && isReturnEntry
+          ? detectReturnReason(narration, reasonHint)
+          : '',
     });
   }
 
@@ -896,20 +1149,58 @@ function parsePdfLines(lines: string[]): ParsedStatementRow[] {
 
     const tokenMatches = Array.from(
       line.matchAll(
-        /(?<!\d)(\d{1,3}(?:,\d{2,3})*\.\d{1,2}|\d+\.\d{1,2})(?:\s*\(?(DR|CR)\)?\.?)?(?!\d)/gi
+        /(?<!\d)(-?\d{1,3}(?:,\d{2,3})*\.\d{1,2}|-?\d+\.\d{1,2})(?:\s*\(?(DR|CR)\)?\.?)?(?!\d)/gi
       )
     ).map((m) => ({
       amount: parseIndianOrNumericAmount(m[1]),
+      signedBalance: parseSignedBalance(`${m[1]} ${m[2] || ''}`),
       tag: (m[2] || '').toUpperCase(),
       startIndex: m.index ?? 0,
     }));
+
+    const isSummaryRow = detectSummaryRowKind(line);
+    if (isSummaryRow) {
+      const lastBalToken = tokenMatches[tokenMatches.length - 1];
+      rows.push({
+        rowIndex: idx + 1,
+        txnDate: parsedDate.txnDate,
+        hasValidDate: parsedDate.hasValidDate,
+        narration: line,
+        chequeNumber: '',
+        extractedChequeNumbers: [],
+        chequeCandidates: [],
+        debitAmount: 0,
+        creditAmount: 0,
+        amount: 0,
+        isCredit: false,
+        runningBalance: lastBalToken?.signedBalance,
+        isSummaryRow,
+        hasReturnKeyword: false,
+        rowType: 'PASSED',
+        isReturnEntry: false,
+        isChargeEntry: false,
+        detectedReason: '',
+      });
+      return;
+    }
 
     // Ignore leading 0.00 placeholders when a Debit/Credit column is 0.00 and another positive token exists
     const positiveTokens = tokenMatches.filter((t) => t.amount > 0);
     const txnToken =
       positiveTokens.length > 0
         ? positiveTokens[0]
-        : tokenMatches[0] || { amount: 0, tag: '', startIndex: line.length };
+        : tokenMatches[0] || {
+            amount: 0,
+            signedBalance: undefined,
+            tag: '',
+            startIndex: line.length,
+          };
+
+    // Running balance is the trailing monetary token when >= 2 monetary tokens exist on a transaction line
+    const runningBalance =
+      tokenMatches.length >= 2
+        ? tokenMatches[tokenMatches.length - 1].signedBalance
+        : undefined;
 
     const amount = txnToken.amount;
     // Slice before running balance token so running balance's "CR" doesn't mask a "DR" transaction
@@ -929,7 +1220,7 @@ function parsePdfLines(lines: string[]): ParsedStatementRow[] {
       (!hasExplicitDr &&
         /\b(?:BY[\s./\-:]*CLG|OW[\s./\-:]*CLG|CLG\/)\b/i.test(line) &&
         !hasWholeWordReturnKeyword(line));
-    const debitAmount = !isCredit && hasExplicitDr ? amount : 0;
+    const debitAmount = !isCredit && (hasExplicitDr || amount > 0) ? amount : 0;
     const creditAmount = isCredit ? amount : 0;
 
     const { hasReturnKeyword, isReturnEntry } = classifyRowAsReturn(
@@ -1007,6 +1298,7 @@ function parsePdfLines(lines: string[]): ParsedStatementRow[] {
       creditAmount,
       amount,
       isCredit,
+      runningBalance,
       hasReturnKeyword,
       rowType,
       isReturnEntry,
@@ -1314,12 +1606,75 @@ export async function parseAndReconcileBankStatement(
   const batchMap = new Map(batches.map((b) => [b.id, b]));
   const todayFallback = new Date().toISOString().slice(0, 10);
 
+  // Extract explicit Opening / Closing Balance summary lines before filtering transaction rows
+  const openingSummaryRow = parsedRows.find(
+    (r) => r.isSummaryRow === 'OPENING' && r.runningBalance !== undefined
+  );
+  const closingSummaryRow = [...parsedRows]
+    .reverse()
+    .find((r) => r.isSummaryRow === 'CLOSING' && r.runningBalance !== undefined);
+
+  const transactionRows = parsedRows.filter((r) => !r.isSummaryRow);
+
+  // Determine chronological direction (ascending vs reverse-chronological statement)
+  const datedTxRows = transactionRows.filter(
+    (r) => r.hasValidDate && r.amount > 0
+  );
+  const isDescending =
+    datedTxRows.length >= 2 &&
+    datedTxRows[0].txnDate > datedTxRows[datedTxRows.length - 1].txnDate;
+
+  const balanceTxRows = transactionRows.filter(
+    (r) => r.amount > 0 && r.runningBalance !== undefined
+  );
+  const firstChronoBalanceRow = isDescending
+    ? balanceTxRows[balanceTxRows.length - 1]
+    : balanceTxRows[0];
+  const lastChronoBalanceRow = isDescending
+    ? balanceTxRows[0]
+    : balanceTxRows[balanceTxRows.length - 1];
+
+  let statementClosingBalance =
+    closingSummaryRow?.runningBalance ?? lastChronoBalanceRow?.runningBalance;
+  const statementClosingDate =
+    closingSummaryRow?.txnDate ||
+    lastChronoBalanceRow?.txnDate ||
+    (isDescending
+      ? datedTxRows[0]?.txnDate
+      : datedTxRows[datedTxRows.length - 1]?.txnDate) ||
+    todayFallback;
+
+  let statementOpeningBalance = openingSummaryRow?.runningBalance;
+  if (
+    statementOpeningBalance === undefined &&
+    firstChronoBalanceRow &&
+    firstChronoBalanceRow.runningBalance !== undefined
+  ) {
+    const delta = firstChronoBalanceRow.isCredit
+      ? firstChronoBalanceRow.amount
+      : -firstChronoBalanceRow.amount;
+    statementOpeningBalance = Number(
+      (firstChronoBalanceRow.runningBalance - delta).toFixed(2)
+    );
+  }
+  if (
+    statementClosingBalance === undefined &&
+    statementOpeningBalance !== undefined
+  ) {
+    const netDelta = transactionRows
+      .filter((r) => r.amount > 0)
+      .reduce((acc, r) => acc + (r.isCredit ? r.amount : -r.amount), 0);
+    statementClosingBalance = Number(
+      (statementOpeningBalance + netDelta).toFixed(2)
+    );
+  }
+
   // Enforce strict Step A (RETURN) vs Step B (CLEARED) separation:
   // A row can ONLY enter Step A if detectReturnFlag was true (explicit Return/Bounce keyword).
   // Clearing rows (BY CLG, TO CLG, OW CLG, INW CLG, CTS, CHQ PAID, MICR) without return keywords
   // go strictly to Step B.
-  const returnRowsRaw = parsedRows.filter((r) => r.isReturnEntry);
-  const nonReturnRowsRaw = parsedRows.filter((r) => !r.isReturnEntry);
+  const returnRowsRaw = transactionRows.filter((r) => r.isReturnEntry);
+  const nonReturnRowsRaw = transactionRows.filter((r) => !r.isReturnEntry);
 
   // STEP B FIRST-PASS RESOLUTION (Cleared/Passed rows WITHOUT Return Keywords):
   // Match against stored cheques by Cheque No / Last-4 + Amount, or unique Amount fallback on CLG rows.
@@ -1410,6 +1765,7 @@ export async function parseAndReconcileBankStatement(
   const clearedMatches: ReconcileClearedCandidate[] = [];
   const ignoredChargeRows: ParsedStatementRow[] = [...orphanChargeRows];
   const ignoredDuplicateRows: ParsedStatementRow[] = [];
+  const consumedRowIndices = new Set<number>();
   let clearedRowsDetected = 0;
 
   for (const [chequeId, items] of rowsByChequeId.entries()) {
@@ -1448,6 +1804,7 @@ export async function parseAndReconcileBankStatement(
     const chargeSum = chargeRows.reduce((s, c) => s + c.row.amount, 0);
     for (const chg of chargeRows) {
       ignoredChargeRows.push(chg.row);
+      consumedRowIndices.add(chg.row.rowIndex);
     }
 
     // Conflict Resolution Rule:
@@ -1455,15 +1812,18 @@ export async function parseAndReconcileBankStatement(
     // and the cheque is placed ONLY in returnedMatches.
     if (principalReturnRows.length > 0) {
       const bestReturn = pickPrincipalReturnResolution(principalReturnRows, cheque);
+      consumedRowIndices.add(bestReturn.row.rowIndex);
 
       let dupCount = 0;
       for (const r of principalReturnRows) {
+        consumedRowIndices.add(r.row.rowIndex);
         if (r !== bestReturn) {
           ignoredDuplicateRows.push(r.row);
           dupCount += 1;
         }
       }
       for (const p of passedRows) {
+        consumedRowIndices.add(p.row.rowIndex);
         ignoredDuplicateRows.push(p.row);
         dupCount += 1;
       }
@@ -1481,6 +1841,8 @@ export async function parseAndReconcileBankStatement(
         bestReturn.row.amount > 0
           ? Math.abs(cheque.amount - bestReturn.row.amount) < 0.01
           : true;
+      const primaryPassed = passedRows[0];
+      const primaryCharge = chargeRows[0];
 
       returnedMatches.push({
         id: `rec-ret-${bestReturn.row.rowIndex}-${chequeId}`,
@@ -1508,8 +1870,12 @@ export async function parseAndReconcileBankStatement(
           bestReturn.row.chequeNumber ||
           '',
         associatedChargeAmount: chargeSum > 0 ? chargeSum : undefined,
+        associatedChargeDate: primaryCharge?.row.txnDate || bestReturn.row.txnDate || todayFallback,
+        associatedChargeNarration: primaryCharge?.row.narration,
         duplicateRowsSkipped: dupCount > 0 ? dupCount : undefined,
         hasPassedAndReturnedPair: passedRows.length > 0,
+        passedRowDate: primaryPassed?.row.txnDate || bestReturn.row.txnDate || todayFallback,
+        passedRowNarration: primaryPassed?.row.narration,
       });
       continue;
     }
@@ -1522,6 +1888,7 @@ export async function parseAndReconcileBankStatement(
         cheque.status === 'Settled / Recovered'
       ) {
         for (const p of passedRows) {
+          consumedRowIndices.add(p.row.rowIndex);
           ignoredDuplicateRows.push(p.row);
         }
         continue;
@@ -1530,6 +1897,7 @@ export async function parseAndReconcileBankStatement(
       const bestCleared = pickPrimaryClearedResolution(passedRows);
       let dupCount = 0;
       for (const p of passedRows) {
+        consumedRowIndices.add(p.row.rowIndex);
         if (p !== bestCleared) {
           ignoredDuplicateRows.push(p.row);
           dupCount += 1;
@@ -1584,6 +1952,7 @@ export async function parseAndReconcileBankStatement(
 
     if (seenUnmatchedKeys.has(dedupeKey)) {
       ignoredDuplicateRows.push(res.row);
+      consumedRowIndices.add(res.row.rowIndex);
       continue;
     }
     seenUnmatchedKeys.add(dedupeKey);
@@ -1609,73 +1978,205 @@ export async function parseAndReconcileBankStatement(
     });
   }
 
+  // STEP D: Capture ALL remaining unmatched bank statement transactions for manual Day Book review
+  // Every positive-amount transaction row NOT consumed by clearedMatches, returnedMatches,
+  // or duplicate/charge merges on matched cheques is captured here so book closing balance tallies to ₹0.00.
+  const knownParties = Array.from(
+    new Set(
+      cheques
+        .map((c) => c.partyName.trim())
+        .filter((name) => name.length >= 4)
+    )
+  );
+
+  const otherTransactions: UnpostedStatementTx[] = [];
+  for (const row of transactionRows) {
+    if (consumedRowIndices.has(row.rowIndex)) continue;
+    if (row.amount <= 0) continue;
+    if (BOILERPLATE_PDF_LINE.test(row.narration.trim())) continue;
+
+    const direction: 'CR' | 'DR' = row.isCredit ? 'CR' : 'DR';
+    const { suggestedVoucherType, suggestedLedgerCategory } =
+      suggestOtherTxClassification(row.narration, direction);
+
+    const upperNarr = row.narration.toUpperCase();
+    const matchedParty = knownParties.find((p) =>
+      upperNarr.includes(p.toUpperCase())
+    );
+
+    const refNo = extractRefNumberFromRow(
+      row.rawRefNo || row.chequeNumber || '',
+      row.narration
+    );
+
+    otherTransactions.push({
+      id: `other-tx-${row.rowIndex}`,
+      rowIndex: row.rowIndex,
+      txDate: row.txnDate || todayFallback,
+      narration: row.narration,
+      refNo,
+      amount: row.amount,
+      direction,
+      statementRunningBalance: row.runningBalance,
+      suggestedVoucherType,
+      suggestedLedgerCategory,
+      suggestedPartyName: matchedParty,
+    });
+  }
+
   return {
     fileName: file.name,
     fileType,
-    totalRowsParsed: parsedRows.length,
+    totalRowsParsed: transactionRows.length,
     returnRowsDetected: returnRowsRaw.length,
     clearedRowsDetected,
     clearedMatches,
     returnedMatches,
+    otherTransactions,
     unmatchedReturnRows,
     ignoredChargeRows,
     ignoredDuplicateRows,
+    statementOpeningBalance,
+    statementClosingBalance,
+    statementClosingDate,
   };
 }
 
 /**
  * Generates a realistic sample Bank Statement CSV using cheques from the current workspace
- * so Treasury teams can test Auto-Reconciliation formatting immediately.
+ * plus everyday non-cheque banking entries (NEFT, UPI, Cash CDM, Bank Charges, Interest)
+ * and a Running Balance column so Treasury teams can test full Day Book & Closing Balance reconciliation.
  */
 export function downloadSampleBankStatementCSV(cheques: ChequeEntry[]): void {
   const sampleCheques = cheques.slice(0, 3);
+  let runningBal = 500000; // ₹5,00,000.00 Opening Balance
+
   const rows: string[][] = [
-    ['Txn Date', 'Cheque No', 'Narration / Description', 'Debit (INR)', 'Credit (INR)'],
+    [
+      'Txn Date',
+      'Cheque / Ref No',
+      'Narration / Description',
+      'Debit (INR)',
+      'Credit (INR)',
+      'Balance (INR)',
+    ],
+    [
+      '2026-11-16',
+      '',
+      'OPENING BALANCE BROUGHT FORWARD',
+      '0.00',
+      '0.00',
+      runningBal.toFixed(2),
+    ],
   ];
+
+  const pushTx = (
+    date: string,
+    ref: string,
+    narration: string,
+    dr: number,
+    cr: number
+  ) => {
+    runningBal = Number((runningBal + cr - dr).toFixed(2));
+    rows.push([
+      date,
+      ref,
+      narration,
+      dr.toFixed(2),
+      cr.toFixed(2),
+      runningBal.toFixed(2),
+    ]);
+  };
 
   if (sampleCheques[0]) {
     const last4 = sampleCheques[0].chequeNumber.slice(-4);
-    rows.push([
+    pushTx(
       '2026-11-17',
       sampleCheques[0].chequeNumber,
       `BY CLG ${sampleCheques[0].chequeNumber} (${sampleCheques[0].partyName})`,
-      '0.00',
-      sampleCheques[0].amount.toFixed(2),
-    ]);
-    rows.push([
+      0,
+      sampleCheques[0].amount
+    );
+    pushTx(
       '2026-11-18',
       '',
       `BRN/OW RTN CLG: ${sampleCheques[0].amount.toFixed(2)} DR REJECT:${Number(sampleCheques[0].chequeNumber)}:Funds insufficient`,
-      sampleCheques[0].amount.toFixed(2),
-      '0.00',
-    ]);
-    rows.push([
+      sampleCheques[0].amount,
+      0
+    );
+    pushTx(
       '2026-11-18',
       last4,
       `CHQ RET CHARGES ${last4} + GST`,
-      '590.00',
-      '0.00',
-    ]);
+      590,
+      0
+    );
   }
   if (sampleCheques[1]) {
     const last4 = sampleCheques[1].chequeNumber.slice(-4);
-    rows.push([
+    pushTx(
       '2026-11-18',
       '',
       `TO CLG-${last4}-RTN SIGN MISMATCH`,
-      sampleCheques[1].amount.toFixed(2),
-      '0.00',
-    ]);
+      sampleCheques[1].amount,
+      0
+    );
   }
   if (sampleCheques[2]) {
-    rows.push([
+    pushTx(
       '2026-11-18',
       sampleCheques[2].chequeNumber,
       `BY CLG CTS ${sampleCheques[2].chequeNumber} (${sampleCheques[2].partyName})`,
-      '0.00',
-      sampleCheques[2].amount.toFixed(2),
-    ]);
+      0,
+      sampleCheques[2].amount
+    );
   }
+
+  // Realistic unmatched non-cheque statement transactions for Day Book review
+  pushTx(
+    '2026-11-18',
+    'NEFT261118004921',
+    'NEFT CR-HDFCN520261118004921-APEX INDUSTRIAL SUPPLIES',
+    0,
+    185000
+  );
+  pushTx(
+    '2026-11-18',
+    'UPI432319884512',
+    'UPI/DR/432319884512/SHREE LOGISTICS TRANSPORT/FREIGHT',
+    24500,
+    0
+  );
+  pushTx(
+    '2026-11-19',
+    'CDM009182',
+    'CASH DEPOSIT AT CDM BRANCH CHENNAI MAIN',
+    0,
+    50000
+  );
+  pushTx(
+    '2026-11-19',
+    'CHG202611',
+    'SMS ALERT & ACCOUNT AMC CHARGES + GST',
+    472,
+    0
+  );
+  pushTx(
+    '2026-11-19',
+    'INT2026Q3',
+    'QUARTERLY CREDIT INTEREST PAID',
+    0,
+    3240.5
+  );
+
+  rows.push([
+    '2026-11-19',
+    '',
+    'CLOSING BALANCE CARRIED FORWARD',
+    '0.00',
+    '0.00',
+    runningBal.toFixed(2),
+  ]);
 
   const escapeCsv = (val: string) =>
     val.includes(',') || val.includes('"') ? `"${val.replace(/"/g, '""')}"` : val;
@@ -1685,7 +2186,7 @@ export function downloadSampleBankStatementCSV(cheques: ChequeEntry[]): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'Sample_Bank_Statement_Return_Reconciliation.csv';
+  link.download = 'Sample_Bank_Statement_Full_Reconciliation.csv';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

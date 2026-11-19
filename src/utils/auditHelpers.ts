@@ -25,6 +25,7 @@ export const AUDIT_ACTION_LABELS: Record<SystemAuditAction, string> = {
   SCHEDULE_DELETED: 'Cheque Schedule Deleted',
   SCHEDULED_CHEQUES_SENT_TO_CLEARING: 'Scheduled Cheques Sent to Clearing',
   BANK_HOLIDAY_UPDATED: 'Bank Holiday Calendar Updated',
+  DAY_BOOK_POSTED: 'Day Book Entry Posted',
 };
 
 export const ALL_AUDIT_ACTIONS: SystemAuditAction[] = [
@@ -51,6 +52,7 @@ export const ALL_AUDIT_ACTIONS: SystemAuditAction[] = [
   'SCHEDULE_DELETED',
   'SCHEDULED_CHEQUES_SENT_TO_CLEARING',
   'BANK_HOLIDAY_UPDATED',
+  'DAY_BOOK_POSTED',
 ];
 
 export function formatAuditTimestamp(iso: string): string {

@@ -17,7 +17,7 @@ import {
   CompanyWorkspace,
   CorporateProfile,
 } from '../types/treasury';
-import { formatIndianShort } from '../utils/indianCurrency';
+import { formatIndianShort, formatINR } from '../utils/indianCurrency';
 
 interface SettingsViewProps {
   companies: CompanyWorkspace[];
@@ -74,6 +74,7 @@ export function SettingsView({
   const [ifscCode, setIfscCode] = useState('');
   const [branchName, setBranchName] = useState('');
   const [branchAddress, setBranchAddress] = useState('');
+  const [openingBalance, setOpeningBalance] = useState('0');
   const [confirmReset, setConfirmReset] = useState(false);
 
   const handleProfileSubmit = (e: React.FormEvent) => {
@@ -86,6 +87,7 @@ export function SettingsView({
   const handleBankSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!bankName.trim() || !accountNumber.trim() || !ifscCode.trim()) return;
+    const parsedOpen = parseFloat(openingBalance.replace(/,/g, '')) || 0;
     onAddBankAccount({
       bankName: bankName.trim(),
       accountType,
@@ -94,12 +96,14 @@ export function SettingsView({
       branchName: branchName.trim() || 'Corporate Branch',
       branchAddress: branchAddress.trim() || 'Mumbai',
       isDefault: bankAccounts.length === 0,
+      openingBalance: parsedOpen,
     });
     setBankName('');
     setAccountNumber('');
     setIfscCode('');
     setBranchName('');
     setBranchAddress('');
+    setOpeningBalance('0');
     setShowAddBank(false);
   };
 
@@ -109,6 +113,10 @@ export function SettingsView({
   );
   const totalCheques = companies.reduce(
     (sum, c) => sum + (c.cheques?.length || 0),
+    0
+  );
+  const totalDayBookEntries = companies.reduce(
+    (sum, c) => sum + (c.dayBookEntries?.length || 0),
     0
   );
 
@@ -130,7 +138,8 @@ export function SettingsView({
                 Download a complete snapshot of all {companies.length}{' '}
                 {companies.length === 1 ? 'company' : 'companies'},{' '}
                 <span className="font-mono-num">{totalBatches}</span> batches,{' '}
-                <span className="font-mono-num">{totalCheques}</span> cheques, customers, and{' '}
+                <span className="font-mono-num">{totalCheques}</span> cheques,{' '}
+                <span className="font-mono-num">{totalDayBookEntries}</span> Day Book entries, customers, and{' '}
                 <span className="font-mono-num">{auditLogsCount}</span> audit logs, or restore from a saved JSON backup.
               </p>
             </div>
@@ -659,7 +668,7 @@ export function SettingsView({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
                   IFSC Code <span className="text-red-600">*</span>
@@ -696,6 +705,19 @@ export function SettingsView({
                   onChange={(e) => setBranchAddress(e.target.value)}
                   placeholder="Full branch address for deposit memo"
                   className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">
+                  Opening Balance (₹)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={openingBalance}
+                  onChange={(e) => setOpeningBalance(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 text-sm font-mono-num border border-slate-300 rounded-md bg-white"
                 />
               </div>
             </div>
@@ -754,6 +776,20 @@ export function SettingsView({
                     </strong>
                   </span>
                   <span>Branch: {acc.branchName}</span>
+                  <span>
+                    Opening Bal:{' '}
+                    <strong className="font-mono-num text-slate-900">
+                      {formatINR(acc.openingBalance ?? 0)}
+                    </strong>
+                  </span>
+                  {acc.statementClosingBalance !== undefined && (
+                    <span>
+                      Last Stmt Closing:{' '}
+                      <strong className="font-mono-num text-slate-900">
+                        {formatINR(acc.statementClosingBalance)}
+                      </strong>
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px] text-slate-500">{acc.branchAddress}</div>
               </div>

@@ -227,6 +227,28 @@ export function incrementChequeNumber(startChequeNo: string, offset: number): st
   return `${prefix}${String(nextVal).padStart(width, '0')}`;
 }
 
+export function computeDueDateByFrequency(
+  startDate: string,
+  indexZeroBased: number,
+  frequency: ScheduleFrequency,
+  customIntervalDays = 30
+): string {
+  if (frequency === 'Monthly') {
+    return addMonthsIso(startDate, indexZeroBased);
+  }
+  if (frequency === 'Weekly') {
+    return addDaysIso(startDate, indexZeroBased * 7);
+  }
+  if (frequency === 'Bi-Weekly') {
+    return addDaysIso(startDate, indexZeroBased * 14);
+  }
+  if (frequency === 'Fortnightly') {
+    return addDaysIso(startDate, indexZeroBased * 15);
+  }
+  const interval = Math.max(1, Math.floor(customIntervalDays || 30));
+  return addDaysIso(startDate, indexZeroBased * interval);
+}
+
 export function generateRecurringChequeItems(params: {
   startDate: string;
   frequency: ScheduleFrequency;
@@ -249,16 +271,15 @@ export function generateRecurringChequeItems(params: {
   } = params;
 
   const safeCount = Math.max(1, Math.min(120, Math.floor(count || 1)));
-  const interval = Math.max(1, Math.floor(customIntervalDays || 30));
   const items: ScheduledChequeItem[] = [];
 
   for (let i = 0; i < safeCount; i++) {
-    const originalDate =
-      frequency === 'Monthly'
-        ? addMonthsIso(startDate, i)
-        : frequency === 'Weekly'
-        ? addDaysIso(startDate, i * 7)
-        : addDaysIso(startDate, i * interval);
+    const originalDate = computeDueDateByFrequency(
+      startDate,
+      i,
+      frequency,
+      customIntervalDays
+    );
 
     const resolved = resolveEffectiveWorkingDate(
       originalDate,
@@ -268,6 +289,7 @@ export function generateRecurringChequeItems(params: {
 
     items.push({
       id: `sch-chq-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+      dueNumber: i + 1,
       chequeNumber: incrementChequeNumber(startingChequeNumber, i),
       originalDate,
       effectiveDate: resolved.effectiveDate,

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
+  BookOpen,
   Building2,
   CalendarCheck2,
   CheckCircle2,
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react';
 import { AddCompanyModal } from './components/AddCompanyModal';
 import { BankHolidayDrawer } from './components/BankHolidayDrawer';
-import { ReconcileConfirmItem } from './components/BankStatementReconcileModal';
+import { ReconcileConfirmPayload } from './components/BankStatementReconcileModal';
 import { CustomerScheduleView } from './components/CustomerScheduleView';
 import {
   CustomerInitialSelection,
@@ -29,6 +30,10 @@ import {
 } from './components/CustomersView';
 import { SendToClearingSelection } from './components/DailyDepositScheduleWidget';
 import { DashboardView } from './components/DashboardView';
+import {
+  DayBookView,
+  ManualDayBookSubmission,
+} from './components/DayBookView';
 import { DocumentPreviewModal } from './components/DocumentPreviewModal';
 import {
   LetterAuditPayload,
@@ -46,6 +51,8 @@ import { SettingsView } from './components/SettingsView';
 import { SystemAuditLogView } from './components/SystemAuditLogView';
 import { deleteDocumentBlob } from './services/documentBlobStore';
 import {
+  appendDeduplicatedDayBookEntries,
+  buildDayBookDedupeKey,
   exportFullBackupJson,
   loadTreasuryState,
   parseBackupJsonState,
@@ -64,6 +71,7 @@ import {
   CustomerChequeSchedule,
   CustomerDocument,
   CustomerProfile,
+  DayBookEntry,
   RecoveryPaymentRecord,
   RecoveryStatus,
   ScheduledChequeStatus,
@@ -86,6 +94,7 @@ import {
 
 type ActiveModule =
   | 'dashboard'
+  | 'day-book'
   | 'entry'
   | 'schedules'
   | 'customers'
@@ -821,6 +830,103 @@ export default function App() {
           }))
         : targetComp.chequeSchedules;
 
+      const autoDayBookEntries: DayBookEntry[] = [];
+      for (const c of targetComp.cheques) {
+        if (!chequeIds.includes(c.id)) continue;
+        const targetBankId =
+          c.companyBankAccountId ||
+          targetComp.bankAccounts.find((b) => b.isDefault)?.id ||
+          targetComp.bankAccounts[0]?.id;
+        if (!targetBankId) continue;
+
+        if (status === 'Cleared' && c.status !== 'Cleared') {
+          const narration = `Cheque Cleared #${c.chequeNumber} — ${c.partyName}`;
+          autoDayBookEntries.push({
+            id: `db-clr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            companyBankAccountId: targetBankId,
+            txDate: today,
+            voucherType: 'Receipt',
+            direction: 'CR',
+            amount: c.amount,
+            partyName: c.partyName,
+            narration,
+            refNo: c.chequeNumber,
+            source: 'CLEARED_CHEQUE',
+            linkedChequeId: c.id,
+            linkedChequeNumber: c.chequeNumber,
+            dedupeKey: buildDayBookDedupeKey({
+              companyBankAccountId: targetBankId,
+              txDate: today,
+              amount: c.amount,
+              direction: 'CR',
+              narration,
+            }),
+            createdAt: now,
+            createdBy: actor,
+          });
+        } else if (status === 'Returned / Bounced' && bounceData) {
+          const revDate = bounceData.bouncedDate || today;
+          const revNarr = `Cheque Returned Reversal #${c.chequeNumber} (${bounceData.bounceReason})`;
+          autoDayBookEntries.push({
+            id: `db-ret-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            companyBankAccountId: targetBankId,
+            txDate: revDate,
+            voucherType: 'Payment',
+            direction: 'DR',
+            amount: c.amount,
+            partyName: c.partyName,
+            narration: revNarr,
+            refNo: c.chequeNumber,
+            source: 'RETURNED_CHEQUE',
+            linkedChequeId: c.id,
+            linkedChequeNumber: c.chequeNumber,
+            dedupeKey: buildDayBookDedupeKey({
+              companyBankAccountId: targetBankId,
+              txDate: revDate,
+              amount: c.amount,
+              direction: 'DR',
+              narration: revNarr,
+            }),
+            createdAt: now,
+            createdBy: actor,
+          });
+          if (bounceData.penaltyAmount > 0) {
+            const chgNarr = `Bank Return Charges — Chq #${c.chequeNumber} (${c.partyName})`;
+            autoDayBookEntries.push({
+              id: `db-chg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              companyBankAccountId: targetBankId,
+              txDate: revDate,
+              voucherType: 'Bank Charges',
+              direction: 'DR',
+              amount: bounceData.penaltyAmount,
+              partyName: 'Bank Return Charges',
+              narration: chgNarr,
+              refNo: c.chequeNumber,
+              source: 'RETURN_CHARGE',
+              linkedChequeId: c.id,
+              linkedChequeNumber: c.chequeNumber,
+              dedupeKey: buildDayBookDedupeKey({
+                companyBankAccountId: targetBankId,
+                txDate: revDate,
+                amount: bounceData.penaltyAmount,
+                direction: 'DR',
+                narration: chgNarr,
+              }),
+              createdAt: now,
+              createdBy: actor,
+            });
+          }
+        }
+      }
+
+      const mergedDayBook =
+        autoDayBookEntries.length > 0
+          ? appendDeduplicatedDayBookEntries(
+              targetComp.dayBookEntries || [],
+              autoDayBookEntries
+            ).entries
+          : targetComp.dayBookEntries || [];
+
       return {
         ...prev,
         companies: prev.companies.map((comp) =>
@@ -829,6 +935,7 @@ export default function App() {
                 ...comp,
                 cheques: nextCheques,
                 chequeSchedules: nextChequeSchedules,
+                dayBookEntries: mergedDayBook,
               }
             : comp
         ),
@@ -840,14 +947,29 @@ export default function App() {
     });
   };
 
-  const handleReconcileReturnedCheques = (
-    updates: ReconcileConfirmItem[],
-    fileName: string
-  ) => {
-    if (updates.length === 0) return;
+  const handleReconcileReturnedCheques = (payload: ReconcileConfirmPayload) => {
+    const {
+      bankAccountId,
+      fileName,
+      chequeUpdates,
+      otherTransactions,
+      statementOpeningBalance,
+      statementClosingBalance,
+      statementClosingDate,
+      applyOpeningBalance,
+    } = payload;
+
+    if (
+      chequeUpdates.length === 0 &&
+      otherTransactions.length === 0 &&
+      statementClosingBalance === undefined
+    ) {
+      return;
+    }
+
     const now = new Date().toISOString();
     const today = now.slice(0, 10);
-    const updateMap = new Map(updates.map((u) => [u.chequeId, u]));
+    const updateMap = new Map(chequeUpdates.map((u) => [u.chequeId, u]));
 
     setState((prev) => {
       const targetComp =
@@ -864,8 +986,15 @@ export default function App() {
         string,
         'Cleared' | 'Returned / Bounced'
       >();
+      const incomingDayBookEntries: DayBookEntry[] = [];
       let totalCleared = 0;
       let totalReturned = 0;
+
+      const resolvedBankId =
+        bankAccountId ||
+        targetComp.bankAccounts.find((b) => b.isDefault)?.id ||
+        targetComp.bankAccounts[0]?.id ||
+        '';
 
       const nextCheques = targetComp.cheques.map((c) => {
         const match = updateMap.get(c.id);
@@ -890,12 +1019,45 @@ export default function App() {
           returned: 0,
         };
         const batchRef = batchMap.get(c.batchId)?.batchRef;
+        const postBankId = resolvedBankId || c.companyBankAccountId;
 
         if (targetStatus === 'Cleared') {
           stats.cleared += 1;
           affectedBatchStats.set(c.batchId, stats);
           totalCleared += 1;
-          const clearedDate = match.clearedDate || today;
+          const clearedDate = match.clearedDate || match.statementDate || today;
+          const isOutwardReceipt = match.isCredit !== false;
+          const txAmount = match.statementAmount || c.amount;
+          const txNarr =
+            match.statementNarration ||
+            `Cheque Cleared #${c.chequeNumber} — ${c.partyName}`;
+
+          if (postBankId) {
+            incomingDayBookEntries.push({
+              id: `db-clr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              companyBankAccountId: postBankId,
+              txDate: clearedDate,
+              voucherType: isOutwardReceipt ? 'Receipt' : 'Payment',
+              direction: isOutwardReceipt ? 'CR' : 'DR',
+              amount: txAmount,
+              partyName: c.partyName,
+              narration: txNarr,
+              refNo: c.chequeNumber,
+              source: 'CLEARED_CHEQUE',
+              linkedChequeId: c.id,
+              linkedChequeNumber: c.chequeNumber,
+              statementFileName: fileName,
+              dedupeKey: buildDayBookDedupeKey({
+                companyBankAccountId: postBankId,
+                txDate: clearedDate,
+                amount: txAmount,
+                direction: isOutwardReceipt ? 'CR' : 'DR',
+                narration: txNarr,
+              }),
+              createdAt: now,
+              createdBy: `${actor} (Auto-Reconciliation)`,
+            });
+          }
 
           newLogs.push(
             createAuditEntry({
@@ -928,6 +1090,103 @@ export default function App() {
         affectedBatchStats.set(c.batchId, stats);
         totalReturned += 1;
         const reason = match.returnReason.trim() || 'Returned by Bank';
+        const retDate = match.bouncedDate || match.statementDate || today;
+        const retAmount = match.statementAmount || c.amount;
+        const retDirection: 'CR' | 'DR' = match.isCredit ? 'CR' : 'DR';
+        const retNarr =
+          match.statementNarration ||
+          `Cheque Returned Reversal #${c.chequeNumber} (${reason})`;
+
+        if (postBankId) {
+          // If statement contained BOTH the initial clearing credit AND return debit,
+          // post both legs so bank running balance matches the bank statement to ₹0.00.
+          if (match.hasPassedAndReturnedPair) {
+            const passedDate = match.passedRowDate || retDate;
+            const passedNarr =
+              match.passedRowNarration ||
+              `BY CLG #${c.chequeNumber} (${c.partyName})`;
+            incomingDayBookEntries.push({
+              id: `db-pair-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              companyBankAccountId: postBankId,
+              txDate: passedDate,
+              voucherType: 'Receipt',
+              direction: 'CR',
+              amount: retAmount,
+              partyName: c.partyName,
+              narration: passedNarr,
+              refNo: c.chequeNumber,
+              source: 'CLEARED_CHEQUE',
+              linkedChequeId: c.id,
+              linkedChequeNumber: c.chequeNumber,
+              statementFileName: fileName,
+              dedupeKey: buildDayBookDedupeKey({
+                companyBankAccountId: postBankId,
+                txDate: passedDate,
+                amount: retAmount,
+                direction: 'CR',
+                narration: passedNarr,
+              }),
+              createdAt: now,
+              createdBy: `${actor} (Auto-Reconciliation)`,
+            });
+          }
+
+          incomingDayBookEntries.push({
+            id: `db-ret-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            companyBankAccountId: postBankId,
+            txDate: retDate,
+            voucherType: retDirection === 'CR' ? 'Receipt' : 'Payment',
+            direction: retDirection,
+            amount: retAmount,
+            partyName: c.partyName,
+            narration: retNarr,
+            refNo: c.chequeNumber,
+            source: 'RETURNED_CHEQUE',
+            linkedChequeId: c.id,
+            linkedChequeNumber: c.chequeNumber,
+            statementFileName: fileName,
+            dedupeKey: buildDayBookDedupeKey({
+              companyBankAccountId: postBankId,
+              txDate: retDate,
+              amount: retAmount,
+              direction: retDirection,
+              narration: retNarr,
+            }),
+            createdAt: now,
+            createdBy: `${actor} (Auto-Reconciliation)`,
+          });
+
+          if (match.associatedChargeAmount && match.associatedChargeAmount > 0) {
+            const chgDate = match.associatedChargeDate || retDate;
+            const chgNarr =
+              match.associatedChargeNarration ||
+              `Bank Return Charges — Chq #${c.chequeNumber} (${c.partyName})`;
+            incomingDayBookEntries.push({
+              id: `db-chg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              companyBankAccountId: postBankId,
+              txDate: chgDate,
+              voucherType: 'Bank Charges',
+              direction: 'DR',
+              amount: match.associatedChargeAmount,
+              partyName: 'Bank Return Charges',
+              narration: chgNarr,
+              refNo: c.chequeNumber,
+              source: 'RETURN_CHARGE',
+              linkedChequeId: c.id,
+              linkedChequeNumber: c.chequeNumber,
+              statementFileName: fileName,
+              dedupeKey: buildDayBookDedupeKey({
+                companyBankAccountId: postBankId,
+                txDate: chgDate,
+                amount: match.associatedChargeAmount,
+                direction: 'DR',
+                narration: chgNarr,
+              }),
+              createdAt: now,
+              createdBy: `${actor} (Auto-Reconciliation)`,
+            });
+          }
+        }
 
         newLogs.push(
           createAuditEntry({
@@ -952,8 +1211,66 @@ export default function App() {
           ...c,
           status: 'Returned / Bounced' as ChequeStatus,
           bounceReason: reason,
-          bouncedDate: match.bouncedDate || today,
+          bouncedDate: retDate,
+          penaltyAmount:
+            match.associatedChargeAmount ?? c.penaltyAmount,
           updatedAt: now,
+        };
+      });
+
+      // Post all manually reviewed Other Bank Statement Transactions into Day Book
+      if (resolvedBankId) {
+        for (const tx of otherTransactions) {
+          incomingDayBookEntries.push({
+            id: `db-stmt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            companyBankAccountId: resolvedBankId,
+            txDate: tx.txDate || today,
+            voucherType: tx.voucherType,
+            direction: tx.direction,
+            amount: tx.amount,
+            partyName: tx.partyOrLedger,
+            narration: tx.narration,
+            refNo: tx.refNo,
+            source: 'BANK_STATEMENT',
+            statementFileName: fileName,
+            statementRunningBalance: tx.statementRunningBalance,
+            dedupeKey: buildDayBookDedupeKey({
+              companyBankAccountId: resolvedBankId,
+              txDate: tx.txDate || today,
+              amount: tx.amount,
+              direction: tx.direction,
+              narration: tx.narration,
+            }),
+            createdAt: now,
+            createdBy: `${actor} (Bank Statement)`,
+          });
+        }
+      }
+
+      const dayBookMerge = appendDeduplicatedDayBookEntries(
+        targetComp.dayBookEntries || [],
+        incomingDayBookEntries
+      );
+
+      // Update selected bank account with Statement Closing Balance (and Opening Balance if requested)
+      const nextBankAccounts = targetComp.bankAccounts.map((acc) => {
+        if (acc.id !== resolvedBankId) return acc;
+        return {
+          ...acc,
+          openingBalance:
+            applyOpeningBalance && statementOpeningBalance !== undefined
+              ? statementOpeningBalance
+              : acc.openingBalance ?? 0,
+          statementClosingBalance:
+            statementClosingBalance !== undefined
+              ? statementClosingBalance
+              : acc.statementClosingBalance,
+          statementClosingDate:
+            statementClosingBalance !== undefined
+              ? statementClosingDate || today
+              : acc.statementClosingDate,
+          lastReconciledFileName: fileName,
+          lastReconciledAt: now,
         };
       });
 
@@ -1002,6 +1319,20 @@ export default function App() {
           `${totalReturned} cheque${totalReturned === 1 ? '' : 's'} marked Returned`
         );
       }
+      if (dayBookMerge.addedCount > 0) {
+        summaryParts.push(
+          `${dayBookMerge.addedCount} Day Book entr${
+            dayBookMerge.addedCount === 1 ? 'y' : 'ies'
+          } posted`
+        );
+      }
+      if (dayBookMerge.skippedCount > 0) {
+        summaryParts.push(
+          `${dayBookMerge.skippedCount} duplicate${
+            dayBookMerge.skippedCount === 1 ? '' : 's'
+          } skipped`
+        );
+      }
 
       const uploadSummaryLog = createAuditEntry({
         timestamp: now,
@@ -1014,16 +1345,18 @@ export default function App() {
         batchRef: batchRefsList || undefined,
         actionType: 'BANK_STATEMENT_UPLOADED',
         actor,
-        description: `Uploaded bank statement "${fileName}": ${
+        description: `Reconciled bank statement "${fileName}": ${
           summaryParts.length > 0
             ? summaryParts.join(', ')
-            : '0 status changes applied'
+            : 'closing balance synced'
         }.`,
         metadata: {
           fileName,
           updatedCount: totalCleared + totalReturned,
           clearedCount: totalCleared,
           returnedCount: totalReturned,
+          dayBookPosted: dayBookMerge.addedCount,
+          dayBookDuplicatesSkipped: dayBookMerge.skippedCount,
         },
       });
 
@@ -1046,9 +1379,11 @@ export default function App() {
           comp.id === targetComp.id
             ? {
                 ...comp,
+                bankAccounts: nextBankAccounts,
                 cheques: nextCheques,
                 batches: nextBatches,
                 chequeSchedules: nextChequeSchedules,
+                dayBookEntries: dayBookMerge.entries,
               }
             : comp
         ),
@@ -1736,14 +2071,86 @@ export default function App() {
     updateActiveCompany((comp) => ({ ...comp, profile }));
   };
 
-  const handleAddBankAccount = (account: Omit<CompanyBankAccount, 'id'>) => {
+  const handleAddBankAccount = (
+    account: Omit<CompanyBankAccount, 'id'>
+  ): string => {
+    const newId = `acc-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
     const newAcc: CompanyBankAccount = {
       ...account,
-      id: `acc-${Date.now()}`,
+      openingBalance: account.openingBalance ?? 0,
+      id: newId,
     };
     updateActiveCompany((comp) => ({
       ...comp,
       bankAccounts: [...comp.bankAccounts, newAcc],
+    }));
+    return newId;
+  };
+
+  const handleAddManualDayBookEntry = (submission: ManualDayBookSubmission) => {
+    const now = new Date().toISOString();
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const actor =
+        currentUserRole === 'Admin'
+          ? `${targetComp.profile.defaultChecker || 'Treasury Admin'} (Admin)`
+          : `${targetComp.profile.defaultMaker || 'Treasury Operator'} (Maker)`;
+      const entry: DayBookEntry = {
+        id: `db-man-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        companyBankAccountId: submission.companyBankAccountId,
+        txDate: submission.txDate,
+        voucherType: submission.voucherType,
+        direction: submission.direction,
+        amount: submission.amount,
+        partyName: submission.partyName,
+        narration: submission.narration,
+        refNo: submission.refNo,
+        source: 'MANUAL',
+        dedupeKey: `${buildDayBookDedupeKey({
+          companyBankAccountId: submission.companyBankAccountId,
+          txDate: submission.txDate,
+          amount: submission.amount,
+          direction: submission.direction,
+          narration: submission.narration,
+        })}|manual-${Date.now()}`,
+        createdAt: now,
+        createdBy: actor,
+      };
+      const bank = targetComp.bankAccounts.find(
+        (b) => b.id === submission.companyBankAccountId
+      );
+      const log = createAuditEntry({
+        timestamp: now,
+        companyId: targetComp.id,
+        companyName: targetComp.profile.companyName,
+        actionType: 'DAY_BOOK_POSTED',
+        actor,
+        description: `Manual Day Book ${submission.voucherType} (${submission.direction}) of ${formatINR(submission.amount)} for ${submission.partyName} in ${bank ? bank.bankName : 'Cash Book'}.`,
+        newValue: `${submission.direction} ${formatINR(submission.amount)}`,
+      });
+      return {
+        ...prev,
+        companies: prev.companies.map((comp) =>
+          comp.id !== targetComp.id
+            ? comp
+            : {
+                ...comp,
+                dayBookEntries: [...(comp.dayBookEntries || []), entry],
+              }
+        ),
+        auditLogs: [log, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const handleDeleteDayBookEntry = (entryId: string) => {
+    updateActiveCompany((comp) => ({
+      ...comp,
+      dayBookEntries: (comp.dayBookEntries || []).filter(
+        (e) => e.id !== entryId
+      ),
     }));
   };
 
@@ -1782,7 +2189,7 @@ export default function App() {
     const result = exportFullBackupJson(state);
     setBackupNotice({
       type: 'success',
-      message: `Full JSON backup downloaded (${result.filename}) — ${result.companyCount} ${result.companyCount === 1 ? 'company' : 'companies'}, ${result.batchCount} batches, ${result.chequeCount} cheques.`,
+      message: `Full JSON backup downloaded (${result.filename}) — ${result.companyCount} ${result.companyCount === 1 ? 'company' : 'companies'}, ${result.batchCount} batches, ${result.chequeCount} cheques, and ${result.dayBookCount} Day Book entries.`,
     });
   };
 
@@ -1811,7 +2218,7 @@ export default function App() {
     setCustomerNavSelection(null);
     setBackupNotice({
       type: 'success',
-      message: `Backup restored from "${pendingRestore.fileName}" — ${pendingRestore.companyCount} ${pendingRestore.companyCount === 1 ? 'company' : 'companies'}, ${pendingRestore.batchCount} batches, and ${pendingRestore.chequeCount} cheques loaded.`,
+      message: `Backup restored from "${pendingRestore.fileName}" — ${pendingRestore.companyCount} ${pendingRestore.companyCount === 1 ? 'company' : 'companies'}, ${pendingRestore.batchCount} batches, ${pendingRestore.chequeCount} cheques, and ${pendingRestore.dayBookCount} Day Book entries loaded.`,
     });
     setPendingRestore(null);
   };
@@ -2429,6 +2836,12 @@ export default function App() {
     count?: number;
   }[] = [
     { id: 'dashboard', label: 'Clearing Dashboard', icon: LayoutDashboard },
+    {
+      id: 'day-book',
+      label: 'Day Book',
+      icon: BookOpen,
+      count: (activeCompany.dayBookEntries || []).length,
+    },
     { id: 'entry', label: 'Rapid Cheque Entry', icon: FilePlus2 },
     {
       id: 'schedules',
@@ -2464,6 +2877,7 @@ export default function App() {
 
   const moduleTitleMap: Record<ActiveModule, string> = {
     dashboard: 'Clearing Schedule & Realization Ledger',
+    'day-book': 'Day Book (Bank & Cash Book) & Multi-Bank Closing Balance Tally',
     entry: editingCheque ? 'Edit Instrument' : 'High-Speed Keyboard Cheque Entry',
     schedules: 'Customer PDC / EMI Cheque Schedule & Daily Deposit Planner',
     customers: 'Customer Profiles, Document Vault & WhatsApp Sharing',
@@ -2771,7 +3185,11 @@ export default function App() {
                 setActiveModule('return-ack');
               }}
               onNavigateLetters={() => setActiveModule('letters')}
+              onNavigateDayBook={() => setActiveModule('day-book')}
               onReconcileReturnedCheques={handleReconcileReturnedCheques}
+              customers={activeCompany.customers || []}
+              dayBookEntries={activeCompany.dayBookEntries || []}
+              onQuickAddBankAccount={handleAddBankAccount}
               onExecuteRecoveryAction={(chequeId, submission) =>
                 handleExecuteRecoveryAction(
                   activeCompany.id,
@@ -2797,6 +3215,23 @@ export default function App() {
                 handleSendScheduledChequesToClearing
               }
               onNavigateSchedules={() => setActiveModule('schedules')}
+            />
+          )}
+
+          {activeModule === 'day-book' && (
+            <DayBookView
+              key={activeCompany.id}
+              companyName={activeCompany.profile.companyName}
+              bankAccounts={activeCompany.bankAccounts}
+              cheques={activeCompany.cheques}
+              batches={activeCompany.batches}
+              customers={activeCompany.customers || []}
+              dayBookEntries={activeCompany.dayBookEntries || []}
+              onAddManualEntry={handleAddManualDayBookEntry}
+              onDeleteEntry={handleDeleteDayBookEntry}
+              onUpdateBankAccount={handleUpdateBankAccount}
+              onQuickAddBankAccount={handleAddBankAccount}
+              onConfirmReconcile={handleReconcileReturnedCheques}
             />
           )}
 
@@ -3031,6 +3466,12 @@ export default function App() {
                 <span className="text-slate-500">Cheque Entries:</span>
                 <strong className="font-mono-num text-slate-900">
                   {pendingRestore.chequeCount}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500">Day Book Entries:</span>
+                <strong className="font-mono-num text-slate-900">
+                  {pendingRestore.dayBookCount}
                 </strong>
               </div>
             </div>

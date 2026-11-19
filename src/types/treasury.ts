@@ -21,6 +21,44 @@ export interface CompanyBankAccount {
   branchName: string;
   branchAddress: string;
   isDefault?: boolean;
+  openingBalance?: number;
+  statementClosingBalance?: number;
+  statementClosingDate?: string;
+  lastReconciledFileName?: string;
+  lastReconciledAt?: string;
+}
+
+export type DayBookVoucherType =
+  | 'Receipt'
+  | 'Payment'
+  | 'Contra'
+  | 'Bank Charges';
+
+export type DayBookEntrySource =
+  | 'CLEARED_CHEQUE'
+  | 'RETURNED_CHEQUE'
+  | 'RETURN_CHARGE'
+  | 'BANK_STATEMENT'
+  | 'MANUAL';
+
+export interface DayBookEntry {
+  id: string;
+  companyBankAccountId: string; // Bank Account ID or 'CASH'
+  txDate: string; // YYYY-MM-DD
+  voucherType: DayBookVoucherType;
+  direction: 'CR' | 'DR';
+  amount: number;
+  partyName: string; // Party / Account Head
+  narration: string;
+  refNo: string;
+  source: DayBookEntrySource;
+  linkedChequeId?: string;
+  linkedChequeNumber?: string;
+  statementFileName?: string;
+  statementRunningBalance?: number;
+  dedupeKey: string;
+  createdAt: string;
+  createdBy?: string;
 }
 
 export interface CorporateProfile {
@@ -205,14 +243,28 @@ export type ScheduledChequeStatus =
   | 'Cleared'
   | 'Returned / Bounced';
 
-export type ScheduleFrequency = 'Monthly' | 'Weekly' | 'Custom';
+export type ScheduleFrequency =
+  | 'Weekly'
+  | 'Bi-Weekly'
+  | 'Fortnightly'
+  | 'Monthly'
+  | 'Custom';
+
+export type LoanInterestType =
+  | 'FLAT_PA'
+  | 'FLAT_PM'
+  | 'REDUCING_EMI'
+  | 'ZERO_INTEREST';
 
 export interface ScheduledChequeItem {
   id: string;
+  dueNumber?: number;
   chequeNumber: string;
   originalDate: string; // YYYY-MM-DD
   effectiveDate: string; // YYYY-MM-DD
   shiftReason?: string;
+  principalAmount?: number;
+  interestAmount?: number;
   amount: number;
   status: ScheduledChequeStatus;
   clearingBatchId?: string;
@@ -245,6 +297,15 @@ export interface CustomerChequeSchedule {
   frequency?: ScheduleFrequency;
   customIntervalDays?: number;
   startDate?: string;
+  startingChequeNumber?: string;
+  principalAmount?: number;
+  numberOfDues?: number;
+  interestRate?: number;
+  interestType?: LoanInterestType;
+  roundDueToNearestRupee?: boolean;
+  totalInterest?: number;
+  totalPayable?: number;
+  autoDueAmount?: number;
   cheques: ScheduledChequeItem[];
   scannedDocuments: ScheduleScanDocument[];
   notes?: string;
@@ -264,6 +325,7 @@ export interface CompanyWorkspace {
   letters?: Record<string, unknown>[];
   chequeSchedules?: CustomerChequeSchedule[];
   bankHolidays?: BankHoliday[];
+  dayBookEntries?: DayBookEntry[];
 }
 
 export type SystemAuditAction =
@@ -289,7 +351,8 @@ export type SystemAuditAction =
   | 'SCHEDULE_UPDATED'
   | 'SCHEDULE_DELETED'
   | 'SCHEDULED_CHEQUES_SENT_TO_CLEARING'
-  | 'BANK_HOLIDAY_UPDATED';
+  | 'BANK_HOLIDAY_UPDATED'
+  | 'DAY_BOOK_POSTED';
 
 export interface SystemAuditLogEntry {
   id: string;

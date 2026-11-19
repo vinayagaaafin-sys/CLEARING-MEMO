@@ -33,6 +33,8 @@ import {
   CompanyBankAccount,
   CustomerChequeSchedule,
   CustomerDocument,
+  CustomerProfile,
+  DayBookEntry,
   SystemAuditLogEntry,
 } from '../types/treasury';
 import { getCustomerKey } from '../utils/customerHelpers';
@@ -46,7 +48,7 @@ import { exportChequesToCSV, findDuplicateCheque } from '../services/treasurySto
 import { ActivityTimeline, ChequeActivityDrawer } from './ActivityTimeline';
 import {
   BankStatementReconcileModal,
-  ReconcileConfirmItem,
+  ReconcileConfirmPayload,
 } from './BankStatementReconcileModal';
 import { BatchLockModal } from './BatchLockModal';
 import { BounceModal } from './BounceModal';
@@ -92,10 +94,11 @@ interface DashboardViewProps {
   onNavigatePrintMemo: () => void;
   onNavigateReturnAck: (scope: 'active' | 'all') => void;
   onNavigateLetters?: () => void;
-  onReconcileReturnedCheques: (
-    updates: ReconcileConfirmItem[],
-    fileName: string
-  ) => void;
+  onNavigateDayBook?: () => void;
+  onReconcileReturnedCheques: (payload: ReconcileConfirmPayload) => void;
+  customers?: CustomerProfile[];
+  dayBookEntries?: DayBookEntry[];
+  onQuickAddBankAccount?: (account: Omit<CompanyBankAccount, 'id'>) => string;
   onExecuteRecoveryAction?: (
     chequeId: string,
     submission: RecoveryActionSubmission
@@ -134,7 +137,11 @@ export function DashboardView({
   onNavigatePrintMemo,
   onNavigateReturnAck,
   onNavigateLetters,
+  onNavigateDayBook,
   onReconcileReturnedCheques,
+  customers = [],
+  dayBookEntries = [],
+  onQuickAddBankAccount,
   onExecuteRecoveryAction,
   documents = [],
   onOpenCustomerDocuments,
@@ -167,6 +174,7 @@ export function DashboardView({
   const [reconcileAlert, setReconcileAlert] = useState<{
     clearedCount: number;
     returnedCount: number;
+    otherCount: number;
     fileName: string;
   } | null>(null);
 
@@ -1260,25 +1268,42 @@ export function DashboardView({
                 />
                 <span>
                   <strong className="font-semibold">
-                    {reconcileAlert.clearedCount > 0 &&
-                      `${reconcileAlert.clearedCount} cheque${
-                        reconcileAlert.clearedCount === 1 ? '' : 's'
-                      } marked Cleared`}
-                    {reconcileAlert.clearedCount > 0 &&
-                      reconcileAlert.returnedCount > 0 &&
-                      ' · '}
-                    {reconcileAlert.returnedCount > 0 &&
-                      `${reconcileAlert.returnedCount} cheque${
-                        reconcileAlert.returnedCount === 1 ? '' : 's'
-                      } marked Returned`}
+                    {[
+                      reconcileAlert.clearedCount > 0
+                        ? `${reconcileAlert.clearedCount} cheque${
+                            reconcileAlert.clearedCount === 1 ? '' : 's'
+                          } marked Cleared`
+                        : '',
+                      reconcileAlert.returnedCount > 0
+                        ? `${reconcileAlert.returnedCount} cheque${
+                            reconcileAlert.returnedCount === 1 ? '' : 's'
+                          } marked Returned`
+                        : '',
+                      reconcileAlert.otherCount > 0
+                        ? `${reconcileAlert.otherCount} other bank txn${
+                            reconcileAlert.otherCount === 1 ? '' : 's'
+                          } posted to Day Book`
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || 'Bank statement reconciled'}
                   </strong>{' '}
                   <span className="text-emerald-800">
-                    from {reconcileAlert.fileName}. Ledger statuses have been
-                    updated across all matched batches.
+                    from {reconcileAlert.fileName}. Ledger &amp; Day Book have been
+                    updated.
                   </span>
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {onNavigateDayBook && (
+                  <button
+                    type="button"
+                    onClick={onNavigateDayBook}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-900 bg-white border border-emerald-300 rounded hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                  >
+                    <span>Open Day Book</span>
+                  </button>
+                )}
                 {scopedReturnedCount > 0 && (
                   <button
                     type="button"
@@ -1877,13 +1902,22 @@ export function DashboardView({
         <BankStatementReconcileModal
           cheques={cheques}
           batches={batches}
-          onConfirmReconcile={(updates, fileName) => {
-            onReconcileReturnedCheques(updates, fileName);
-            const clearedCount = updates.filter(
+          bankAccounts={bankAccounts}
+          customers={customers}
+          existingDayBookEntries={dayBookEntries}
+          onQuickAddBankAccount={onQuickAddBankAccount}
+          onConfirmReconcile={(payload) => {
+            onReconcileReturnedCheques(payload);
+            const clearedCount = payload.chequeUpdates.filter(
               (u) => u.matchType === 'CLEARED' || u.targetStatus === 'Cleared'
             ).length;
-            const returnedCount = updates.length - clearedCount;
-            setReconcileAlert({ clearedCount, returnedCount, fileName });
+            const returnedCount = payload.chequeUpdates.length - clearedCount;
+            setReconcileAlert({
+              clearedCount,
+              returnedCount,
+              otherCount: payload.otherTransactions.length,
+              fileName: payload.fileName,
+            });
             setShowReconcileModal(false);
           }}
           onClose={() => setShowReconcileModal(false)}

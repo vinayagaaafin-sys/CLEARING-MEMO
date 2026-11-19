@@ -4,6 +4,7 @@ import {
   ClearingBatch,
   CompanyBankAccount,
   CompanyWorkspace,
+  DayBookEntry,
   SystemAuditLogEntry,
   TreasuryState,
 } from '../types/treasury';
@@ -219,6 +220,69 @@ const DEFAULT_PROFILE: CompanyWorkspace['profile'] = {
   signatory2Designation: '',
 };
 
+export function buildDayBookDedupeKey(params: {
+  companyBankAccountId: string;
+  txDate: string;
+  amount: number;
+  direction: 'CR' | 'DR';
+  narration: string;
+}): string {
+  const normNarration = String(params.narration || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+  const safeAmt = Number.isFinite(params.amount)
+    ? Math.abs(params.amount).toFixed(2)
+    : '0.00';
+  return `${params.companyBankAccountId}|${params.txDate}|${safeAmt}|${params.direction}|${normNarration}`;
+}
+
+export function appendDeduplicatedDayBookEntries(
+  existing: DayBookEntry[],
+  incoming: DayBookEntry[]
+): { entries: DayBookEntry[]; addedCount: number; skippedCount: number } {
+  const seenKeys = new Set<string>(
+    existing.map(
+      (e) =>
+        e.dedupeKey ||
+        buildDayBookDedupeKey({
+          companyBankAccountId: e.companyBankAccountId,
+          txDate: e.txDate,
+          amount: e.amount,
+          direction: e.direction,
+          narration: e.narration,
+        })
+    )
+  );
+
+  const toAdd: DayBookEntry[] = [];
+  let skippedCount = 0;
+
+  for (const item of incoming) {
+    const key =
+      item.dedupeKey ||
+      buildDayBookDedupeKey({
+        companyBankAccountId: item.companyBankAccountId,
+        txDate: item.txDate,
+        amount: item.amount,
+        direction: item.direction,
+        narration: item.narration,
+      });
+    if (seenKeys.has(key)) {
+      skippedCount += 1;
+      continue;
+    }
+    seenKeys.add(key);
+    toAdd.push({ ...item, dedupeKey: key });
+  }
+
+  return {
+    entries: [...existing, ...toAdd],
+    addedCount: toAdd.length,
+    skippedCount,
+  };
+}
+
 function normalizeCompanyWorkspace(
   comp: Partial<CompanyWorkspace>,
   index: number,
@@ -228,7 +292,21 @@ function normalizeCompanyWorkspace(
     typeof comp.id === 'string' && comp.id.trim()
       ? comp.id
       : `comp-migrated-${index + 1}`;
-  const bankAccounts = Array.isArray(comp.bankAccounts) ? comp.bankAccounts : [];
+  const bankAccounts: CompanyBankAccount[] = Array.isArray(comp.bankAccounts)
+    ? comp.bankAccounts.map((acc) => ({
+        ...acc,
+        openingBalance:
+          typeof acc.openingBalance === 'number' &&
+          Number.isFinite(acc.openingBalance)
+            ? acc.openingBalance
+            : 0,
+        statementClosingBalance:
+          typeof acc.statementClosingBalance === 'number' &&
+          Number.isFinite(acc.statementClosingBalance)
+            ? acc.statementClosingBalance
+            : undefined,
+      }))
+    : [];
   const batches = Array.isArray(comp.batches) ? comp.batches : [];
   const cheques = Array.isArray(comp.cheques) ? comp.cheques : [];
   const hasCustomers = Array.isArray(comp.customers);
@@ -240,7 +318,32 @@ function normalizeCompanyWorkspace(
   const chequeSchedules = Array.isArray(comp.chequeSchedules)
     ? comp.chequeSchedules.map((sch) => ({
         ...sch,
-        cheques: Array.isArray(sch.cheques) ? sch.cheques : [],
+        holidayAutoShift:
+          typeof sch.holidayAutoShift === 'boolean' ? sch.holidayAutoShift : true,
+        mode: sch.mode === 'manual' ? ('manual' as const) : ('auto' as const),
+        cheques: Array.isArray(sch.cheques)
+          ? sch.cheques.map((item, itemIdx) => ({
+              ...item,
+              dueNumber:
+                typeof item.dueNumber === 'number' && Number.isFinite(item.dueNumber)
+                  ? item.dueNumber
+                  : itemIdx + 1,
+              amount:
+                typeof item.amount === 'number' && Number.isFinite(item.amount)
+                  ? item.amount
+                  : 0,
+              principalAmount:
+                typeof item.principalAmount === 'number' &&
+                Number.isFinite(item.principalAmount)
+                  ? item.principalAmount
+                  : undefined,
+              interestAmount:
+                typeof item.interestAmount === 'number' &&
+                Number.isFinite(item.interestAmount)
+                  ? item.interestAmount
+                  : undefined,
+            }))
+          : [],
         scannedDocuments: Array.isArray(sch.scannedDocuments)
           ? sch.scannedDocuments
           : [],
@@ -249,6 +352,24 @@ function normalizeCompanyWorkspace(
   const bankHolidays = Array.isArray(comp.bankHolidays)
     ? comp.bankHolidays
     : getDefaultIndianBankHolidays();
+  const dayBookEntries: DayBookEntry[] = Array.isArray(comp.dayBookEntries)
+    ? comp.dayBookEntries.map((entry) => ({
+        ...entry,
+        amount:
+          typeof entry.amount === 'number' && Number.isFinite(entry.amount)
+            ? Math.abs(entry.amount)
+            : 0,
+        dedupeKey:
+          entry.dedupeKey ||
+          buildDayBookDedupeKey({
+            companyBankAccountId: entry.companyBankAccountId,
+            txDate: entry.txDate,
+            amount: entry.amount,
+            direction: entry.direction,
+            narration: entry.narration,
+          }),
+      }))
+    : [];
 
   const hasValidActiveBatch =
     typeof comp.activeBatchId === 'string' &&
@@ -272,6 +393,7 @@ function normalizeCompanyWorkspace(
     letters,
     chequeSchedules,
     bankHolidays,
+    dayBookEntries,
   };
 }
 
@@ -363,6 +485,7 @@ export function loadTreasuryState(): TreasuryState {
           documents: c.documents || [],
           chequeSchedules: c.chequeSchedules || [],
           bankHolidays: c.bankHolidays || getDefaultIndianBankHolidays(),
+          dayBookEntries: c.dayBookEntries || [],
         })),
         auditLogs: buildBackfillAuditLogs(SEED_TREASURY_STATE.companies),
       };
@@ -413,6 +536,7 @@ export function resetTreasuryState(): TreasuryState {
       documents: c.documents || [],
       chequeSchedules: c.chequeSchedules || [],
       bankHolidays: c.bankHolidays || getDefaultIndianBankHolidays(),
+      dayBookEntries: c.dayBookEntries || [],
     })),
     auditLogs: buildBackfillAuditLogs(SEED_TREASURY_STATE.companies),
   };
@@ -425,12 +549,13 @@ export interface BackupExportResult {
   companyCount: number;
   chequeCount: number;
   batchCount: number;
+  dayBookCount: number;
 }
 
 export function exportFullBackupJson(state: TreasuryState): BackupExportResult {
   const payload = {
     app: 'ClearLedger Treasury',
-    schemaVersion: 1,
+    schemaVersion: 2,
     exportedAt: new Date().toISOString(),
     state,
   };
@@ -455,12 +580,17 @@ export function exportFullBackupJson(state: TreasuryState): BackupExportResult {
     (sum, c) => sum + (c.batches?.length || 0),
     0
   );
+  const dayBookCount = state.companies.reduce(
+    (sum, c) => sum + (c.dayBookEntries?.length || 0),
+    0
+  );
 
   return {
     filename,
     companyCount: state.companies.length,
     chequeCount,
     batchCount,
+    dayBookCount,
   };
 }
 
@@ -472,6 +602,7 @@ export type ParsedBackupResult =
       companyCount: number;
       chequeCount: number;
       batchCount: number;
+      dayBookCount: number;
     }
   | {
       ok: false;
@@ -507,6 +638,10 @@ export function parseBackupJsonState(jsonText: string): ParsedBackupResult {
       (sum, c) => sum + c.batches.length,
       0
     );
+    const dayBookCount = normalized.companies.reduce(
+      (sum, c) => sum + (c.dayBookEntries?.length || 0),
+      0
+    );
 
     return {
       ok: true,
@@ -518,6 +653,7 @@ export function parseBackupJsonState(jsonText: string): ParsedBackupResult {
       companyCount: normalized.companies.length,
       chequeCount,
       batchCount,
+      dayBookCount,
     };
   } catch {
     return {
