@@ -266,6 +266,7 @@ export interface ScheduledChequeItem {
   principalAmount?: number;
   interestAmount?: number;
   amount: number;
+  balance?: number;
   status: ScheduledChequeStatus;
   clearingBatchId?: string;
   clearingBatchRef?: string;

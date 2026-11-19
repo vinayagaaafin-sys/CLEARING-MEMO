@@ -1,11 +1,15 @@
 import {
   ChequeEntry,
   CompanyWorkspace,
+  CustomerChequeSchedule,
   CustomerDocument,
   CustomerDocumentType,
   CustomerProfile,
+  ScheduledChequeItem,
+  ScheduledChequeStatus,
   SystemAuditLogEntry,
 } from '../types/treasury';
+import { round2 } from './loanCalculator';
 
 export const CUSTOMER_DOCUMENT_TYPES: CustomerDocumentType[] = [
   'Scanned Cheque Copy',
@@ -53,11 +57,24 @@ export function getCustomerKey(
   return `NAME::${name || 'unknown-customer'}`;
 }
 
+export interface CustomerLoanSummary {
+  totalLoans: number;
+  totalPrincipal: number;
+  totalInterest: number;
+  totalPayable: number;
+  paidAmount: number;
+  unpaidBalance: number;
+  paidInstallments: number;
+  totalInstallments: number;
+}
+
 export interface CustomerSummaryItem {
   customerKey: string;
   profile: CustomerProfile;
   cheques: ChequeEntry[];
   documents: CustomerDocument[];
+  schedules: CustomerChequeSchedule[];
+  loanSummary: CustomerLoanSummary;
   totalAmount: number;
   returnedCount: number;
   returnedAmount: number;
@@ -65,10 +82,130 @@ export interface CustomerSummaryItem {
   latestActivityDate: string;
 }
 
+export function resolveInstallmentPaidInfo(
+  item: ScheduledChequeItem,
+  chequeById?: Map<string, ChequeEntry>
+): {
+  isPaid: boolean;
+  effectiveStatus: ScheduledChequeStatus | 'Settled / Recovered';
+  paidLabel: string;
+  paidDate?: string;
+} {
+  const linked = item.clearingChequeId
+    ? chequeById?.get(item.clearingChequeId)
+    : undefined;
+
+  if (linked) {
+    if (linked.status === 'Cleared') {
+      return {
+        isPaid: true,
+        effectiveStatus: 'Cleared',
+        paidLabel: 'Paid (Cleared)',
+        paidDate: linked.clearedDate || item.effectiveDate,
+      };
+    }
+    if (linked.status === 'Settled / Recovered') {
+      return {
+        isPaid: true,
+        effectiveStatus: 'Settled / Recovered',
+        paidLabel: 'Paid (Settled)',
+        paidDate: linked.recoveryDate || item.effectiveDate,
+      };
+    }
+    if (linked.status === 'Returned / Bounced') {
+      return {
+        isPaid: false,
+        effectiveStatus: 'Returned / Bounced',
+        paidLabel: 'Bounced (Unpaid)',
+      };
+    }
+    if (
+      linked.status === 'Draft' ||
+      linked.status === 'Submitted to Bank' ||
+      linked.status === 'Re-Deposited'
+    ) {
+      return {
+        isPaid: false,
+        effectiveStatus: 'In Clearing',
+        paidLabel: 'In Clearing',
+      };
+    }
+  }
+
+  if (item.status === 'Cleared') {
+    return {
+      isPaid: true,
+      effectiveStatus: 'Cleared',
+      paidLabel: 'Paid (Cleared)',
+      paidDate: item.effectiveDate,
+    };
+  }
+  if (item.status === 'Returned / Bounced') {
+    return {
+      isPaid: false,
+      effectiveStatus: 'Returned / Bounced',
+      paidLabel: 'Bounced (Unpaid)',
+    };
+  }
+  if (item.status === 'In Clearing') {
+    return {
+      isPaid: false,
+      effectiveStatus: 'In Clearing',
+      paidLabel: 'In Clearing',
+    };
+  }
+  return {
+    isPaid: false,
+    effectiveStatus: 'Scheduled',
+    paidLabel: 'Unpaid (Scheduled)',
+  };
+}
+
+function emptyLoanSummary(): CustomerLoanSummary {
+  return {
+    totalLoans: 0,
+    totalPrincipal: 0,
+    totalInterest: 0,
+    totalPayable: 0,
+    paidAmount: 0,
+    unpaidBalance: 0,
+    paidInstallments: 0,
+    totalInstallments: 0,
+  };
+}
+
 export function buildCustomerDirectory(
   company: CompanyWorkspace
 ): CustomerSummaryItem[] {
   const map = new Map<string, CustomerSummaryItem>();
+  const nameToKey = new Map<string, string>();
+  const chequeById = new Map(company.cheques.map((c) => [c.id, c]));
+
+  const registerName = (partyName: string | undefined, key: string) => {
+    const normalized = (partyName || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+    if (normalized && !nameToKey.has(normalized)) {
+      nameToKey.set(normalized, key);
+    }
+  };
+
+  const resolveCustomerItemKey = (
+    customerCode?: string,
+    partyName?: string
+  ): string => {
+    const directKey = getCustomerKey(customerCode, partyName);
+    if (map.has(directKey)) return directKey;
+    const normalized = (partyName || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+    if (normalized && nameToKey.has(normalized)) {
+      return nameToKey.get(normalized)!;
+    }
+    return directKey;
+  };
 
   // 1. Seed from saved customer profiles first
   for (const prof of company.customers || []) {
@@ -78,17 +215,20 @@ export function buildCustomerDirectory(
       profile: { ...prof },
       cheques: [],
       documents: [],
+      schedules: [],
+      loanSummary: emptyLoanSummary(),
       totalAmount: 0,
       returnedCount: 0,
       returnedAmount: 0,
       recoveredAmount: 0,
       latestActivityDate: prof.updatedAt || '',
     });
+    registerName(prof.partyName, key);
   }
 
   // 2. Merge customers discovered from cheque entries
   for (const chq of company.cheques) {
-    const key = getCustomerKey(chq.customerCode, chq.partyName);
+    const key = resolveCustomerItemKey(chq.customerCode, chq.partyName);
     let item = map.get(key);
     if (!item) {
       item = {
@@ -102,6 +242,8 @@ export function buildCustomerDirectory(
         },
         cheques: [],
         documents: [],
+        schedules: [],
+        loanSummary: emptyLoanSummary(),
         totalAmount: 0,
         returnedCount: 0,
         returnedAmount: 0,
@@ -109,6 +251,7 @@ export function buildCustomerDirectory(
         latestActivityDate: chq.updatedAt || chq.chequeDate,
       };
       map.set(key, item);
+      registerName(chq.partyName, key);
     } else if (!item.profile.partyName && chq.partyName) {
       item.profile.partyName = chq.partyName;
     }
@@ -134,8 +277,11 @@ export function buildCustomerDirectory(
 
   // 3. Attach stored documents to matching customer
   for (const doc of company.documents || []) {
-    const key =
+    const rawKey =
       doc.customerKey || getCustomerKey(doc.customerCode, doc.customerName);
+    const key = map.has(rawKey)
+      ? rawKey
+      : resolveCustomerItemKey(doc.customerCode, doc.customerName);
     let item = map.get(key);
     if (!item) {
       item = {
@@ -149,6 +295,8 @@ export function buildCustomerDirectory(
         },
         cheques: [],
         documents: [],
+        schedules: [],
+        loanSummary: emptyLoanSummary(),
         totalAmount: 0,
         returnedCount: 0,
         returnedAmount: 0,
@@ -156,6 +304,7 @@ export function buildCustomerDirectory(
         latestActivityDate: doc.uploadedAt,
       };
       map.set(key, item);
+      registerName(doc.customerName, key);
     }
     item.documents.push(doc);
     if (doc.uploadedAt > item.latestActivityDate) {
@@ -163,7 +312,97 @@ export function buildCustomerDirectory(
     }
   }
 
+  // 4. Attach loan / cheque schedules to matching customer (or create new entry)
+  for (const sch of company.chequeSchedules || []) {
+    const key = resolveCustomerItemKey(sch.customerCode, sch.customerName);
+    let item = map.get(key);
+    if (!item) {
+      item = {
+        customerKey: key,
+        profile: {
+          id: `cust-${key.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+          customerCode: sch.customerCode || '—',
+          partyName: sch.customerName,
+          mobileNumber: '',
+          updatedAt: sch.updatedAt || sch.createdAt,
+        },
+        cheques: [],
+        documents: [],
+        schedules: [],
+        loanSummary: emptyLoanSummary(),
+        totalAmount: 0,
+        returnedCount: 0,
+        returnedAmount: 0,
+        recoveredAmount: 0,
+        latestActivityDate: sch.updatedAt || sch.createdAt,
+      };
+      map.set(key, item);
+      registerName(sch.customerName, key);
+    }
+    item.schedules.push(sch);
+    const schDate = sch.updatedAt || sch.createdAt;
+    if (schDate > item.latestActivityDate) {
+      item.latestActivityDate = schDate;
+    }
+  }
+
+  // 5. Compute aggregated loan summaries per customer
+  for (const item of map.values()) {
+    if (item.schedules.length === 0) continue;
+    let totalPrincipal = 0;
+    let totalInterest = 0;
+    let totalPayable = 0;
+    let paidAmount = 0;
+    let paidInstallments = 0;
+    let totalInstallments = 0;
+
+    for (const sch of item.schedules) {
+      const rows = sch.cheques || [];
+      const rowPrincipal = rows.reduce(
+        (s, r) => s + (r.principalAmount ?? r.amount ?? 0),
+        0
+      );
+      const rowInterest = rows.reduce(
+        (s, r) => s + (r.interestAmount ?? 0),
+        0
+      );
+      const rowTotal = rows.reduce((s, r) => s + (r.amount || 0), 0);
+
+      totalPrincipal += sch.principalAmount ?? rowPrincipal;
+      totalInterest += sch.totalInterest ?? rowInterest;
+      totalPayable += sch.totalPayable ?? rowTotal;
+      totalInstallments += rows.length;
+
+      for (const row of rows) {
+        const paidInfo = resolveInstallmentPaidInfo(row, chequeById);
+        if (paidInfo.isPaid) {
+          paidAmount += row.amount || 0;
+          paidInstallments += 1;
+        }
+      }
+    }
+
+    totalPrincipal = round2(totalPrincipal);
+    totalInterest = round2(totalInterest);
+    totalPayable = round2(totalPayable);
+    paidAmount = round2(paidAmount);
+
+    item.loanSummary = {
+      totalLoans: item.schedules.length,
+      totalPrincipal,
+      totalInterest,
+      totalPayable,
+      paidAmount,
+      unpaidBalance: Math.max(0, round2(totalPayable - paidAmount)),
+      paidInstallments,
+      totalInstallments,
+    };
+  }
+
   return Array.from(map.values()).sort((a, b) => {
+    if (b.schedules.length !== a.schedules.length) {
+      return b.schedules.length - a.schedules.length;
+    }
     if (b.documents.length !== a.documents.length) {
       return b.documents.length - a.documents.length;
     }

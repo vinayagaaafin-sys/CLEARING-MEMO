@@ -324,6 +324,7 @@ function normalizeCompanyWorkspace(
         cheques: Array.isArray(sch.cheques)
           ? sch.cheques.map((item, itemIdx) => ({
               ...item,
+              effectiveDate: item.effectiveDate || item.originalDate,
               dueNumber:
                 typeof item.dueNumber === 'number' && Number.isFinite(item.dueNumber)
                   ? item.dueNumber

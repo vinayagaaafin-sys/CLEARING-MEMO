@@ -18,6 +18,7 @@ import {
   ScrollText,
   ShieldCheck,
   Upload,
+  Users,
   X,
 } from 'lucide-react';
 import { AddCompanyModal } from './components/AddCompanyModal';
@@ -90,7 +91,10 @@ import {
   recalculateScheduleDates,
   toIsoDate,
 } from './utils/bankHolidays';
-import { getCustomerKey } from './utils/customerHelpers';
+import {
+  buildCustomerDirectory,
+  getCustomerKey,
+} from './utils/customerHelpers';
 import {
   formatIndianDate,
   formatIndianShort,
@@ -2902,6 +2906,8 @@ export default function App() {
     (c) => c.status === 'Returned / Bounced'
   ).length;
 
+  const activeCustomerCount = buildCustomerDirectory(activeCompany).length;
+
   const navItems: {
     id: ActiveModule;
     label: string;
@@ -2921,6 +2927,12 @@ export default function App() {
       label: 'Customer Schedule',
       icon: CalendarCheck2,
       count: dueTodayScheduleCount,
+    },
+    {
+      id: 'customers',
+      label: 'Customers',
+      icon: Users,
+      count: activeCustomerCount,
     },
     { id: 'memo', label: 'Bank Deposit Memo', icon: Printer },
     {
@@ -3311,6 +3323,7 @@ export default function App() {
           {activeModule === 'schedules' && (
             <CustomerScheduleView
               key={activeCompany.id}
+              company={activeCompany}
               schedules={activeCompany.chequeSchedules || []}
               bankAccounts={activeCompany.bankAccounts}
               customers={activeCompany.customers || []}

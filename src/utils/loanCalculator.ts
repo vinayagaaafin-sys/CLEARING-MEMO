@@ -25,6 +25,7 @@ export interface LoanInstallmentSplit {
   principalAmount: number;
   interestAmount: number;
   amount: number;
+  balance: number;
 }
 
 export interface LoanSchemeSummary {
@@ -180,16 +181,21 @@ export function calculateLoanScheme(input: LoanSchemeInput): LoanSchemeSummary {
       : round2(exactDueAmount);
 
     const installments: LoanInstallmentSplit[] = [];
+    let remainingPayable = totalPayable;
     for (let i = 0; i < N; i++) {
       const isLast = i === N - 1;
       const due = isLast
         ? Math.max(0, round2(totalPayable - baseDue * (N - 1)))
         : baseDue;
+      remainingPayable = isLast
+        ? 0
+        : Math.max(0, round2(remainingPayable - due));
       installments.push({
         dueNumber: i + 1,
         principalAmount: due,
         interestAmount: 0,
         amount: due,
+        balance: remainingPayable,
       });
     }
 
@@ -230,6 +236,7 @@ export function calculateLoanScheme(input: LoanSchemeInput): LoanSchemeSummary {
       : round2(exactDueAmount);
 
     const installments: LoanInstallmentSplit[] = [];
+    let remainingPayable = totalPayable;
     for (let i = 0; i < N; i++) {
       const isLast = i === N - 1;
       const principalPart = isLast
@@ -239,11 +246,15 @@ export function calculateLoanScheme(input: LoanSchemeInput): LoanSchemeSummary {
         ? Math.max(0, round2(totalPayable - baseDue * (N - 1)))
         : baseDue;
       const interestPart = round2(due - principalPart);
+      remainingPayable = isLast
+        ? 0
+        : Math.max(0, round2(remainingPayable - due));
       installments.push({
         dueNumber: i + 1,
         principalAmount: principalPart,
         interestAmount: interestPart,
         amount: due,
+        balance: remainingPayable,
       });
     }
 
@@ -294,6 +305,7 @@ export function calculateLoanScheme(input: LoanSchemeInput): LoanSchemeSummary {
         principalAmount: principalPart,
         interestAmount: rawInterest,
         amount: due,
+        balance: 0,
       });
     } else if (input.roundDueToNearestRupee) {
       const due = Math.max(0, round2(exactTotalPayable - baseDue * (N - 1)));
@@ -304,6 +316,7 @@ export function calculateLoanScheme(input: LoanSchemeInput): LoanSchemeSummary {
         principalAmount: principalPart,
         interestAmount: interestPart,
         amount: due,
+        balance: 0,
       });
     } else {
       const principalPart = round2(outstanding);
@@ -313,6 +326,7 @@ export function calculateLoanScheme(input: LoanSchemeInput): LoanSchemeSummary {
         principalAmount: principalPart,
         interestAmount: rawInterest,
         amount: due,
+        balance: 0,
       });
     }
   }
@@ -320,6 +334,15 @@ export function calculateLoanScheme(input: LoanSchemeInput): LoanSchemeSummary {
   const totalPayable = round2(
     installments.reduce((sum, row) => sum + row.amount, 0)
   );
+  let remainingPayable = totalPayable;
+  for (let i = 0; i < installments.length; i++) {
+    const isLast = i === installments.length - 1;
+    remainingPayable = isLast
+      ? 0
+      : Math.max(0, round2(remainingPayable - installments[i].amount));
+    installments[i].balance = remainingPayable;
+  }
+
   const totalInterest = round2(totalPayable - P);
   const finalDue = installments[N - 1]?.amount ?? baseDue;
 
@@ -351,6 +374,7 @@ export function generateLoanScheduleItems(params: {
   holidayAutoShift: boolean;
   holidays: BankHoliday[];
   summary: LoanSchemeSummary;
+  dueStartOffset?: number;
 }): ScheduledChequeItem[] {
   const {
     startDate,
@@ -360,13 +384,15 @@ export function generateLoanScheduleItems(params: {
     holidayAutoShift,
     holidays,
     summary,
+    dueStartOffset = 0,
   } = params;
 
   const stamp = Date.now();
   return summary.installments.map((inst, idx) => {
+    const seqIdx = dueStartOffset + idx;
     const originalDate = computeDueDateByFrequency(
       startDate,
-      idx,
+      seqIdx,
       frequency,
       customIntervalDays
     );
@@ -377,16 +403,36 @@ export function generateLoanScheduleItems(params: {
     );
 
     return {
-      id: `sch-chq-${stamp}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
-      dueNumber: inst.dueNumber,
-      chequeNumber: incrementChequeNumber(startingChequeNumber || '001001', idx),
+      id: `sch-chq-${stamp}-${seqIdx}-${Math.random().toString(36).slice(2, 6)}`,
+      dueNumber: seqIdx + 1,
+      chequeNumber: incrementChequeNumber(startingChequeNumber || '001001', seqIdx),
       originalDate,
       effectiveDate: resolved.effectiveDate,
       shiftReason: resolved.shiftReason || resolved.leaveWarning,
       principalAmount: inst.principalAmount,
       interestAmount: inst.interestAmount,
       amount: inst.amount,
+      balance: inst.balance,
       status: 'Scheduled',
+    };
+  });
+}
+
+export function computeScheduleRowsWithBalance(
+  rows: ScheduledChequeItem[]
+): { item: ScheduledChequeItem; runningBalance: number }[] {
+  const totalPayable = round2(
+    rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
+  );
+  let remaining = totalPayable;
+  return rows.map((item, idx) => {
+    const isLast = idx === rows.length - 1;
+    remaining = isLast
+      ? 0
+      : Math.max(0, round2(remaining - (Number(item.amount) || 0)));
+    return {
+      item,
+      runningBalance: remaining,
     };
   });
 }

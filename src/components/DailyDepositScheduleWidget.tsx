@@ -211,7 +211,7 @@ export function DailyDepositScheduleWidget({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-sm font-semibold text-slate-900">
-                Today&apos;s Deposit Schedule (Cheques Due for Deposit)
+                Today&apos;s Cheques to Deposit (Scheduled PDC / EMI Queue)
               </h2>
               {counts.overdue > 0 && (
                 <span className="text-[11px] font-semibold text-red-700 font-mono-num">

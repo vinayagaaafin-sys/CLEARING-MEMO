@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  Download,
   Edit3,
   FileImage,
   Plus,
@@ -21,6 +22,7 @@ import {
   BankHoliday,
   ChequeEntry,
   CompanyBankAccount,
+  CompanyWorkspace,
   CustomerChequeSchedule,
   CustomerProfile,
   LoanInterestType,
@@ -32,9 +34,15 @@ import {
   resolveEffectiveWorkingDate,
   toIsoDate,
 } from '../utils/bankHolidays';
+import {
+  buildCustomerDirectory,
+  getCustomerKey,
+  resolveInstallmentPaidInfo,
+} from '../utils/customerHelpers';
 import { formatIndianDate, formatINR } from '../utils/indianCurrency';
 import {
   calculateLoanScheme,
+  computeScheduleRowsWithBalance,
   generateLoanScheduleItems,
   getFrequencyLabel,
   getInterestTypeLabel,
@@ -42,6 +50,7 @@ import {
   round2,
   SCHEDULE_FREQUENCY_OPTIONS,
 } from '../utils/loanCalculator';
+import { generateCustomerStatementPdf } from '../utils/pdfCustomerStatementGenerator';
 import {
   DailyDepositScheduleWidget,
   SendToClearingSelection,
@@ -49,6 +58,7 @@ import {
 import { ScheduleDocumentScanner } from './ScheduleDocumentScanner';
 
 interface CustomerScheduleViewProps {
+  company?: CompanyWorkspace;
   schedules: CustomerChequeSchedule[];
   bankAccounts: CompanyBankAccount[];
   customers?: CustomerProfile[];
@@ -68,6 +78,7 @@ interface CustomerScheduleViewProps {
 }
 
 export function CustomerScheduleView({
+  company,
   schedules,
   bankAccounts,
   customers = [],
@@ -113,6 +124,12 @@ export function CustomerScheduleView({
   const [startingChequeNo, setStartingChequeNo] = useState('001001');
   const [roundDueToNearestRupee, setRoundDueToNearestRupee] = useState(true);
   const [hasManualRowOverride, setHasManualRowOverride] = useState(false);
+  const [overriddenChequeIndices, setOverriddenChequeIndices] = useState<
+    number[]
+  >([]);
+  const [overriddenDateIndices, setOverriddenDateIndices] = useState<number[]>(
+    []
+  );
 
   // Rows & attached scans
   const [rows, setRows] = useState<ScheduledChequeItem[]>([]);
@@ -182,6 +199,8 @@ export function CustomerScheduleView({
     roundDueToNearestRupee?: boolean;
     holidayAutoShift?: boolean;
     forceOverwrite?: boolean;
+    preserveChequeOverrides?: number[];
+    preserveDateOverrides?: number[];
   }) => {
     const nextPrincipal = overrides?.principalAmount ?? parsedPrincipal;
     const nextDues = overrides?.numberOfDues ?? parsedDues;
@@ -196,15 +215,47 @@ export function CustomerScheduleView({
     const nextShift = overrides?.holidayAutoShift ?? holidayAutoShift;
 
     const lockedRows = rows.filter((r) => r.status !== 'Scheduled');
+    const remainingDues = Math.max(0, nextDues - lockedRows.length);
+
+    if (remainingDues === 0) {
+      setRows(lockedRows);
+      if (overrides?.forceOverwrite) {
+        setHasManualRowOverride(false);
+        setOverriddenChequeIndices([]);
+        setOverriddenDateIndices([]);
+      }
+      return;
+    }
+
+    const lockedPrincipal = lockedRows.reduce(
+      (s, r) => s + (r.principalAmount ?? r.amount ?? 0),
+      0
+    );
+    const remainingPrincipal =
+      lockedRows.length > 0
+        ? Math.max(0, round2(nextPrincipal - lockedPrincipal))
+        : nextPrincipal;
+
     const summary = calculateLoanScheme({
-      principalAmount: nextPrincipal,
-      numberOfDues: Math.max(1, Math.min(120, nextDues - lockedRows.length)),
+      principalAmount: remainingPrincipal,
+      numberOfDues: remainingDues,
       interestRate: nextRate,
       interestType: nextIntType,
       frequency: nextFreq,
       customIntervalDays: nextCustomDays,
       roundDueToNearestRupee: nextRound,
     });
+
+    const chequeOverrideSet = new Set(
+      overrides?.forceOverwrite
+        ? []
+        : overrides?.preserveChequeOverrides ?? overriddenChequeIndices
+    );
+    const dateOverrideSet = new Set(
+      overrides?.forceOverwrite
+        ? []
+        : overrides?.preserveDateOverrides ?? overriddenDateIndices
+    );
 
     const generated = generateLoanScheduleItems({
       startDate: nextStart || todayIso,
@@ -214,14 +265,36 @@ export function CustomerScheduleView({
       holidayAutoShift: nextShift,
       holidays,
       summary,
-    }).map((item, idx) => ({
-      ...item,
-      dueNumber: lockedRows.length + idx + 1,
-    }));
+      dueStartOffset: lockedRows.length,
+    }).map((item, idx) => {
+      const globalIdx = lockedRows.length + idx;
+      const existingRow = rows[globalIdx];
+      let nextItem = item;
+
+      if (existingRow && chequeOverrideSet.has(globalIdx)) {
+        nextItem = { ...nextItem, chequeNumber: existingRow.chequeNumber };
+      }
+      if (existingRow && dateOverrideSet.has(globalIdx)) {
+        const resolved = resolveEffectiveWorkingDate(
+          existingRow.originalDate,
+          nextShift,
+          holidays
+        );
+        nextItem = {
+          ...nextItem,
+          originalDate: existingRow.originalDate,
+          effectiveDate: resolved.effectiveDate,
+          shiftReason: resolved.shiftReason || resolved.leaveWarning,
+        };
+      }
+      return nextItem;
+    });
 
     setRows([...lockedRows, ...generated]);
     if (overrides?.forceOverwrite) {
       setHasManualRowOverride(false);
+      setOverriddenChequeIndices([]);
+      setOverriddenDateIndices([]);
     }
   };
 
@@ -254,6 +327,18 @@ export function CustomerScheduleView({
     const nextRound =
       patch.roundDueToNearestRupee ?? roundDueToNearestRupee;
 
+    let nextChequeOverrides = overriddenChequeIndices;
+    let nextDateOverrides = overriddenDateIndices;
+
+    if (patch.startingChequeNo !== undefined) {
+      nextChequeOverrides = [];
+      setOverriddenChequeIndices([]);
+    }
+    if (patch.startDate !== undefined || patch.frequency !== undefined) {
+      nextDateOverrides = [];
+      setOverriddenDateIndices([]);
+    }
+
     if (patch.principalInput !== undefined) setPrincipalInput(nextP);
     if (patch.numberOfDuesInput !== undefined) setNumberOfDuesInput(nextN);
     if (patch.interestRateInput !== undefined) setInterestRateInput(nextR);
@@ -266,6 +351,9 @@ export function CustomerScheduleView({
       setRoundDueToNearestRupee(nextRound);
 
     if (scheduleMode === 'auto' && !hasManualRowOverride) {
+      const validStart = /^\d{4}-\d{2}-\d{2}$/.test(nextStart)
+        ? nextStart
+        : todayIso;
       rebuildScheduledRowsFromCalculator({
         principalAmount: Math.max(0, Number(nextP) || 0),
         numberOfDues: Math.max(1, Math.min(120, Math.floor(Number(nextN) || 1))),
@@ -273,9 +361,11 @@ export function CustomerScheduleView({
         interestType: nextIT,
         frequency: nextFreq,
         customIntervalDays: Math.max(1, Math.floor(Number(nextCDays) || 30)),
-        startDate: nextStart,
+        startDate: validStart,
         startingChequeNumber: nextChq,
         roundDueToNearestRupee: nextRound,
+        preserveChequeOverrides: nextChequeOverrides,
+        preserveDateOverrides: nextDateOverrides,
       });
     }
   };
@@ -303,6 +393,8 @@ export function CustomerScheduleView({
     setStartingChequeNo('001001');
     setRoundDueToNearestRupee(true);
     setHasManualRowOverride(false);
+    setOverriddenChequeIndices([]);
+    setOverriddenDateIndices([]);
     setScannedDocs([]);
     setNotes('');
     setFormError(null);
@@ -341,6 +433,12 @@ export function CustomerScheduleView({
     const derivedRate = sch.interestRate !== undefined ? sch.interestRate : 0;
     const derivedInterestType: LoanInterestType =
       sch.interestType || (derivedRate === 0 ? 'ZERO_INTEREST' : 'FLAT_PA');
+    const derivedFreq: ScheduleFrequency = sch.frequency || 'Monthly';
+    const derivedRound = sch.roundDueToNearestRupee ?? true;
+    const derivedStart =
+      sch.startDate || sch.cheques[0]?.originalDate || todayIso;
+    const derivedChqStart =
+      sch.startingChequeNumber || sch.cheques[0]?.chequeNumber || '001001';
 
     setEditingScheduleId(sch.id);
     setCustomerName(sch.customerName);
@@ -357,19 +455,58 @@ export function CustomerScheduleView({
     );
     setHolidayAutoShift(sch.holidayAutoShift);
     setScheduleMode(sch.mode);
-    setStartDate(sch.startDate || sch.cheques[0]?.originalDate || todayIso);
-    setFrequency(sch.frequency || 'Monthly');
+    setStartDate(derivedStart);
+    setFrequency(derivedFreq);
     setCustomIntervalDays(String(sch.customIntervalDays || 30));
     setPrincipalInput(String(derivedPrincipal));
     setNumberOfDuesInput(String(derivedDues));
     setInterestRateInput(String(derivedRate));
     setInterestType(derivedInterestType);
-    setStartingChequeNo(
-      sch.startingChequeNumber || sch.cheques[0]?.chequeNumber || '001001'
-    );
-    setRoundDueToNearestRupee(sch.roundDueToNearestRupee ?? true);
-    // Preserve exact saved rows until user explicitly recalculates or changes mode
-    setHasManualRowOverride(true);
+    setStartingChequeNo(derivedChqStart);
+    setRoundDueToNearestRupee(derivedRound);
+
+    if (sch.mode === 'auto') {
+      const expectedSummary = calculateLoanScheme({
+        principalAmount: derivedPrincipal,
+        numberOfDues: derivedDues,
+        interestRate: derivedRate,
+        interestType: derivedInterestType,
+        frequency: derivedFreq,
+        customIntervalDays: sch.customIntervalDays || 30,
+        roundDueToNearestRupee: derivedRound,
+      });
+      const expectedRows = generateLoanScheduleItems({
+        startDate: derivedStart,
+        frequency: derivedFreq,
+        customIntervalDays: sch.customIntervalDays || 30,
+        startingChequeNumber: derivedChqStart,
+        holidayAutoShift: sch.holidayAutoShift,
+        holidays,
+        summary: expectedSummary,
+      });
+
+      const amountsDiffer =
+        expectedRows.length !== sch.cheques.length ||
+        sch.cheques.some(
+          (row, idx) => Math.abs(row.amount - expectedRows[idx].amount) > 0.05
+        );
+      const customCheques: number[] = [];
+      const customDates: number[] = [];
+      sch.cheques.forEach((row, idx) => {
+        const exp = expectedRows[idx];
+        if (!exp) return;
+        if (row.chequeNumber !== exp.chequeNumber) customCheques.push(idx);
+        if (row.originalDate !== exp.originalDate) customDates.push(idx);
+      });
+      setHasManualRowOverride(amountsDiffer);
+      setOverriddenChequeIndices(customCheques);
+      setOverriddenDateIndices(customDates);
+    } else {
+      setHasManualRowOverride(true);
+      setOverriddenChequeIndices([]);
+      setOverriddenDateIndices([]);
+    }
+
     setRows(sch.cheques);
     setScannedDocs(sch.scannedDocuments || []);
     setNotes(sch.notes || '');
@@ -438,7 +575,21 @@ export function CustomerScheduleView({
     rowId: string,
     patch: Partial<{ chequeNumber: string; originalDate: string; amount: number }>
   ) => {
-    setHasManualRowOverride(true);
+    const targetIdx = rows.findIndex((r) => r.id === rowId);
+    if (patch.chequeNumber !== undefined && targetIdx >= 0) {
+      setOverriddenChequeIndices((prev) =>
+        prev.includes(targetIdx) ? prev : [...prev, targetIdx]
+      );
+    }
+    if (patch.originalDate !== undefined && targetIdx >= 0) {
+      setOverriddenDateIndices((prev) =>
+        prev.includes(targetIdx) ? prev : [...prev, targetIdx]
+      );
+    }
+    if (patch.amount !== undefined) {
+      setHasManualRowOverride(true);
+    }
+
     setRows((prev) =>
       prev.map((item) => {
         if (item.id !== rowId) return item;
@@ -542,6 +693,52 @@ export function CustomerScheduleView({
 
     setViewMode('overview');
     setEditingScheduleId(null);
+  };
+
+  const chequeById = useMemo(
+    () => new Map(cheques.map((c) => [c.id, c])),
+    [cheques]
+  );
+
+  const handleDownloadCustomerPdfFromSchedule = (sch: CustomerChequeSchedule) => {
+    const workspace: CompanyWorkspace = company || {
+      id: 'active',
+      profile: {
+        companyName: 'Corporate Treasury',
+        registeredAddress: '',
+        pan: '',
+        gstin: '',
+        contactPhone: '',
+        treasuryEmail: '',
+        defaultMaker: 'Maker',
+        defaultChecker: 'Checker',
+        signatory1Name: '',
+        signatory1Designation: '',
+        signatory2Name: '',
+        signatory2Designation: '',
+      },
+      bankAccounts,
+      batches: [],
+      cheques,
+      activeBatchId: '',
+      customers,
+      chequeSchedules: schedules,
+      bankHolidays: holidays,
+    };
+
+    const directory = buildCustomerDirectory(workspace);
+    const targetKey = getCustomerKey(sch.customerCode, sch.customerName);
+    const normalizedName = sch.customerName.trim().toLowerCase();
+    const matched =
+      directory.find((c) => c.customerKey === targetKey) ||
+      directory.find(
+        (c) => c.profile.partyName.trim().toLowerCase() === normalizedName
+      ) ||
+      directory.find((c) => c.schedules.some((s) => s.id === sch.id));
+
+    if (matched) {
+      generateCustomerStatementPdf(workspace, matched);
+    }
   };
 
   const filteredSchedules = useMemo(() => {
@@ -767,7 +964,12 @@ export function CustomerScheduleView({
                 <div className="inline-flex p-0.5 bg-slate-100 border border-slate-200 rounded-md">
                   <button
                     type="button"
-                    onClick={() => setScheduleMode('auto')}
+                    onClick={() => {
+                      setScheduleMode('auto');
+                      rebuildScheduledRowsFromCalculator({
+                        forceOverwrite: true,
+                      });
+                    }}
                     className={`px-3 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap ${
                       scheduleMode === 'auto'
                         ? 'bg-white text-slate-900 shadow-xs'
@@ -1056,7 +1258,7 @@ export function CustomerScheduleView({
 
                       <div className="p-3.5 bg-[#0B192C] text-white">
                         <div className="text-[11px] font-medium text-slate-300">
-                          Auto Due Amount (EMI)
+                          Auto Due Amount (Per Installment)
                         </div>
                         <div className="mt-1 text-lg font-bold tracking-tight font-mono-num">
                           {formatINR(liveSchemeSummary.autoDueAmount)}
@@ -1124,13 +1326,13 @@ export function CustomerScheduleView({
                     <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200 text-[11px] font-semibold text-slate-600">
                       <tr>
                         <th className="py-2 px-2 text-center whitespace-nowrap">
-                          Due #
+                          Inst. #
                         </th>
                         <th className="py-2 px-2 whitespace-nowrap">
-                          Scheduled Date
+                          Due Date
                         </th>
                         <th className="py-2 px-2 whitespace-nowrap">
-                          Effective Bank Deposit Date
+                          Effective Bank Deposit Date (Holiday-Adjusted)
                         </th>
                         <th className="py-2 px-2 whitespace-nowrap">
                           Cheque No
@@ -1144,139 +1346,155 @@ export function CustomerScheduleView({
                         <th className="py-2 px-2 text-right whitespace-nowrap">
                           Due Amount (₹)
                         </th>
-                        <th className="py-2 px-2 whitespace-nowrap">Status</th>
+                        <th className="py-2 px-2 whitespace-nowrap">
+                          Paid Status
+                        </th>
+                        <th className="py-2 px-2 text-right whitespace-nowrap">
+                          Balance (₹)
+                        </th>
                         <th className="py-2 px-1.5 w-8" />
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 text-xs">
-                      {rows.map((row, idx) => {
-                        const isLockedRow = row.status !== 'Scheduled';
-                        const wasShifted =
-                          row.effectiveDate !== row.originalDate;
-                        const isLeaveWarning =
-                          !wasShifted &&
-                          Boolean(row.shiftReason?.startsWith('Falls on'));
-                        const rowPrincipal =
-                          row.principalAmount !== undefined
-                            ? row.principalAmount
-                            : row.amount;
-                        const rowInterest =
-                          row.interestAmount !== undefined
-                            ? row.interestAmount
-                            : 0;
+                      {computeScheduleRowsWithBalance(rows).map(
+                        ({ item: row, runningBalance }, idx) => {
+                          const isLockedRow = row.status !== 'Scheduled';
+                          const wasShifted =
+                            row.effectiveDate !== row.originalDate;
+                          const isLeaveWarning =
+                            !wasShifted &&
+                            Boolean(row.shiftReason?.startsWith('Falls on'));
+                          const rowPrincipal =
+                            row.principalAmount !== undefined
+                              ? row.principalAmount
+                              : row.amount;
+                          const rowInterest =
+                            row.interestAmount !== undefined
+                              ? row.interestAmount
+                              : 0;
+                          const paidInfo = resolveInstallmentPaidInfo(
+                            row,
+                            chequeById
+                          );
 
-                        return (
-                          <tr
-                            key={row.id}
-                            className="align-top hover:bg-slate-50/70"
-                          >
-                            <td className="py-2 px-2 text-center font-mono-num text-slate-500 pt-2.5">
-                              {row.dueNumber ?? idx + 1}
-                            </td>
-                            <td className="py-2 px-2">
-                              <input
-                                type="date"
-                                disabled={isLockedRow}
-                                value={row.originalDate}
-                                onChange={(e) =>
-                                  handleUpdateRow(row.id, {
-                                    originalDate: e.target.value,
-                                  })
-                                }
-                                className="px-2 py-1 text-xs font-mono-num border border-slate-300 rounded bg-white disabled:bg-slate-100"
-                              />
-                            </td>
-                            <td className="py-2 px-2 min-w-[140px]">
-                              <div className="font-mono-num font-semibold text-slate-900 pt-0.5 whitespace-nowrap">
-                                {formatIndianDate(row.effectiveDate)}
-                              </div>
-                              {wasShifted && (
-                                <div className="mt-0.5 space-y-0.5">
-                                  <span className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
-                                    Shifted (Holiday)
-                                  </span>
-                                  {row.shiftReason && (
-                                    <div className="text-[10px] text-amber-800">
-                                      {row.shiftReason}
-                                    </div>
-                                  )}
+                          return (
+                            <tr
+                              key={row.id}
+                              className="align-top hover:bg-slate-50/70"
+                            >
+                              <td className="py-2 px-2 text-center font-mono-num text-slate-500 pt-2.5">
+                                {row.dueNumber ?? idx + 1}
+                              </td>
+                              <td className="py-2 px-2">
+                                <input
+                                  type="date"
+                                  disabled={isLockedRow}
+                                  value={row.originalDate}
+                                  onChange={(e) =>
+                                    handleUpdateRow(row.id, {
+                                      originalDate: e.target.value,
+                                    })
+                                  }
+                                  className="px-2 py-1 text-xs font-mono-num border border-slate-300 rounded bg-white disabled:bg-slate-100"
+                                />
+                              </td>
+                              <td className="py-2 px-2 min-w-[140px]">
+                                <div className="font-mono-num font-semibold text-slate-900 pt-0.5 whitespace-nowrap">
+                                  {formatIndianDate(row.effectiveDate)}
                                 </div>
-                              )}
-                              {isLeaveWarning && row.shiftReason && (
-                                <div className="mt-0.5 inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
-                                  {row.shiftReason}
-                                </div>
-                              )}
-                            </td>
-                            <td className="py-2 px-2">
-                              <input
-                                type="text"
-                                disabled={isLockedRow}
-                                value={row.chequeNumber}
-                                onChange={(e) =>
-                                  handleUpdateRow(row.id, {
-                                    chequeNumber: e.target.value,
-                                  })
-                                }
-                                className="w-24 px-2 py-1 text-xs font-mono-num font-semibold border border-slate-300 rounded bg-white disabled:bg-slate-100"
-                              />
-                            </td>
-                            <td className="py-2 px-2 text-right font-mono-num text-slate-700 pt-2.5 whitespace-nowrap">
-                              {formatINR(rowPrincipal)}
-                            </td>
-                            <td className="py-2 px-2 text-right font-mono-num text-slate-600 pt-2.5 whitespace-nowrap">
-                              {formatINR(rowInterest)}
-                            </td>
-                            <td className="py-2 px-2 text-right">
-                              <input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                disabled={isLockedRow}
-                                value={row.amount}
-                                onChange={(e) =>
-                                  handleUpdateRow(row.id, {
-                                    amount: Number(e.target.value) || 0,
-                                  })
-                                }
-                                className="w-24 px-2 py-1 text-xs font-mono-num font-semibold text-right border border-slate-300 rounded bg-white disabled:bg-slate-100"
-                              />
-                            </td>
-                            <td className="py-2 px-2 pt-2.5 whitespace-nowrap">
-                              <span
-                                className={`text-[11px] font-semibold ${
-                                  row.status === 'Cleared'
-                                    ? 'text-emerald-700'
-                                    : row.status === 'Returned / Bounced'
-                                    ? 'text-red-700'
-                                    : row.status === 'In Clearing'
-                                    ? 'text-blue-700'
-                                    : 'text-slate-700'
-                                }`}
-                              >
-                                {row.status}
-                              </span>
-                              {row.clearingBatchRef && (
-                                <div className="text-[10px] font-mono-num text-slate-500">
-                                  {row.clearingBatchRef}
-                                </div>
-                              )}
-                            </td>
-                            <td className="py-2 px-1.5 text-center pt-2">
-                              {!isLockedRow && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveRow(row.id)}
-                                  title="Remove cheque row"
-                                  className="p-1 text-slate-400 hover:text-red-700 rounded hover:bg-red-50"
+                                {wasShifted && (
+                                  <div className="mt-0.5 space-y-0.5">
+                                    <span className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
+                                      Shifted (Holiday)
+                                    </span>
+                                    {row.shiftReason && (
+                                      <div className="text-[10px] text-amber-800">
+                                        {row.shiftReason}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {isLeaveWarning && row.shiftReason && (
+                                  <div className="mt-0.5 inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
+                                    {row.shiftReason}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-2 px-2">
+                                <input
+                                  type="text"
+                                  disabled={isLockedRow}
+                                  value={row.chequeNumber}
+                                  onChange={(e) =>
+                                    handleUpdateRow(row.id, {
+                                      chequeNumber: e.target.value,
+                                    })
+                                  }
+                                  className="w-24 px-2 py-1 text-xs font-mono-num font-semibold border border-slate-300 rounded bg-white disabled:bg-slate-100"
+                                />
+                              </td>
+                              <td className="py-2 px-2 text-right font-mono-num text-slate-700 pt-2.5 whitespace-nowrap">
+                                {formatINR(rowPrincipal)}
+                              </td>
+                              <td className="py-2 px-2 text-right font-mono-num text-slate-600 pt-2.5 whitespace-nowrap">
+                                {formatINR(rowInterest)}
+                              </td>
+                              <td className="py-2 px-2 text-right">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  disabled={isLockedRow}
+                                  value={row.amount}
+                                  onChange={(e) =>
+                                    handleUpdateRow(row.id, {
+                                      amount: Number(e.target.value) || 0,
+                                    })
+                                  }
+                                  className="w-24 px-2 py-1 text-xs font-mono-num font-semibold text-right border border-slate-300 rounded bg-white disabled:bg-slate-100"
+                                />
+                              </td>
+                              <td className="py-2 px-2 pt-2.5 whitespace-nowrap">
+                                <span
+                                  className={`text-[11px] font-semibold ${
+                                    paidInfo.isPaid
+                                      ? 'text-emerald-700'
+                                      : paidInfo.effectiveStatus ===
+                                        'Returned / Bounced'
+                                      ? 'text-red-700'
+                                      : paidInfo.effectiveStatus ===
+                                        'In Clearing'
+                                      ? 'text-blue-700'
+                                      : 'text-slate-700'
+                                  }`}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                                  {paidInfo.paidLabel}
+                                </span>
+                                {row.clearingBatchRef && (
+                                  <div className="text-[10px] font-mono-num text-slate-500">
+                                    {row.clearingBatchRef}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-2 px-2 text-right font-mono-num font-semibold text-slate-900 pt-2.5 whitespace-nowrap">
+                                {formatINR(runningBalance)}
+                              </td>
+                              <td className="py-2 px-1.5 text-center pt-2">
+                                {!isLockedRow && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveRow(row.id)}
+                                    title="Remove cheque row"
+                                    className="p-1 text-slate-400 hover:text-red-700 rounded hover:bg-red-50"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        }
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1568,6 +1786,15 @@ export function CustomerScheduleView({
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
+                        onClick={() => handleDownloadCustomerPdfFromSchedule(sch)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 whitespace-nowrap"
+                        title={`Download PDF Statement for ${sch.customerName}`}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download PDF</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => startEditSchedule(sch)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 whitespace-nowrap"
                       >
@@ -1585,97 +1812,155 @@ export function CustomerScheduleView({
                     </div>
                   </div>
 
-                  {isExpanded && (
-                    <div className="px-5 pb-4 pt-1 bg-slate-50/50 border-t border-slate-100">
-                      <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
-                        <table className="w-full text-left border-collapse text-xs">
-                          <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
-                              <th className="py-2 px-3">Due #</th>
-                              <th className="py-2 px-3">Scheduled Date</th>
-                              <th className="py-2 px-3">
-                                Effective Deposit Date
-                              </th>
-                              <th className="py-2 px-3">Cheque No</th>
-                              <th className="py-2 px-3 text-right">
-                                Principal (₹)
-                              </th>
-                              <th className="py-2 px-3 text-right">
-                                Interest (₹)
-                              </th>
-                              <th className="py-2 px-3 text-right">
-                                Due Amount (₹)
-                              </th>
-                              <th className="py-2 px-3">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-200">
-                            {sch.cheques.map((item, idx) => {
-                              const wasShifted =
-                                item.effectiveDate !== item.originalDate;
-                              return (
-                                <tr key={item.id}>
-                                  <td className="py-2 px-3 font-mono-num text-slate-500">
-                                    {item.dueNumber ?? idx + 1}
-                                  </td>
-                                  <td className="py-2 px-3 font-mono-num text-slate-600">
-                                    {formatIndianDate(item.originalDate)}
-                                  </td>
-                                  <td className="py-2 px-3">
-                                    <span className="font-mono-num font-semibold text-slate-900">
-                                      {formatIndianDate(item.effectiveDate)}
-                                    </span>
-                                    {wasShifted && (
-                                      <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
-                                        Shifted (Holiday)
+                  {isExpanded && (() => {
+                    const rowsWithBal = computeScheduleRowsWithBalance(
+                      sch.cheques || []
+                    );
+                    const paidSum = round2(
+                      (sch.cheques || []).reduce((s, row) => {
+                        const info = resolveInstallmentPaidInfo(row, chequeById);
+                        return info.isPaid ? s + (row.amount || 0) : s;
+                      }, 0)
+                    );
+                    const outstandingBal = Math.max(0, round2(totalVal - paidSum));
+
+                    return (
+                      <div className="px-5 pb-4 pt-2 bg-slate-50/50 border-t border-slate-100 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <div className="flex flex-wrap items-center gap-4 font-mono-num text-slate-600">
+                            <span>
+                              Total Payable:{' '}
+                              <strong className="text-slate-900">
+                                {formatINR(totalVal)}
+                              </strong>
+                            </span>
+                            <span>
+                              Paid (Cleared):{' '}
+                              <strong className="text-emerald-700">
+                                {formatINR(paidSum)}
+                              </strong>
+                            </span>
+                            <span>
+                              Outstanding Loan Balance:{' '}
+                              <strong className="text-slate-950">
+                                {formatINR(outstandingBal)}
+                              </strong>
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDownloadCustomerPdfFromSchedule(sch)
+                            }
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-slate-800 bg-white border border-slate-300 rounded hover:bg-slate-100 whitespace-nowrap"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Download Customer Statement PDF</span>
+                          </button>
+                        </div>
+
+                        <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+                                <th className="py-2 px-3">Inst. #</th>
+                                <th className="py-2 px-3">Due Date</th>
+                                <th className="py-2 px-3">
+                                  Effective Deposit Date
+                                </th>
+                                <th className="py-2 px-3">Cheque No</th>
+                                <th className="py-2 px-3 text-right">
+                                  Principal (₹)
+                                </th>
+                                <th className="py-2 px-3 text-right">
+                                  Interest (₹)
+                                </th>
+                                <th className="py-2 px-3 text-right">
+                                  Due Amount (₹)
+                                </th>
+                                <th className="py-2 px-3">Paid Status</th>
+                                <th className="py-2 px-3 text-right">
+                                  Balance (₹)
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                              {rowsWithBal.map(({ item, runningBalance }, idx) => {
+                                const wasShifted =
+                                  item.effectiveDate !== item.originalDate;
+                                const paidInfo = resolveInstallmentPaidInfo(
+                                  item,
+                                  chequeById
+                                );
+                                return (
+                                  <tr key={item.id}>
+                                    <td className="py-2 px-3 font-mono-num text-slate-500">
+                                      {item.dueNumber ?? idx + 1}
+                                    </td>
+                                    <td className="py-2 px-3 font-mono-num text-slate-600">
+                                      {formatIndianDate(item.originalDate)}
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <span className="font-mono-num font-semibold text-slate-900">
+                                        {formatIndianDate(item.effectiveDate)}
                                       </span>
-                                    )}
-                                    {item.shiftReason && (
-                                      <span className="ml-1.5 text-[10px] text-amber-800">
-                                        {item.shiftReason}
+                                      {wasShifted && (
+                                        <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                                          Shifted (Holiday)
+                                        </span>
+                                      )}
+                                      {item.shiftReason && (
+                                        <span className="ml-1.5 text-[10px] text-amber-800">
+                                          {item.shiftReason}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="py-2 px-3 font-mono-num font-semibold text-slate-950">
+                                      {item.chequeNumber}
+                                    </td>
+                                    <td className="py-2 px-3 text-right font-mono-num text-slate-700">
+                                      {formatINR(
+                                        item.principalAmount ?? item.amount
+                                      )}
+                                    </td>
+                                    <td className="py-2 px-3 text-right font-mono-num text-slate-600">
+                                      {formatINR(item.interestAmount ?? 0)}
+                                    </td>
+                                    <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-950">
+                                      {formatINR(item.amount)}
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <span
+                                        className={`font-semibold ${
+                                          paidInfo.isPaid
+                                            ? 'text-emerald-700'
+                                            : paidInfo.effectiveStatus ===
+                                              'Returned / Bounced'
+                                            ? 'text-red-700'
+                                            : paidInfo.effectiveStatus ===
+                                              'In Clearing'
+                                            ? 'text-blue-700'
+                                            : 'text-slate-700'
+                                        }`}
+                                      >
+                                        {paidInfo.paidLabel}
+                                        {item.clearingBatchRef
+                                          ? ` (${item.clearingBatchRef})`
+                                          : ''}
                                       </span>
-                                    )}
-                                  </td>
-                                  <td className="py-2 px-3 font-mono-num font-semibold text-slate-950">
-                                    {item.chequeNumber}
-                                  </td>
-                                  <td className="py-2 px-3 text-right font-mono-num text-slate-700">
-                                    {formatINR(
-                                      item.principalAmount ?? item.amount
-                                    )}
-                                  </td>
-                                  <td className="py-2 px-3 text-right font-mono-num text-slate-600">
-                                    {formatINR(item.interestAmount ?? 0)}
-                                  </td>
-                                  <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-950">
-                                    {formatINR(item.amount)}
-                                  </td>
-                                  <td className="py-2 px-3">
-                                    <span
-                                      className={`font-semibold ${
-                                        item.status === 'Cleared'
-                                          ? 'text-emerald-700'
-                                          : item.status === 'Returned / Bounced'
-                                          ? 'text-red-700'
-                                          : item.status === 'In Clearing'
-                                          ? 'text-blue-700'
-                                          : 'text-slate-700'
-                                      }`}
-                                    >
-                                      {item.status}
-                                      {item.clearingBatchRef
-                                        ? ` (${item.clearingBatchRef})`
-                                        : ''}
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                    </td>
+                                    <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-900">
+                                      {formatINR(item.balance ?? runningBalance)}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               );
             })}

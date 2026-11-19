@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
+  CalendarCheck2,
   Camera,
   Check,
   CheckCircle2,
@@ -48,12 +49,20 @@ import {
   getCustomerKey,
   inferDocumentMimeType,
   isAcceptedDocumentFile,
+  resolveInstallmentPaidInfo,
 } from '../utils/customerHelpers';
 import {
   formatIndianDate,
   formatIndianShort,
   formatINR,
 } from '../utils/indianCurrency';
+import {
+  computeScheduleRowsWithBalance,
+  getFrequencyLabel,
+  getInterestTypeLabel,
+  round2,
+} from '../utils/loanCalculator';
+import { generateCustomerStatementPdf } from '../utils/pdfCustomerStatementGenerator';
 import { ActivityTimeline } from './ActivityTimeline';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
 import { StatusTag } from './StatusTag';
@@ -61,7 +70,7 @@ import { WhatsAppShareModal } from './WhatsAppShareModal';
 
 export interface CustomerInitialSelection {
   customerKey?: string;
-  tab?: 'documents' | 'cheques' | 'audit';
+  tab?: 'loans' | 'documents' | 'cheques' | 'audit';
   linkChequeId?: string;
 }
 
@@ -110,13 +119,17 @@ export function CustomersView({
     () => new Map(company.batches.map((b) => [b.id, b])),
     [company.batches]
   );
+  const chequeById = useMemo(
+    () => new Map(company.cheques.map((c) => [c.id, c])),
+    [company.cheques]
+  );
 
   const [selectedCustomerKey, setSelectedCustomerKey] = useState<string>(
     initialSelection?.customerKey || customers[0]?.customerKey || ''
   );
-  const [activeTab, setActiveTab] = useState<'documents' | 'cheques' | 'audit'>(
-    initialSelection?.tab || 'documents'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'loans' | 'documents' | 'cheques' | 'audit'
+  >(initialSelection?.tab || 'loans');
   const [directorySearch, setDirectorySearch] = useState('');
   const [directoryFilter, setDirectoryFilter] = useState<
     'ALL' | 'WITH_DOCS' | 'RETURNED'
@@ -211,12 +224,20 @@ export function CustomersView({
         item.profile.mobileNumber,
         item.profile.contactPerson || '',
         ...item.cheques.map((c) => c.chequeNumber),
+        ...item.schedules.map((s) => s.loanRefNo),
       ]
         .join(' ')
         .toLowerCase();
       return hay.includes(q);
     });
   }, [customers, directorySearch, directoryFilter]);
+
+  const handleDownloadCustomerPdf = (customer: CustomerSummaryItem) => {
+    const { filename } = generateCustomerStatementPdf(company, customer);
+    setActionNotice(
+      `Downloaded PDF statement "${filename}" for ${customer.profile.partyName}.`
+    );
+  };
 
   const customerDocs = useMemo(() => {
     if (!activeCustomer) return [];
@@ -532,75 +553,106 @@ export function CustomersView({
                 const isSelected =
                   item.customerKey === activeCustomer?.customerKey;
                 return (
-                  <button
+                  <div
                     key={item.customerKey}
-                    type="button"
-                    onClick={() => setSelectedCustomerKey(item.customerKey)}
-                    className={`w-full text-left p-3.5 transition-colors flex flex-col gap-1.5 ${
+                    className={`p-3.5 transition-colors flex items-start justify-between gap-2.5 ${
                       isSelected
                         ? 'bg-slate-900 text-white'
                         : 'hover:bg-slate-50 text-slate-900'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="font-semibold text-xs leading-snug">
-                        {item.profile.partyName}
-                      </div>
-                      {item.documents.length > 0 && (
-                        <span
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono-num font-semibold shrink-0 ${
-                            isSelected
-                              ? 'bg-slate-700 text-white'
-                              : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
-                          }`}
-                        >
-                          <Paperclip className="w-2.5 h-2.5" />
-                          {item.documents.length}
-                        </span>
-                      )}
-                    </div>
-
-                    <div
-                      className={`flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] font-mono-num ${
-                        isSelected ? 'text-slate-300' : 'text-slate-500'
-                      }`}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCustomerKey(item.customerKey)}
+                      className="flex-1 min-w-0 text-left flex flex-col gap-1.5"
                     >
-                      <span>{item.profile.customerCode}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>
-                        {item.cheques.length} chq
-                        {item.cheques.length === 1 ? '' : 's'}
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <span>{formatIndianShort(item.totalAmount)}</span>
-                    </div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-semibold text-xs leading-snug">
+                          {item.profile.partyName}
+                        </div>
+                        {item.documents.length > 0 && (
+                          <span
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono-num font-semibold shrink-0 ${
+                              isSelected
+                                ? 'bg-slate-700 text-white'
+                                : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+                            }`}
+                          >
+                            <Paperclip className="w-2.5 h-2.5" />
+                            {item.documents.length}
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                      <span
-                        className={`inline-flex items-center gap-1 font-mono-num ${
-                          item.profile.mobileNumber
-                            ? isSelected
-                              ? 'text-emerald-300'
-                              : 'text-emerald-700'
-                            : isSelected
-                            ? 'text-slate-400'
-                            : 'text-slate-400'
+                      <div
+                        className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-mono-num ${
+                          isSelected ? 'text-slate-300' : 'text-slate-500'
                         }`}
                       >
-                        <Phone className="w-2.5 h-2.5" aria-hidden="true" />
-                        {item.profile.mobileNumber || 'No WhatsApp mobile'}
-                      </span>
-                      {item.returnedCount > 0 && (
+                        <span>{item.profile.customerCode}</span>
+                        {item.schedules.length > 0 && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <span>
+                              {item.schedules.length} loan
+                              {item.schedules.length === 1 ? '' : 's'} (
+                              {formatIndianShort(item.loanSummary.unpaidBalance)}{' '}
+                              bal)
+                            </span>
+                          </>
+                        )}
+                        <span aria-hidden="true">·</span>
+                        <span>
+                          {item.cheques.length} chq
+                          {item.cheques.length === 1 ? '' : 's'}
+                        </span>
+                        {item.totalAmount > 0 && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <span>{formatIndianShort(item.totalAmount)}</span>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
                         <span
-                          className={`text-[10px] font-semibold ${
-                            isSelected ? 'text-red-300' : 'text-red-700'
+                          className={`inline-flex items-center gap-1 font-mono-num ${
+                            item.profile.mobileNumber
+                              ? isSelected
+                                ? 'text-emerald-300'
+                                : 'text-emerald-700'
+                              : 'text-slate-400'
                           }`}
                         >
-                          {item.returnedCount} Returned
+                          <Phone className="w-2.5 h-2.5" aria-hidden="true" />
+                          {item.profile.mobileNumber || 'No WhatsApp mobile'}
                         </span>
-                      )}
-                    </div>
-                  </button>
+                        {item.returnedCount > 0 && (
+                          <span
+                            className={`text-[10px] font-semibold ${
+                              isSelected ? 'text-red-300' : 'text-red-700'
+                            }`}
+                          >
+                            {item.returnedCount} Returned
+                          </span>
+                        )}
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadCustomerPdf(item)}
+                      title={`Download PDF statement for ${item.profile.partyName}`}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded border shrink-0 whitespace-nowrap transition-colors ${
+                        isSelected
+                          ? 'bg-white text-slate-900 border-white hover:bg-slate-100'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-950'
+                      }`}
+                    >
+                      <Download className="w-3 h-3" aria-hidden="true" />
+                      <span>Download PDF</span>
+                    </button>
+                  </div>
                 );
               })
             )}
@@ -822,59 +874,111 @@ export function CustomersView({
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={handleStartEditProfile}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" aria-hidden="true" />
-                        <span>Edit Contact / Mobile</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadCustomerPdf(activeCustomer)}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#0B192C] hover:bg-slate-800 rounded-md transition-colors whitespace-nowrap"
+                        >
+                          <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>Download PDF</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleStartEditProfile}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>Edit Contact / Mobile</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Customer KPI Strip */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100 text-xs">
                       <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5">
                         <div className="text-[11px] text-slate-500">
-                          Total Cheques
+                          {activeCustomer.schedules.length > 0
+                            ? `Loan Payable (${activeCustomer.loanSummary.totalLoans})`
+                            : 'Total Cheques'}
                         </div>
                         <div className="font-mono-num font-bold text-slate-950 text-sm mt-0.5">
-                          {activeCustomer.cheques.length}{' '}
-                          <span className="text-[11px] font-normal text-slate-500">
-                            ({formatIndianShort(activeCustomer.totalAmount)})
-                          </span>
+                          {activeCustomer.schedules.length > 0 ? (
+                            <>
+                              {formatIndianShort(
+                                activeCustomer.loanSummary.totalPayable
+                              )}{' '}
+                              <span className="text-[11px] font-normal text-slate-500">
+                                ({activeCustomer.loanSummary.paidInstallments}/
+                                {activeCustomer.loanSummary.totalInstallments}{' '}
+                                paid)
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              {activeCustomer.cheques.length}{' '}
+                              <span className="text-[11px] font-normal text-slate-500">
+                                ({formatIndianShort(activeCustomer.totalAmount)})
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5">
                         <div className="text-[11px] text-slate-500">
-                          Returned Cheques
+                          {activeCustomer.schedules.length > 0
+                            ? 'Outstanding Loan Balance'
+                            : 'Returned Cheques'}
                         </div>
                         <div
                           className={`font-mono-num font-bold text-sm mt-0.5 ${
-                            activeCustomer.returnedCount > 0
+                            activeCustomer.schedules.length > 0
+                              ? activeCustomer.loanSummary.unpaidBalance > 0
+                                ? 'text-amber-800'
+                                : 'text-emerald-700'
+                              : activeCustomer.returnedCount > 0
                               ? 'text-red-700'
                               : 'text-slate-900'
                           }`}
                         >
-                          {activeCustomer.returnedCount}{' '}
-                          <span className="text-[11px] font-normal text-slate-500">
-                            ({formatIndianShort(activeCustomer.returnedAmount)})
-                          </span>
+                          {activeCustomer.schedules.length > 0 ? (
+                            formatIndianShort(
+                              activeCustomer.loanSummary.unpaidBalance
+                            )
+                          ) : (
+                            <>
+                              {activeCustomer.returnedCount}{' '}
+                              <span className="text-[11px] font-normal text-slate-500">
+                                (
+                                {formatIndianShort(
+                                  activeCustomer.returnedAmount
+                                )}
+                                )
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5">
                         <div className="text-[11px] text-slate-500">
-                          Recovered Amount
+                          {activeCustomer.schedules.length > 0
+                            ? 'Total Paid (Installments)'
+                            : 'Recovered Amount'}
                         </div>
                         <div className="font-mono-num font-bold text-emerald-700 text-sm mt-0.5">
-                          {formatIndianShort(activeCustomer.recoveredAmount)}
+                          {formatIndianShort(
+                            activeCustomer.schedules.length > 0
+                              ? activeCustomer.loanSummary.paidAmount
+                              : activeCustomer.recoveredAmount
+                          )}
                         </div>
                       </div>
                       <div className="bg-indigo-50/70 border border-indigo-200 rounded-md p-2.5">
                         <div className="text-[11px] text-indigo-800">
-                          Stored Documents
+                          Cheques &amp; Vault Docs
                         </div>
                         <div className="font-mono-num font-bold text-indigo-950 text-sm mt-0.5">
+                          {activeCustomer.cheques.length} Chq ·{' '}
                           {activeCustomer.documents.length} Files
                         </div>
                       </div>
@@ -886,6 +990,20 @@ export function CustomersView({
               {/* Customer Detail Tabs */}
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <div className="border-b border-slate-200 bg-slate-50 px-4 flex flex-wrap items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('loans')}
+                    className={`inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-colors ${
+                      activeTab === 'loans'
+                        ? 'border-[#0B192C] text-slate-950'
+                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <CalendarCheck2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>
+                      Loans &amp; Installments ({activeCustomer.schedules.length})
+                    </span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('documents')}
@@ -929,6 +1047,276 @@ export function CustomersView({
                     </span>
                   </button>
                 </div>
+
+                {/* TAB 0: Customer Loans & Full Installment Payment History */}
+                {activeTab === 'loans' && (
+                  <div className="p-5 space-y-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-xs font-semibold text-slate-900">
+                          Loan Summary &amp; Full Installment Payment History
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Showing all loan schemes and due schedules for{' '}
+                          <strong className="text-slate-700">
+                            {activeCustomer.profile.partyName}
+                          </strong>
+                          .
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadCustomerPdf(activeCustomer)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 rounded-md transition-colors whitespace-nowrap"
+                      >
+                        <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>Download PDF Statement</span>
+                      </button>
+                    </div>
+
+                    {activeCustomer.schedules.length === 0 ? (
+                      <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-xs text-slate-500 bg-slate-50/40">
+                        No loan installment schedules found for{' '}
+                        {activeCustomer.profile.partyName}. Create a new loan
+                        schedule under <strong>Customer Schedule</strong> to
+                        auto-generate dues and payment history here.
+                      </div>
+                    ) : (
+                      <div className="space-y-5">
+                        {/* Aggregated Customer Loan KPI Bar */}
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                            <div className="text-[11px] text-slate-500">
+                              Total Principal
+                            </div>
+                            <div className="font-mono-num font-bold text-slate-900 mt-0.5">
+                              {formatINR(
+                                activeCustomer.loanSummary.totalPrincipal
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                            <div className="text-[11px] text-slate-500">
+                              Total Interest
+                            </div>
+                            <div className="font-mono-num font-bold text-slate-900 mt-0.5">
+                              {formatINR(
+                                activeCustomer.loanSummary.totalInterest
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                            <div className="text-[11px] text-slate-500">
+                              Total Payable
+                            </div>
+                            <div className="font-mono-num font-bold text-slate-950 mt-0.5">
+                              {formatINR(
+                                activeCustomer.loanSummary.totalPayable
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-md">
+                            <div className="text-[11px] text-emerald-800">
+                              Paid ({activeCustomer.loanSummary.paidInstallments}
+                              /{activeCustomer.loanSummary.totalInstallments})
+                            </div>
+                            <div className="font-mono-num font-bold text-emerald-800 mt-0.5">
+                              {formatINR(activeCustomer.loanSummary.paidAmount)}
+                            </div>
+                          </div>
+                          <div className="p-3 bg-[#0B192C] text-white rounded-md">
+                            <div className="text-[11px] text-slate-300">
+                              Outstanding Balance
+                            </div>
+                            <div className="font-mono-num font-bold mt-0.5">
+                              {formatINR(
+                                activeCustomer.loanSummary.unpaidBalance
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Individual Loan Schedule Cards */}
+                        {activeCustomer.schedules.map((sch) => {
+                          const rowsWithBal = computeScheduleRowsWithBalance(
+                            sch.cheques || []
+                          );
+                          const schTotalPayable = round2(
+                            sch.totalPayable ??
+                              (sch.cheques || []).reduce(
+                                (s, r) => s + (r.amount || 0),
+                                0
+                              )
+                          );
+                          const schPrincipal = round2(
+                            sch.principalAmount ??
+                              (sch.cheques || []).reduce(
+                                (s, r) =>
+                                  s + (r.principalAmount ?? r.amount ?? 0),
+                                0
+                              )
+                          );
+                          const schPaid = round2(
+                            (sch.cheques || []).reduce((s, r) => {
+                              const info = resolveInstallmentPaidInfo(
+                                r,
+                                chequeById
+                              );
+                              return info.isPaid ? s + (r.amount || 0) : s;
+                            }, 0)
+                          );
+                          const schBal = Math.max(
+                            0,
+                            round2(schTotalPayable - schPaid)
+                          );
+
+                          return (
+                            <div
+                              key={sch.id}
+                              className="border border-slate-200 rounded-lg overflow-hidden"
+                            >
+                              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <div className="space-y-0.5">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-semibold text-slate-900">
+                                      Loan Ref:{' '}
+                                      <span className="font-mono-num">
+                                        {sch.loanRefNo || sch.id.slice(-8)}
+                                      </span>
+                                    </span>
+                                    {sch.frequency && (
+                                      <span className="text-[11px] text-slate-600">
+                                        · {getFrequencyLabel(sch.frequency)}
+                                      </span>
+                                    )}
+                                    {sch.interestType && (
+                                      <span className="text-[11px] text-slate-600">
+                                        ·{' '}
+                                        {getInterestTypeLabel(sch.interestType)}
+                                        {sch.interestType !== 'ZERO_INTEREST'
+                                          ? ` (${sch.interestRate ?? 0}%)`
+                                          : ''}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500">
+                                    {sch.draweeBank || 'Bank N/A'}
+                                    {sch.draweeBranch
+                                      ? ` (${sch.draweeBranch})`
+                                      : ''}
+                                    {sch.notes ? ` · ${sch.notes}` : ''}
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-3 font-mono-num text-[11px]">
+                                  <span>
+                                    Principal:{' '}
+                                    <strong className="text-slate-900">
+                                      {formatINR(schPrincipal)}
+                                    </strong>
+                                  </span>
+                                  <span>
+                                    Paid:{' '}
+                                    <strong className="text-emerald-700">
+                                      {formatINR(schPaid)}
+                                    </strong>
+                                  </span>
+                                  <span>
+                                    Remaining:{' '}
+                                    <strong className="text-slate-950">
+                                      {formatINR(schBal)}
+                                    </strong>
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse text-xs">
+                                  <thead>
+                                    <tr className="border-b border-slate-200 bg-white text-[11px] font-semibold text-slate-600">
+                                      <th className="py-2 px-3">Inst. #</th>
+                                      <th className="py-2 px-3">Due Date</th>
+                                      <th className="py-2 px-3">
+                                        Deposit Date
+                                      </th>
+                                      <th className="py-2 px-3">Cheque #</th>
+                                      <th className="py-2 px-3 text-right">
+                                        Due Amount (₹)
+                                      </th>
+                                      <th className="py-2 px-3">Paid Status</th>
+                                      <th className="py-2 px-3 text-right">
+                                        Balance (₹)
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-200">
+                                    {rowsWithBal.map(
+                                      ({ item, runningBalance }, idx) => {
+                                        const paidInfo =
+                                          resolveInstallmentPaidInfo(
+                                            item,
+                                            chequeById
+                                          );
+                                        return (
+                                          <tr
+                                            key={item.id}
+                                            className="hover:bg-slate-50/70"
+                                          >
+                                            <td className="py-2 px-3 font-mono-num text-slate-500">
+                                              {item.dueNumber ?? idx + 1}
+                                            </td>
+                                            <td className="py-2 px-3 font-mono-num text-slate-700 whitespace-nowrap">
+                                              {formatIndianDate(
+                                                item.originalDate
+                                              )}
+                                            </td>
+                                            <td className="py-2 px-3 font-mono-num text-slate-900 whitespace-nowrap">
+                                              {formatIndianDate(
+                                                item.effectiveDate
+                                              )}
+                                            </td>
+                                            <td className="py-2 px-3 font-mono-num font-semibold text-slate-900">
+                                              #{item.chequeNumber}
+                                            </td>
+                                            <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-900">
+                                              {formatINR(item.amount)}
+                                            </td>
+                                            <td className="py-2 px-3 whitespace-nowrap">
+                                              <span
+                                                className={`text-[11px] font-semibold ${
+                                                  paidInfo.isPaid
+                                                    ? 'text-emerald-700'
+                                                    : paidInfo.effectiveStatus ===
+                                                      'Returned / Bounced'
+                                                    ? 'text-red-700'
+                                                    : paidInfo.effectiveStatus ===
+                                                      'In Clearing'
+                                                    ? 'text-blue-700'
+                                                    : 'text-slate-600'
+                                                }`}
+                                              >
+                                                {paidInfo.paidLabel}
+                                              </span>
+                                            </td>
+                                            <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-900">
+                                              {formatINR(
+                                                item.balance ?? runningBalance
+                                              )}
+                                            </td>
+                                          </tr>
+                                        );
+                                      }
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* TAB 1: Documents & Attachments */}
                 {activeTab === 'documents' && (
