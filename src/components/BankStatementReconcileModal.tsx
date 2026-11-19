@@ -19,8 +19,11 @@ import {
 
 export interface ReconcileConfirmItem {
   chequeId: string;
+  matchType: 'CLEARED' | 'RETURNED';
+  targetStatus: 'Cleared' | 'Returned / Bounced';
   returnReason: string;
   bouncedDate: string;
+  clearedDate?: string;
 }
 
 interface BankStatementReconcileModalProps {
@@ -47,22 +50,34 @@ export function BankStatementReconcileModal({
   const [parseError, setParseError] = useState<string | null>(null);
   const [result, setResult] = useState<StatementParseResult | null>(null);
 
-  // Editable per-match selection, reason, and return date
+  // Editable per-match selection, reason, and return date (Returned cheques)
   const [selectedMap, setSelectedMap] = useState<Record<string, boolean>>({});
   const [reasonMap, setReasonMap] = useState<Record<string, string>>({});
   const [dateMap, setDateMap] = useState<Record<string, string>>({});
+
+  // Editable per-match selection and clearing date (Cleared cheques)
+  const [clearedSelectedMap, setClearedSelectedMap] = useState<
+    Record<string, boolean>
+  >({});
+  const [clearedDateMap, setClearedDateMap] = useState<Record<string, string>>(
+    {}
+  );
 
   const processFile = async (file: File) => {
     setParseError(null);
     setIsParsing(true);
     try {
       const parsed = await parseAndReconcileBankStatement(file, cheques, batches);
+      console.log('PARSE RESULT:', {
+        cleared: parsed.clearedMatches,
+        returned: parsed.returnedMatches,
+      });
       setResult(parsed);
 
       const nextSelected: Record<string, boolean> = {};
       const nextReasons: Record<string, string> = {};
       const nextDates: Record<string, string> = {};
-      for (const item of parsed.matchedCandidates) {
+      for (const item of parsed.returnedMatches) {
         nextSelected[item.id] = true;
         nextReasons[item.id] = item.detectedReason;
         nextDates[item.id] = item.statementDate;
@@ -70,6 +85,15 @@ export function BankStatementReconcileModal({
       setSelectedMap(nextSelected);
       setReasonMap(nextReasons);
       setDateMap(nextDates);
+
+      const nextClearedSelected: Record<string, boolean> = {};
+      const nextClearedDates: Record<string, string> = {};
+      for (const item of parsed.clearedMatches) {
+        nextClearedSelected[item.id] = !item.alreadyCleared;
+        nextClearedDates[item.id] = item.statementDate;
+      }
+      setClearedSelectedMap(nextClearedSelected);
+      setClearedDateMap(nextClearedDates);
     } catch (err) {
       setParseError(
         err instanceof Error
@@ -98,19 +122,102 @@ export function BankStatementReconcileModal({
     }
   };
 
-  const selectedCandidates = result
-    ? result.matchedCandidates.filter((item) => selectedMap[item.id])
+  const handleAssignAmbiguousCheque = (rowIndex: number, chequeId: string) => {
+    if (!result || !chequeId) return;
+    const targetRow = result.unmatchedReturnRows.find((u) => u.rowIndex === rowIndex);
+    const chosenCheque = cheques.find((c) => c.id === chequeId);
+    if (!targetRow || !chosenCheque) return;
+    const batch = batches.find((b) => b.id === chosenCheque.batchId);
+    const newId = `rec-manual-${targetRow.rowIndex}-${chosenCheque.id}`;
+
+    if (result.returnedMatches.some((m) => m.cheque.id === chosenCheque.id)) {
+      return;
+    }
+
+    const hadCleared = result.clearedMatches.some(
+      (c) => c.cheque.id === chosenCheque.id
+    );
+
+    const newCandidate = {
+      id: newId,
+      matchType: 'RETURNED' as const,
+      matchMethod: 'MANUAL' as const,
+      cheque: chosenCheque,
+      batchName: batch?.batchRef || 'Unknown Batch',
+      isBatchLocked: Boolean(batch?.isLocked),
+      statementDate: targetRow.txnDate || new Date().toISOString().slice(0, 10),
+      statementNarration: targetRow.narration,
+      statementAmount: targetRow.amount,
+      isCredit: targetRow.isCredit,
+      txnDirection: targetRow.isCredit
+        ? ('CR' as const)
+        : targetRow.debitAmount > 0
+        ? ('DR' as const)
+        : undefined,
+      amountMatches:
+        targetRow.amount > 0
+          ? Math.abs(chosenCheque.amount - targetRow.amount) < 1.0
+          : true,
+      detectedReason: targetRow.detectedReason || 'Cheque Returned (Manual Review)',
+      alreadyReturned: chosenCheque.status === 'Returned / Bounced',
+      matchedStatementNumber: targetRow.chequeNumber || 'Manual Assignment',
+      hasPassedAndReturnedPair: hadCleared,
+    };
+
+    setResult({
+      ...result,
+      returnedMatches: [...result.returnedMatches, newCandidate],
+      clearedMatches: result.clearedMatches.filter(
+        (c) => c.cheque.id !== chosenCheque.id
+      ),
+      unmatchedReturnRows: result.unmatchedReturnRows.filter(
+        (u) => u.rowIndex !== rowIndex
+      ),
+    });
+    setSelectedMap((prev) => ({ ...prev, [newId]: true }));
+    setReasonMap((prev) => ({ ...prev, [newId]: newCandidate.detectedReason }));
+    setDateMap((prev) => ({ ...prev, [newId]: newCandidate.statementDate }));
+  };
+
+  const selectedReturnedCandidates = result
+    ? result.returnedMatches.filter((item) => selectedMap[item.id])
     : [];
 
+  const selectedClearedCandidates = result
+    ? result.clearedMatches.filter((item) => clearedSelectedMap[item.id])
+    : [];
+
+  const totalSelectedCount =
+    selectedReturnedCandidates.length + selectedClearedCandidates.length;
+
   const handleConfirm = () => {
-    if (!result || selectedCandidates.length === 0) return;
-    const payload: ReconcileConfirmItem[] = selectedCandidates.map((item) => ({
-      chequeId: item.cheque.id,
-      returnReason:
-        (reasonMap[item.id] || '').trim() || 'Cheque Returned (Bank Statement)',
-      bouncedDate: dateMap[item.id] || new Date().toISOString().slice(0, 10),
-    }));
-    onConfirmReconcile(payload, result.fileName);
+    if (!result || totalSelectedCount === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const returnedPayload: ReconcileConfirmItem[] = selectedReturnedCandidates.map(
+      (item) => ({
+        chequeId: item.cheque.id,
+        matchType: 'RETURNED',
+        targetStatus: 'Returned / Bounced',
+        returnReason:
+          (reasonMap[item.id] || '').trim() || 'Cheque Returned (Bank Statement)',
+        bouncedDate: dateMap[item.id] || today,
+      })
+    );
+
+    const returnedChequeIdSet = new Set(returnedPayload.map((r) => r.chequeId));
+    const clearedPayload: ReconcileConfirmItem[] = selectedClearedCandidates
+      .filter((item) => !returnedChequeIdSet.has(item.cheque.id))
+      .map((item) => ({
+        chequeId: item.cheque.id,
+        matchType: 'CLEARED',
+        targetStatus: 'Cleared',
+        returnReason: '',
+        bouncedDate: '',
+        clearedDate: clearedDateMap[item.id] || today,
+      }));
+
+    onConfirmReconcile([...clearedPayload, ...returnedPayload], result.fileName);
   };
 
   return (
@@ -130,10 +237,10 @@ export function BankStatementReconcileModal({
                 id="reconcile-modal-title"
                 className="text-base font-semibold text-slate-900"
               >
-                Bank Statement Auto-Reconciliation (Returned Cheques)
+                Bank Statement Auto-Reconciliation (Cleared &amp; Returned Cheques)
               </h3>
               <p className="text-xs text-slate-500">
-                Upload Excel (.xlsx, .xls), CSV (.csv), or PDF (.pdf) bank statements to detect returned/bounced cheques and preview status updates
+                Upload Excel (.xlsx, .xls), CSV (.csv), or PDF (.pdf) bank statements to auto-detect cleared/passed and returned/bounced cheques
               </p>
             </div>
           </div>
@@ -185,7 +292,7 @@ export function BankStatementReconcileModal({
                       : 'Drag & drop your bank statement file here, or click Browse'}
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    Supports .xlsx, .xls, .csv, and .pdf · Scans for CHQ RET, BOUNCE, UNPAID, INSUFFICIENT FUNDS, PAYMENT STOPPED, SIGN MISMATCH, STALE, etc.
+                    Supports .xlsx, .xls, .csv, and .pdf · Detects clearing entries (BY CLG, OW CLG, CTS, CHQ PAID) &amp; return entries (CHQ RET, REJECT, BOUNCE, INSUFF FUNDS)
                   </div>
                 </div>
               </div>
@@ -229,16 +336,16 @@ export function BankStatementReconcileModal({
                     {result.totalRowsParsed} ({result.fileType})
                   </div>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <div className="text-slate-500">Return Entries Detected</div>
-                  <div className="mt-1 text-base font-bold font-mono-num text-amber-700">
-                    {result.returnRowsDetected}
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md">
+                  <div className="text-emerald-800">Cleared / Passed Cheques</div>
+                  <div className="mt-1 text-base font-bold font-mono-num text-emerald-900">
+                    {result.clearedMatches.length}
                   </div>
                 </div>
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md">
-                  <div className="text-emerald-800">Matched Ledger Cheques</div>
-                  <div className="mt-1 text-base font-bold font-mono-num text-emerald-900">
-                    {result.matchedCandidates.length}
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <div className="text-red-800">Returned / Bounced Cheques</div>
+                  <div className="mt-1 text-base font-bold font-mono-num text-red-900">
+                    {result.returnedMatches.length}
                   </div>
                 </div>
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
@@ -249,26 +356,202 @@ export function BankStatementReconcileModal({
                 </div>
               </div>
 
-              {/* Matched Cheques Confirmation Table */}
-              {result.matchedCandidates.length === 0 ? (
-                <div className="p-8 border border-slate-200 rounded-md text-center space-y-1.5">
-                  <p className="text-sm font-medium text-slate-900">
-                    No matching returned cheques found in this statement
-                  </p>
-                  <p className="text-xs text-slate-500 max-w-lg mx-auto">
-                    {result.returnRowsDetected === 0
-                      ? 'No transaction descriptions matched return keywords (CHQ RET, BOUNCE, UNPAID, INSUFFICIENT FUNDS, etc.).'
-                      : 'Return entries were detected, but their 6-digit cheque numbers did not match any cheques stored in the active company.'}
-                  </p>
-                </div>
-              ) : (
-                <div className="border border-slate-200 rounded-md overflow-hidden">
-                  <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-900">
-                      Preview &amp; Confirm Matched Returned Cheques ({selectedCandidates.length} of{' '}
-                      {result.matchedCandidates.length} selected)
+              {/* Empty Match State */}
+              {result.clearedMatches.length === 0 &&
+                result.returnedMatches.length === 0 && (
+                  <div className="p-8 border border-slate-200 rounded-md text-center space-y-1.5">
+                    <p className="text-sm font-medium text-slate-900">
+                      No matching cleared or returned cheques found in this statement
+                    </p>
+                    <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                      {result.returnRowsDetected === 0
+                        ? 'No statement transactions matched stored cheque numbers and amounts in the active company.'
+                        : 'Return entries were detected, but no stored cheques in the active company matched any extracted candidate cheque number or last-4 digits with matching amount (< ₹0.01 difference). See unmatched diagnostics below.'}
+                    </p>
+                  </div>
+                )}
+
+              {/* Cleared Cheques Confirmation Table */}
+              {result.clearedMatches.length > 0 && (
+                <div className="border border-emerald-200 rounded-md overflow-hidden">
+                  <div className="px-4 py-2.5 bg-emerald-50/70 border-b border-emerald-200 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-emerald-950">
+                        Cleared / Passed Cheques ({selectedClearedCandidates.length} of{' '}
+                        {result.clearedMatches.length} selected)
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                        Passed / Cleared
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-emerald-800">
+                      Returned entries always override cleared rows · Existing Returned/Settled cheques protected
                     </span>
-                    <span className="text-[11px] text-slate-500">
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+                          <th className="py-2.5 pl-4 pr-2 w-9">
+                            <input
+                              type="checkbox"
+                              aria-label="Toggle all matched cleared cheques"
+                              checked={
+                                result.clearedMatches.length > 0 &&
+                                result.clearedMatches.every(
+                                  (m) => clearedSelectedMap[m.id]
+                                )
+                              }
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                const next: Record<string, boolean> = {};
+                                result.clearedMatches.forEach((m) => {
+                                  next[m.id] = checked;
+                                });
+                                setClearedSelectedMap(next);
+                              }}
+                              className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-700"
+                            />
+                          </th>
+                          <th className="py-2.5 px-3">Cheque Number</th>
+                          <th className="py-2.5 px-3">Batch &amp; Narration</th>
+                          <th className="py-2.5 px-3 text-right">Amount (₹)</th>
+                          <th className="py-2.5 px-3">Bank Date</th>
+                          <th className="py-2.5 px-3">Matched Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {result.clearedMatches.map((item) => {
+                          const isSelected = Boolean(clearedSelectedMap[item.id]);
+                          return (
+                            <tr
+                              key={item.id}
+                              className={!isSelected ? 'opacity-50 bg-slate-50/50' : 'bg-white'}
+                            >
+                              <td className="py-3 pl-4 pr-2 align-top">
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Include cleared cheque ${item.cheque.chequeNumber}`}
+                                  checked={isSelected}
+                                  onChange={(e) =>
+                                    setClearedSelectedMap((prev) => ({
+                                      ...prev,
+                                      [item.id]: e.target.checked,
+                                    }))
+                                  }
+                                  className="mt-1 rounded border-slate-300 text-emerald-700 focus:ring-emerald-700"
+                                />
+                              </td>
+                              <td className="py-3 px-3 align-top">
+                                <div className="font-mono-num font-bold text-slate-900">
+                                  #{item.cheque.chequeNumber}
+                                </div>
+                                <div className="text-[11px] text-slate-600 truncate max-w-[175px]">
+                                  {item.cheque.partyName}
+                                </div>
+                                <div className="text-[10px] text-slate-400">
+                                  Chq Date: {formatIndianDate(item.cheque.chequeDate)}
+                                </div>
+                                {item.matchMethod === 'LAST_4' && (
+                                  <div className="text-[10px] text-slate-500 font-mono-num mt-0.5">
+                                    Last-4 match ({item.matchedStatementNumber})
+                                  </div>
+                                )}
+                                {item.matchMethod === 'AMOUNT_UNIQUE' && (
+                                  <div className="text-[10px] text-sky-700 font-medium mt-0.5">
+                                    Unique pending amount match
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-3 px-3 align-top max-w-[300px]">
+                                <div className="font-mono-num font-medium text-slate-900 flex items-center gap-1.5">
+                                  <span>{item.batchName}</span>
+                                  {item.isBatchLocked && (
+                                    <span
+                                      title="Batch is locked — Status updates cleanly without unlocking"
+                                      className="inline-flex items-center gap-0.5 text-[10px] font-sans font-semibold text-amber-700"
+                                    >
+                                      <Lock className="w-3 h-3" aria-hidden="true" />
+                                      <span>Locked</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="mt-1.5 flex items-start gap-1.5 bg-slate-50 border border-slate-200 rounded px-2 py-1">
+                                  <span
+                                    className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono-num font-bold border ${
+                                      item.txnDirection === 'CR' || item.isCredit
+                                        ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                                        : item.txnDirection === 'DR'
+                                        ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                        : 'bg-slate-100 text-slate-700 border-slate-300'
+                                    }`}
+                                  >
+                                    {item.txnDirection || (item.isCredit ? 'CR' : 'DR/AMT')}
+                                  </span>
+                                  <span className="text-[10px] font-mono-num text-slate-700 whitespace-normal break-words leading-snug">
+                                    {item.statementNarration}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-3 align-top text-right whitespace-nowrap">
+                                <div className="font-mono-num font-semibold text-slate-900">
+                                  {formatINR(item.cheque.amount)}
+                                </div>
+                                <div className="text-[10px] font-mono-num text-emerald-700">
+                                  Amount matched
+                                </div>
+                              </td>
+                              <td className="py-3 px-3 align-top">
+                                <input
+                                  type="date"
+                                  aria-label={`Clearing date for cheque ${item.cheque.chequeNumber}`}
+                                  value={clearedDateMap[item.id] || item.statementDate}
+                                  onChange={(e) =>
+                                    setClearedDateMap((prev) => ({
+                                      ...prev,
+                                      [item.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="px-2 py-1 text-[11px] font-mono-num border border-slate-300 rounded bg-white"
+                                />
+                              </td>
+                              <td className="py-3 px-3 align-top space-y-1">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                  Passed / Cleared
+                                </span>
+                                <div className="text-[10px] text-slate-500">
+                                  {item.cheque.status} → Cleared
+                                </div>
+                                {item.alreadyCleared && (
+                                  <div className="text-[10px] text-slate-500">
+                                    Already Cleared in ledger
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Matched Returned Cheques Confirmation Table */}
+              {result.returnedMatches.length > 0 && (
+                <div className="border border-red-200 rounded-md overflow-hidden">
+                  <div className="px-4 py-2.5 bg-red-50/70 border-b border-red-200 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-red-950">
+                        Returned / Bounced Cheques ({selectedReturnedCandidates.length} of{' '}
+                        {result.returnedMatches.length} selected)
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-900 border border-red-300">
+                        Returned
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-red-800">
                       Locked batches also allow Status &amp; Return Reason updates
                     </span>
                   </div>
@@ -280,15 +563,15 @@ export function BankStatementReconcileModal({
                           <th className="py-2.5 pl-4 pr-2 w-9">
                             <input
                               type="checkbox"
-                              aria-label="Toggle all matched cheques"
+                              aria-label="Toggle all matched returned cheques"
                               checked={
-                                result.matchedCandidates.length > 0 &&
-                                result.matchedCandidates.every((m) => selectedMap[m.id])
+                                result.returnedMatches.length > 0 &&
+                                result.returnedMatches.every((m) => selectedMap[m.id])
                               }
                               onChange={(e) => {
                                 const checked = e.target.checked;
                                 const next: Record<string, boolean> = {};
-                                result.matchedCandidates.forEach((m) => {
+                                result.returnedMatches.forEach((m) => {
                                   next[m.id] = checked;
                                 });
                                 setSelectedMap(next);
@@ -306,7 +589,7 @@ export function BankStatementReconcileModal({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">
-                        {result.matchedCandidates.map((item) => {
+                        {result.returnedMatches.map((item) => {
                           const currentReason = reasonMap[item.id] ?? '';
                           const isPreset = BOUNCE_REASONS.includes(currentReason);
                           const isSelected = Boolean(selectedMap[item.id]);
@@ -331,8 +614,13 @@ export function BankStatementReconcileModal({
                                 />
                               </td>
                               <td className="py-3 px-3 align-top">
-                                <div className="font-mono-num font-bold text-slate-900">
-                                  #{item.cheque.chequeNumber}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono-num font-bold text-slate-900">
+                                    #{item.cheque.chequeNumber}
+                                  </span>
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-red-100 text-red-900 border border-red-200">
+                                    Returned
+                                  </span>
                                 </div>
                                 <div className="text-[11px] text-slate-600 truncate max-w-[175px]">
                                   {item.cheque.partyName}
@@ -340,8 +628,33 @@ export function BankStatementReconcileModal({
                                 <div className="text-[10px] text-slate-400">
                                   Chq Date: {formatIndianDate(item.cheque.chequeDate)}
                                 </div>
+                                {item.matchMethod === 'LAST_4' && (
+                                  <div className="text-[10px] text-slate-500 font-mono-num mt-0.5">
+                                    Last-4 match ({item.matchedStatementNumber})
+                                  </div>
+                                )}
+                                {item.matchMethod === 'STMT_XREF' && (
+                                  <div className="text-[10px] text-sky-700 font-medium mt-0.5">
+                                    Statement cross-ref match
+                                  </div>
+                                )}
+                                {item.matchMethod === 'AMOUNT_UNIQUE' && (
+                                  <div className="text-[10px] text-sky-700 font-medium mt-0.5">
+                                    Unique amount match (no Chq # in line)
+                                  </div>
+                                )}
+                                {item.matchMethod === 'MANUAL' && (
+                                  <div className="text-[10px] text-amber-700 font-medium mt-0.5">
+                                    Manual review assignment
+                                  </div>
+                                )}
+                                {item.hasPassedAndReturnedPair && (
+                                  <div className="text-[10px] text-red-700 font-medium mt-0.5">
+                                    Passed + Returned pair → Final: Returned
+                                  </div>
+                                )}
                               </td>
-                              <td className="py-3 px-3 align-top">
+                              <td className="py-3 px-3 align-top max-w-[280px]">
                                 <div className="font-mono-num font-medium text-slate-900 flex items-center gap-1.5">
                                   <span>{item.batchName}</span>
                                   {item.isBatchLocked && (
@@ -354,11 +667,21 @@ export function BankStatementReconcileModal({
                                     </span>
                                   )}
                                 </div>
-                                <div
-                                  className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[180px]"
-                                  title={item.statementNarration}
-                                >
-                                  {item.statementNarration}
+                                <div className="mt-1.5 flex items-start gap-1.5 bg-red-50/50 border border-red-200/80 rounded px-2 py-1">
+                                  <span
+                                    className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono-num font-bold border ${
+                                      item.txnDirection === 'CR' || item.isCredit
+                                        ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                                        : item.txnDirection === 'DR'
+                                        ? 'bg-red-100 text-red-900 border-red-300'
+                                        : 'bg-slate-100 text-slate-700 border-slate-300'
+                                    }`}
+                                  >
+                                    {item.txnDirection || (item.isCredit ? 'CR' : 'DR/AMT')}
+                                  </span>
+                                  <span className="text-[10px] font-mono-num text-slate-700 whitespace-normal break-words leading-snug">
+                                    {item.statementNarration}
+                                  </span>
                                 </div>
                               </td>
                               <td className="py-3 px-3 align-top text-right whitespace-nowrap">
@@ -376,6 +699,11 @@ export function BankStatementReconcileModal({
                                     {item.amountMatches
                                       ? 'Amount matched'
                                       : `Stmt: ${formatINR(item.statementAmount)}`}
+                                  </div>
+                                )}
+                                {item.associatedChargeAmount && item.associatedChargeAmount > 0 && (
+                                  <div className="text-[10px] font-mono-num text-slate-500">
+                                    Bank Chg ignored: {formatINR(item.associatedChargeAmount)}
                                   </div>
                                 )}
                               </td>
@@ -443,6 +771,39 @@ export function BankStatementReconcileModal({
                 </div>
               )}
 
+              {/* Bank Return Charges & Deduplicated Entries Log */}
+              {(result.ignoredChargeRows.length > 0 ||
+                result.ignoredDuplicateRows.length > 0) && (
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-700 space-y-1.5">
+                  <div className="font-semibold text-slate-900">
+                    Separated Bank Return Charges &amp; Duplicate Lines (
+                    {result.ignoredChargeRows.length} charge
+                    {result.ignoredChargeRows.length === 1 ? '' : 's'},{' '}
+                    {result.ignoredDuplicateRows.length} duplicate
+                    {result.ignoredDuplicateRows.length === 1 ? '' : 's'} ignored)
+                  </div>
+                  <ul className="list-disc pl-5 text-[11px] text-slate-600 space-y-0.5">
+                    {result.ignoredChargeRows.slice(0, 5).map((chg) => (
+                      <li key={`chg-${chg.rowIndex}`}>
+                        Row {chg.rowIndex} (Bank Return Charge):{' '}
+                        {chg.chequeNumber ? `Chq #${chg.chequeNumber}` : 'Charge entry'}
+                        {chg.amount > 0 ? ` · ${formatINR(chg.amount)}` : ''} —{' '}
+                        {chg.narration.slice(0, 80)}
+                        {chg.narration.length > 80 ? '...' : ''}
+                      </li>
+                    ))}
+                    {result.ignoredDuplicateRows.slice(0, 3).map((dup) => (
+                      <li key={`dup-${dup.rowIndex}`}>
+                        Row {dup.rowIndex} (Duplicate / Superseded Entry):{' '}
+                        {dup.chequeNumber ? `Chq #${dup.chequeNumber}` : 'Entry'} —{' '}
+                        {dup.narration.slice(0, 80)}
+                        {dup.narration.length > 80 ? '...' : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {/* Unmatched return rows summary */}
               {result.unmatchedReturnRows.length > 0 && (
                 <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-950 space-y-1.5">
@@ -452,13 +813,71 @@ export function BankStatementReconcileModal({
                       {result.unmatchedReturnRows.length} return statement line(s) could not be matched to a cheque in this company
                     </span>
                   </div>
-                  <ul className="list-disc pl-5 text-[11px] text-amber-900 space-y-0.5">
+                  <ul className="list-disc pl-5 text-[11px] text-amber-900 space-y-2">
                     {result.unmatchedReturnRows.slice(0, 5).map((u) => (
-                      <li key={u.rowIndex}>
-                        Row {u.rowIndex}:{' '}
-                        {u.chequeNumber ? `Chq #${u.chequeNumber}` : 'No 6-digit Chq #'} —{' '}
-                        {u.narration.slice(0, 90)}
-                        {u.narration.length > 90 ? '...' : ''}
+                      <li key={u.rowIndex} className="space-y-0.5">
+                        <div>
+                          <span className="font-semibold">Row {u.rowIndex}:</span>{' '}
+                          {u.chequeNumber ? `Chq #${u.chequeNumber}` : 'No Chq # detected'}
+                          {u.amount > 0 ? ` · ${formatINR(u.amount)}` : ''} —{' '}
+                          {u.narration.slice(0, 90)}
+                          {u.narration.length > 90 ? '...' : ''}
+                        </div>
+                        {u.debugInfo && (
+                          <div className="text-[10px] text-amber-800/90 font-mono-num pl-1 space-y-1">
+                            {u.debugInfo.manualReviewRequired &&
+                              u.debugInfo.ambiguousCheques &&
+                              u.debugInfo.ambiguousCheques.length > 1 && (
+                                <div className="font-sans flex flex-wrap items-center gap-2 py-1">
+                                  <span className="font-semibold text-red-800">
+                                    Manual Review Required: Multiple cheques match{' '}
+                                    {formatINR(u.amount)} — select returned cheque:
+                                  </span>
+                                  <select
+                                    aria-label={`Assign cheque for row ${u.rowIndex}`}
+                                    defaultValue=""
+                                    onChange={(e) => {
+                                      if (e.target.value) {
+                                        handleAssignAmbiguousCheque(
+                                          u.rowIndex,
+                                          e.target.value
+                                        );
+                                      }
+                                    }}
+                                    className="px-2 py-1 text-[11px] font-mono-num border border-amber-400 rounded bg-white text-slate-900"
+                                  >
+                                    <option value="">Select matching cheque...</option>
+                                    {u.debugInfo.ambiguousCheques.map((ac) => (
+                                      <option key={ac.id} value={ac.id}>
+                                        #{ac.chequeNumber} · {ac.partyName} ·{' '}
+                                        {formatIndianDate(ac.chequeDate)} ({ac.status})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                            <div>
+                              Candidates:{' '}
+                              {u.debugInfo.extractedCandidates.length > 0
+                                ? u.debugInfo.extractedCandidates
+                                    .map((c) => `${c.raw} (pad6: ${c.padded6}, last4: ${c.last4})`)
+                                    .join(', ')
+                                : 'None'}{' '}
+                              · Tx Amt: {formatINR(u.debugInfo.transactionAmount)}
+                            </div>
+                            {u.debugInfo.closestStoredCheques.length > 0 && (
+                              <div>
+                                Closest stored:{' '}
+                                {u.debugInfo.closestStoredCheques
+                                  .map(
+                                    (c) =>
+                                      `#${c.chequeNumber} (${formatINR(c.amount)}, ${c.mismatchReason})`
+                                  )
+                                  .join(' | ')}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -472,7 +891,7 @@ export function BankStatementReconcileModal({
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 shrink-0">
           <div className="text-xs text-slate-500">
             {result
-              ? `Ready to mark ${selectedCandidates.length} cheque(s) as Returned / Bounced.`
+              ? `Ready to mark ${selectedClearedCandidates.length} cheque(s) Cleared and ${selectedReturnedCandidates.length} cheque(s) Returned.`
               : 'Select an Excel, CSV, or PDF bank statement to start matching.'}
           </div>
           <div className="flex items-center gap-2.5">
@@ -485,14 +904,19 @@ export function BankStatementReconcileModal({
             </button>
             <button
               type="button"
-              disabled={!result || selectedCandidates.length === 0}
+              disabled={!result || totalSelectedCount === 0}
               onClick={handleConfirm}
-              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-red-700 rounded-md hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                selectedReturnedCandidates.length > 0 &&
+                selectedClearedCandidates.length === 0
+                  ? 'bg-red-700 hover:bg-red-800'
+                  : 'bg-slate-900 hover:bg-slate-800'
+              }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
               <span>
-                Confirm &amp; Update {selectedCandidates.length} Cheque
-                {selectedCandidates.length === 1 ? '' : 's'} to Returned
+                Confirm &amp; Update {totalSelectedCount} Cheque
+                {totalSelectedCount === 1 ? '' : 's'}
               </span>
             </button>
           </div>

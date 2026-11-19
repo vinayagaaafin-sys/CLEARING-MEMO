@@ -200,6 +200,7 @@ export interface CompanyWorkspace {
   activeBatchId: string;
   customers?: CustomerProfile[];
   documents?: CustomerDocument[];
+  letters?: Record<string, unknown>[];
 }
 
 export type SystemAuditAction =
@@ -218,7 +219,9 @@ export type SystemAuditAction =
   | 'CHEQUE_REDEPOSITED'
   | 'DOCUMENT_UPLOADED'
   | 'DOCUMENT_DELETED'
-  | 'DOCUMENT_SHARED';
+  | 'DOCUMENT_SHARED'
+  | 'NOC_LETTER_GENERATED'
+  | 'DD_CANCELLATION_GENERATED';
 
 export interface SystemAuditLogEntry {
   id: string;

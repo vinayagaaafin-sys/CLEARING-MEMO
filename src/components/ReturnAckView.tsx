@@ -731,68 +731,9 @@ export function ReturnAckView({
                       )}
                     </div>
 
-                    {/* BOTTOM: Bearer Authorization + Company Authorized Signatory & Stamp */}
+                    {/* BOTTOM: Bank Counter Acknowledgement */}
                     {page.isLastPage ? (
                       <footer className="space-y-3 pt-4 avoid-break">
-                        <div className="grid grid-cols-12 gap-4 items-stretch">
-                          {/* Bearer / Employee Authorization Block */}
-                          <div className="col-span-7 border border-slate-400 bg-slate-50/70 p-3.5 space-y-2 text-[10px]">
-                            <div className="font-bold uppercase tracking-wide text-slate-950 border-b border-slate-300 pb-1">
-                              Bearer / Employee Authorization
-                            </div>
-                            <div className="grid grid-cols-12 gap-y-1.5 items-center">
-                              <span className="col-span-4 text-slate-600">Bearer Name:</span>
-                              <strong className="col-span-8 text-slate-950">
-                                {bearer.bearerName || '______________________________'}
-                              </strong>
-
-                              <span className="col-span-4 text-slate-600">
-                                Designation / ID:
-                              </span>
-                              <span className="col-span-8 text-slate-900">
-                                {bearer.bearerDesignation || '______________________________'}
-                              </span>
-
-                              <span className="col-span-4 text-slate-600">ID Proof Details:</span>
-                              <strong className="col-span-8 font-mono-num text-slate-950">
-                                {bearer.idProofType}:{' '}
-                                {bearer.idProofNumber || '____________________'}
-                              </strong>
-                            </div>
-                            <div className="pt-1.5 flex items-end gap-3">
-                              <span className="text-slate-600 pb-1 shrink-0">
-                                Specimen Signature of Bearer:
-                              </span>
-                              <div className="flex-1 border border-slate-300 bg-white h-10" />
-                            </div>
-                          </div>
-
-                          {/* Company Authorized Signatory & Stamp Block */}
-                          <div className="col-span-5 border border-slate-900 bg-white p-3.5 flex flex-col justify-between text-[10px]">
-                            <div className="font-bold text-slate-950 leading-tight">
-                              For {profile.companyName}
-                            </div>
-
-                            <div className="flex items-end justify-between gap-2 my-2">
-                              <div className="flex-1 border-b border-slate-500 pt-8" />
-                              <div className="w-16 h-14 border border-dashed border-slate-400 flex items-center justify-center text-center text-[8.5px] text-slate-500 leading-tight shrink-0">
-                                Company
-                                <br />
-                                Stamp
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="font-bold text-slate-950">
-                                {activeSignatoryName || 'Authorized Signatory'}
-                              </div>
-                              <div className="text-[9px] text-slate-600">
-                                {activeSignatoryDesignation || 'Authorized Signatory'}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
                         {/* Perforated Bank Counter Acknowledgement */}
                         <div className="border-t border-dashed border-slate-400 pt-2.5 text-[9.5px] text-slate-600 space-y-2">
                           <div className="font-bold uppercase tracking-wide text-slate-700">

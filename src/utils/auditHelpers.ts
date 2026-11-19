@@ -18,6 +18,8 @@ export const AUDIT_ACTION_LABELS: Record<SystemAuditAction, string> = {
   DOCUMENT_UPLOADED: 'Customer Document Uploaded',
   DOCUMENT_DELETED: 'Customer Document Deleted',
   DOCUMENT_SHARED: 'Document Shared via WhatsApp',
+  NOC_LETTER_GENERATED: 'NOC Letter Generated',
+  DD_CANCELLATION_GENERATED: 'DD Cancellation Letter Generated',
 };
 
 export const ALL_AUDIT_ACTIONS: SystemAuditAction[] = [
@@ -37,6 +39,8 @@ export const ALL_AUDIT_ACTIONS: SystemAuditAction[] = [
   'DOCUMENT_UPLOADED',
   'DOCUMENT_DELETED',
   'DOCUMENT_SHARED',
+  'NOC_LETTER_GENERATED',
+  'DD_CANCELLATION_GENERATED',
 ];
 
 export function formatAuditTimestamp(iso: string): string {

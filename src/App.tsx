@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  AlertTriangle,
   BarChart3,
   Building2,
+  CheckCircle2,
+  Download,
   FileCheck2,
   FilePlus2,
   History,
@@ -10,7 +13,9 @@ import {
   Menu,
   Plus,
   Printer,
+  ScrollText,
   ShieldCheck,
+  Upload,
   Users,
   X,
 } from 'lucide-react';
@@ -22,6 +27,10 @@ import {
 } from './components/CustomersView';
 import { DashboardView } from './components/DashboardView';
 import { DocumentPreviewModal } from './components/DocumentPreviewModal';
+import {
+  LetterAuditPayload,
+  LettersCertificatesView,
+} from './components/LettersCertificatesView';
 import { PrintMemoView } from './components/PrintMemoView';
 import { RapidEntryView } from './components/RapidEntryView';
 import { RecoveryActionSubmission } from './components/RecoveryActionModal';
@@ -34,7 +43,10 @@ import { SettingsView } from './components/SettingsView';
 import { SystemAuditLogView } from './components/SystemAuditLogView';
 import { deleteDocumentBlob } from './services/documentBlobStore';
 import {
+  exportFullBackupJson,
   loadTreasuryState,
+  parseBackupJsonState,
+  ParsedBackupResult,
   resetTreasuryState,
   saveTreasuryState,
 } from './services/treasuryStore';
@@ -67,6 +79,7 @@ type ActiveModule =
   | 'customers'
   | 'memo'
   | 'return-ack'
+  | 'letters'
   | 'return-analytics'
   | 'audit-log'
   | 'settings';
@@ -92,6 +105,14 @@ export default function App() {
   const [customerNavSelection, setCustomerNavSelection] =
     useState<CustomerInitialSelection | null>(null);
   const [deepLinkDoc, setDeepLinkDoc] = useState<CustomerDocument | null>(null);
+  const headerBackupInputRef = useRef<HTMLInputElement | null>(null);
+  const [backupNotice, setBackupNotice] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const [pendingRestore, setPendingRestore] = useState<
+    (Extract<ParsedBackupResult, { ok: true }> & { fileName: string }) | null
+  >(null);
 
   useEffect(() => {
     saveTreasuryState(state);
@@ -792,18 +813,73 @@ export default function App() {
         prev.companies[0];
       const batchMap = new Map(targetComp.batches.map((b) => [b.id, b]));
       const actor = targetComp.profile.defaultChecker || 'Treasury System';
-      const affectedBatchCounts = new Map<string, number>();
+      const affectedBatchStats = new Map<
+        string,
+        { cleared: number; returned: number }
+      >();
       const newLogs: SystemAuditLogEntry[] = [];
+      let totalCleared = 0;
+      let totalReturned = 0;
 
       const nextCheques = targetComp.cheques.map((c) => {
         const match = updateMap.get(c.id);
         if (!match) return c;
-        affectedBatchCounts.set(
-          c.batchId,
-          (affectedBatchCounts.get(c.batchId) || 0) + 1
-        );
-        const reason = match.returnReason.trim() || 'Returned by Bank';
+
+        const targetStatus: ChequeStatus =
+          match.matchType === 'CLEARED' || match.targetStatus === 'Cleared'
+            ? 'Cleared'
+            : 'Returned / Bounced';
+
+        // Never overwrite an already Returned or Settled cheque with Cleared
+        if (
+          targetStatus === 'Cleared' &&
+          (c.status === 'Returned / Bounced' ||
+            c.status === 'Settled / Recovered')
+        ) {
+          return c;
+        }
+
+        const stats = affectedBatchStats.get(c.batchId) || {
+          cleared: 0,
+          returned: 0,
+        };
         const batchRef = batchMap.get(c.batchId)?.batchRef;
+
+        if (targetStatus === 'Cleared') {
+          stats.cleared += 1;
+          affectedBatchStats.set(c.batchId, stats);
+          totalCleared += 1;
+          const clearedDate = match.clearedDate || today;
+
+          newLogs.push(
+            createAuditEntry({
+              timestamp: now,
+              companyId: targetComp.id,
+              companyName: targetComp.profile.companyName,
+              batchId: c.batchId,
+              batchRef,
+              chequeId: c.id,
+              chequeNumber: c.chequeNumber,
+              actionType: 'CHEQUE_STATUS_CHANGED',
+              actor: `${actor} (Auto-Reconciliation)`,
+              description: `Auto-updated cheque #${c.chequeNumber} (${c.partyName}) via statement "${fileName}": ${c.status} → Cleared (${clearedDate}).`,
+              oldValue: c.status,
+              newValue: 'Cleared',
+            })
+          );
+
+          return {
+            ...c,
+            status: 'Cleared' as ChequeStatus,
+            clearedDate,
+            updatedAt: now,
+          };
+        }
+
+        stats.returned += 1;
+        affectedBatchStats.set(c.batchId, stats);
+        totalReturned += 1;
+        const reason = match.returnReason.trim() || 'Returned by Bank';
 
         newLogs.push(
           createAuditEntry({
@@ -832,17 +908,26 @@ export default function App() {
       });
 
       const nextBatches = targetComp.batches.map((b) => {
-        const count = affectedBatchCounts.get(b.id);
-        if (!count) return b;
+        const stats = affectedBatchStats.get(b.id);
+        if (!stats || (stats.cleared === 0 && stats.returned === 0)) return b;
+        const parts: string[] = [];
+        if (stats.cleared > 0) {
+          parts.push(
+            `${stats.cleared} cheque${stats.cleared === 1 ? '' : 's'} marked Cleared`
+          );
+        }
+        if (stats.returned > 0) {
+          parts.push(
+            `${stats.returned} cheque${stats.returned === 1 ? '' : 's'} marked Returned`
+          );
+        }
         const entry = {
           id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           action: 'STATUS_UPDATED' as const,
           actorRole: 'Checker' as const,
           actorName: actor,
           timestamp: now,
-          reason: `Bank statement reconciliation (${fileName}): ${count} cheque${
-            count === 1 ? '' : 's'
-          } marked Returned`,
+          reason: `Bank statement reconciliation (${fileName}): ${parts.join(', ')}`,
         };
         return {
           ...b,
@@ -851,26 +936,45 @@ export default function App() {
       });
 
       // Summary Bank Statement Upload log entry
-      const batchRefsList = Array.from(affectedBatchCounts.keys())
+      const batchRefsList = Array.from(affectedBatchStats.keys())
         .map((bid) => batchMap.get(bid)?.batchRef)
         .filter(Boolean)
         .join(', ');
+
+      const summaryParts: string[] = [];
+      if (totalCleared > 0) {
+        summaryParts.push(
+          `${totalCleared} cheque${totalCleared === 1 ? '' : 's'} marked Cleared`
+        );
+      }
+      if (totalReturned > 0) {
+        summaryParts.push(
+          `${totalReturned} cheque${totalReturned === 1 ? '' : 's'} marked Returned`
+        );
+      }
 
       const uploadSummaryLog = createAuditEntry({
         timestamp: now,
         companyId: targetComp.id,
         companyName: targetComp.profile.companyName,
         batchId:
-          affectedBatchCounts.size === 1
-            ? Array.from(affectedBatchCounts.keys())[0]
+          affectedBatchStats.size === 1
+            ? Array.from(affectedBatchStats.keys())[0]
             : undefined,
         batchRef: batchRefsList || undefined,
         actionType: 'BANK_STATEMENT_UPLOADED',
         actor,
-        description: `Uploaded bank statement "${fileName}": ${updates.length} cheque${
-          updates.length === 1 ? '' : 's'
-        } auto-updated to Returned status.`,
-        metadata: { fileName, updatedCount: updates.length },
+        description: `Uploaded bank statement "${fileName}": ${
+          summaryParts.length > 0
+            ? summaryParts.join(', ')
+            : '0 status changes applied'
+        }.`,
+        metadata: {
+          fileName,
+          updatedCount: totalCleared + totalReturned,
+          clearedCount: totalCleared,
+          returnedCount: totalReturned,
+        },
       });
 
       return {
@@ -1008,6 +1112,46 @@ export default function App() {
           chequeCount: details.chequeIds.length,
           mode: details.kind,
         },
+      });
+      return {
+        ...prev,
+        auditLogs: [log, ...(prev.auditLogs || [])],
+      };
+    });
+  };
+
+  const handleLogLetterGenerated = (details: LetterAuditPayload) => {
+    const now = new Date().toISOString();
+    setState((prev) => {
+      const targetComp =
+        prev.companies.find((c) => c.id === prev.activeCompanyId) ||
+        prev.companies[0];
+      const actionLabel =
+        details.actionMode === 'PDF_DOWNLOADED' ? 'Downloaded PDF' : 'Printed';
+      const isNoc = details.letterType === 'NOC';
+      const log = createAuditEntry({
+        timestamp: now,
+        companyId: targetComp.id,
+        companyName: targetComp.profile.companyName,
+        customerName: isNoc ? details.subjectPartyOrBank : undefined,
+        documentTitle: `${isNoc ? 'NOC' : 'DD Cancellation'} (${details.refNo})`,
+        actionType: isNoc
+          ? 'NOC_LETTER_GENERATED'
+          : 'DD_CANCELLATION_GENERATED',
+        actor:
+          currentUserRole === 'Admin'
+            ? `${targetComp.profile.defaultChecker || 'Treasury Admin'} (Admin)`
+            : `${targetComp.profile.defaultMaker || 'Treasury Executive'} (Maker)`,
+        description: `${actionLabel} ${
+          isNoc
+            ? `No Objection Certificate for ${details.subjectPartyOrBank}`
+            : `Bank DD Cancellation Letter to ${details.subjectPartyOrBank}`
+        }${
+          details.instrumentOrAccountRef
+            ? ` (${isNoc ? 'A/c' : 'DD #'}: ${details.instrumentOrAccountRef})`
+            : ''
+        } for ${formatINR(details.amount)} [Ref: ${details.refNo}].`,
+        newValue: `${formatINR(details.amount)} · ${details.refNo}`,
       });
       return {
         ...prev,
@@ -1551,6 +1695,44 @@ export default function App() {
     setActiveModule('dashboard');
   };
 
+  const handleExportFullBackup = () => {
+    const result = exportFullBackupJson(state);
+    setBackupNotice({
+      type: 'success',
+      message: `Full JSON backup downloaded (${result.filename}) — ${result.companyCount} ${result.companyCount === 1 ? 'company' : 'companies'}, ${result.batchCount} batches, ${result.chequeCount} cheques.`,
+    });
+  };
+
+  const handleRestoreBackupFile = async (file: File) => {
+    try {
+      const text = await file.text();
+      const parsed = parseBackupJsonState(text);
+      if (!parsed.ok) {
+        setBackupNotice({ type: 'error', message: parsed.error });
+        return;
+      }
+      setPendingRestore({ ...parsed, fileName: file.name });
+    } catch {
+      setBackupNotice({
+        type: 'error',
+        message: 'Failed to read the selected backup file.',
+      });
+    }
+  };
+
+  const handleConfirmRestoreBackup = () => {
+    if (!pendingRestore) return;
+    setState(pendingRestore.state);
+    saveTreasuryState(pendingRestore.state);
+    setEditingCheque(null);
+    setCustomerNavSelection(null);
+    setBackupNotice({
+      type: 'success',
+      message: `Backup restored from "${pendingRestore.fileName}" — ${pendingRestore.companyCount} ${pendingRestore.companyCount === 1 ? 'company' : 'companies'}, ${pendingRestore.batchCount} batches, and ${pendingRestore.chequeCount} cheques loaded.`,
+    });
+    setPendingRestore(null);
+  };
+
   const currentActorName =
     currentUserRole === 'Admin'
       ? activeCompany.profile.defaultChecker || 'Treasury Admin'
@@ -1764,6 +1946,11 @@ export default function App() {
       count: companyReturnedCount,
     },
     {
+      id: 'letters',
+      label: 'Letters / NOC & DD',
+      icon: ScrollText,
+    },
+    {
       id: 'return-analytics',
       label: 'Return Analytics',
       icon: BarChart3,
@@ -1783,6 +1970,7 @@ export default function App() {
     customers: 'Customer Profiles, Document Vault & WhatsApp Sharing',
     memo: 'Official A4 Bank Deposit Memo (PDF)',
     'return-ack': 'Returned Cheque Bank Acknowledgement Letter (PDF)',
+    letters: 'Official Letters & Certificates (NOC & DD Cancellation)',
     'return-analytics': 'Returned Cheques Smart Analytics & Field Checklist',
     'audit-log': 'Global System Audit Log & Activity History',
     settings: 'Corporate Entity & Multi-Bank Treasury Setup',
@@ -1936,7 +2124,41 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleExportFullBackup}
+              title="Download full JSON backup of all companies, cheques, batches, and audit logs"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+            >
+              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Export Full Backup (JSON)</span>
+            </button>
+
+            <input
+              ref={headerBackupInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  void handleRestoreBackupFile(file);
+                }
+                e.target.value = '';
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => headerBackupInputRef.current?.click()}
+              title="Restore all company data from a saved JSON backup"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+            >
+              <Upload className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Restore Backup (JSON)</span>
+            </button>
+
             {/* Active User Role Toggle (Admin vs Maker) */}
             <div
               className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 p-0.5 text-[11px]"
@@ -1994,7 +2216,34 @@ export default function App() {
         </header>
 
         {/* Main Content Canvas */}
-        <main className="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto print:p-0 print:max-w-none">
+          {backupNotice && (
+            <div
+              role="status"
+              className={`no-print mb-5 px-4 py-3 rounded-lg border text-xs flex items-center justify-between gap-3 ${
+                backupNotice.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                  : 'bg-red-50 border-red-200 text-red-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {backupNotice.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-red-700 shrink-0" />
+                )}
+                <span>{backupNotice.message}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBackupNotice(null)}
+                className="p-1 opacity-70 hover:opacity-100"
+                aria-label="Dismiss backup notice"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           {activeModule === 'dashboard' && (
             <DashboardView
               key={activeCompany.id}
@@ -2022,6 +2271,7 @@ export default function App() {
                 setReturnAckScope(scope);
                 setActiveModule('return-ack');
               }}
+              onNavigateLetters={() => setActiveModule('letters')}
               onReconcileReturnedCheques={handleReconcileReturnedCheques}
               onExecuteRecoveryAction={(chequeId, submission) =>
                 handleExecuteRecoveryAction(
@@ -2113,6 +2363,17 @@ export default function App() {
             />
           )}
 
+          {activeModule === 'letters' && (
+            <LettersCertificatesView
+              key={activeCompany.id}
+              profile={activeCompany.profile}
+              bankAccounts={activeCompany.bankAccounts}
+              customers={activeCompany.customers || []}
+              cheques={activeCompany.cheques}
+              onLogLetterGenerated={handleLogLetterGenerated}
+            />
+          )}
+
           {activeModule === 'return-analytics' && (
             <ReturnAnalyticsView
               key={activeCompany.id}
@@ -2150,6 +2411,9 @@ export default function App() {
               onUpdateBankAccount={handleUpdateBankAccount}
               onDeleteBankAccount={handleDeleteBankAccount}
               onResetDemoData={handleResetDemoData}
+              auditLogsCount={(state.auditLogs || []).length}
+              onExportFullBackup={handleExportFullBackup}
+              onRestoreBackupFile={handleRestoreBackupFile}
             />
           )}
         </main>
@@ -2167,6 +2431,96 @@ export default function App() {
           documentItem={deepLinkDoc}
           onClose={() => setDeepLinkDoc(null)}
         />
+      )}
+
+      {pendingRestore && (
+        <div
+          className="no-print fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="restore-backup-title"
+        >
+          <div className="bg-white border border-slate-200 rounded-lg max-w-md w-full p-5 space-y-4 shadow-lg">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-md bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
+                  <Upload className="w-4 h-4" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3
+                    id="restore-backup-title"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Confirm Full Backup Restore
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Review the backup summary before replacing current workspace data.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingRestore(null)}
+                className="p-1 text-slate-400 hover:text-slate-700"
+                aria-label="Close restore confirmation"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-md p-3.5 text-xs space-y-1.5">
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500">Backup File:</span>
+                <strong className="font-mono-num text-slate-900 truncate max-w-[230px]">
+                  {pendingRestore.fileName}
+                </strong>
+              </div>
+              {pendingRestore.exportedAt && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-slate-500">Exported At:</span>
+                  <strong className="font-mono-num text-slate-900">
+                    {new Date(pendingRestore.exportedAt).toLocaleString('en-IN')}
+                  </strong>
+                </div>
+              )}
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500">Companies:</span>
+                <strong className="font-mono-num text-slate-900">
+                  {pendingRestore.companyCount}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500">Clearing Batches:</span>
+                <strong className="font-mono-num text-slate-900">
+                  {pendingRestore.batchCount}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500">Cheque Entries:</span>
+                <strong className="font-mono-num text-slate-900">
+                  {pendingRestore.chequeCount}
+                </strong>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setPendingRestore(null)}
+                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRestoreBackup}
+                className="px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800"
+              >
+                Restore Backup Now
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

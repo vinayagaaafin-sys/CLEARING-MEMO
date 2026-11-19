@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  BarChart3,
   Check,
   CheckCircle2,
   Download,
@@ -12,6 +13,7 @@ import {
   Paperclip,
   Printer,
   RotateCcw,
+  ScrollText,
   Search,
   Send,
   ShieldCheck,
@@ -83,6 +85,7 @@ interface DashboardViewProps {
   onNavigateRapidEntry: () => void;
   onNavigatePrintMemo: () => void;
   onNavigateReturnAck: (scope: 'active' | 'all') => void;
+  onNavigateLetters?: () => void;
   onReconcileReturnedCheques: (
     updates: ReconcileConfirmItem[],
     fileName: string
@@ -116,6 +119,7 @@ export function DashboardView({
   onNavigateRapidEntry,
   onNavigatePrintMemo,
   onNavigateReturnAck,
+  onNavigateLetters,
   onReconcileReturnedCheques,
   onExecuteRecoveryAction,
   documents = [],
@@ -143,7 +147,8 @@ export function DashboardView({
   const [newBatchBankId, setNewBatchBankId] = useState(bankAccounts[0]?.id || '');
   const [showReconcileModal, setShowReconcileModal] = useState(false);
   const [reconcileAlert, setReconcileAlert] = useState<{
-    count: number;
+    clearedCount: number;
+    returnedCount: number;
     fileName: string;
   } | null>(null);
 
@@ -299,6 +304,139 @@ export function DashboardView({
     };
   }, [filteredCheques, batchMap]);
 
+  // High-level Batch Pipeline summary across all company batches
+  const batchPipeline = useMemo(() => {
+    const amountByBatchId = new Map<string, number>();
+    const countByBatchId = new Map<string, number>();
+    for (const c of cheques) {
+      amountByBatchId.set(c.batchId, (amountByBatchId.get(c.batchId) || 0) + c.amount);
+      countByBatchId.set(c.batchId, (countByBatchId.get(c.batchId) || 0) + 1);
+    }
+
+    const stages: {
+      key: BatchStatus;
+      label: string;
+      barColor: string;
+      dotColor: string;
+      textColor: string;
+      count: number;
+      amount: number;
+      chequeCount: number;
+      firstBatchId?: string;
+    }[] = [
+      {
+        key: 'Draft',
+        label: 'Draft',
+        barColor: 'bg-slate-500',
+        dotColor: 'bg-slate-500',
+        textColor: 'text-slate-700',
+        count: 0,
+        amount: 0,
+        chequeCount: 0,
+      },
+      {
+        key: 'Submitted to Bank',
+        label: 'Submitted to Bank',
+        barColor: 'bg-sky-600',
+        dotColor: 'bg-sky-600',
+        textColor: 'text-sky-800',
+        count: 0,
+        amount: 0,
+        chequeCount: 0,
+      },
+      {
+        key: 'Partially Realized',
+        label: 'Partially Realized',
+        barColor: 'bg-amber-500',
+        dotColor: 'bg-amber-500',
+        textColor: 'text-amber-800',
+        count: 0,
+        amount: 0,
+        chequeCount: 0,
+      },
+      {
+        key: 'Cleared',
+        label: 'Cleared',
+        barColor: 'bg-emerald-600',
+        dotColor: 'bg-emerald-600',
+        textColor: 'text-emerald-800',
+        count: 0,
+        amount: 0,
+        chequeCount: 0,
+      },
+      {
+        key: 'Returned / Bounced',
+        label: 'Returned / Bounced',
+        barColor: 'bg-red-600',
+        dotColor: 'bg-red-600',
+        textColor: 'text-red-800',
+        count: 0,
+        amount: 0,
+        chequeCount: 0,
+      },
+    ];
+
+    const stageMap = new Map(stages.map((s) => [s.key, s]));
+    let totalPipelineAmount = 0;
+    let lockedCount = 0;
+    let pendingApprovalCount = 0;
+    let unlockedDraftCount = 0;
+
+    for (const b of batches) {
+      const status: BatchStatus = b.status || 'Draft';
+      const stage = stageMap.get(status) || stages[0];
+      const batchAmt = amountByBatchId.get(b.id) || 0;
+      const batchChqCount = countByBatchId.get(b.id) || 0;
+
+      stage.count += 1;
+      stage.amount += batchAmt;
+      stage.chequeCount += batchChqCount;
+      if (!stage.firstBatchId) stage.firstBatchId = b.id;
+      totalPipelineAmount += batchAmt;
+
+      if (b.isLocked) {
+        lockedCount += 1;
+      } else if (status === 'Draft') {
+        unlockedDraftCount += 1;
+      } else {
+        pendingApprovalCount += 1;
+      }
+    }
+
+    const totalBatches = batches.length;
+    const maxStageCount = Math.max(1, ...stages.map((s) => s.count));
+
+    return {
+      totalBatches,
+      totalPipelineAmount,
+      maxStageCount,
+      stages,
+      governance: [
+        {
+          key: 'draft',
+          label: 'Draft (Open)',
+          count: unlockedDraftCount,
+          barColor: 'bg-slate-400',
+          textColor: 'text-slate-700',
+        },
+        {
+          key: 'pending',
+          label: 'Pending Checker Lock',
+          count: pendingApprovalCount,
+          barColor: 'bg-amber-500',
+          textColor: 'text-amber-800',
+        },
+        {
+          key: 'locked',
+          label: 'Locked (Approved)',
+          count: lockedCount,
+          barColor: 'bg-emerald-600',
+          textColor: 'text-emerald-800',
+        },
+      ],
+    };
+  }, [batches, cheques]);
+
   const allSelected =
     filteredCheques.length > 0 &&
     filteredCheques.every((c) => selectedIds.includes(c.id));
@@ -428,6 +566,199 @@ export function DashboardView({
             )}
           </div>
         </div>
+      </section>
+
+      {/* Treasury Batch Pipeline Overview Card */}
+      <section
+        aria-label="Treasury Batch Pipeline Overview"
+        className="bg-white border border-slate-200 rounded-lg p-5"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-md bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center shrink-0">
+              <BarChart3 className="w-4 h-4" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Treasury Batch Pipeline
+              </h2>
+              <p className="text-xs text-slate-500">
+                High-level status distribution across {batchPipeline.totalBatches}{' '}
+                clearing batch{batchPipeline.totalBatches === 1 ? '' : 'es'} · Total Value{' '}
+                <span className="font-mono-num font-semibold text-slate-700">
+                  {formatINR(batchPipeline.totalPipelineAmount)}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {batchPipeline.totalBatches > 0 && (
+            <div className="flex flex-wrap items-center gap-4 text-xs">
+              {batchPipeline.governance.map((gov) => {
+                const pct = Math.round(
+                  (gov.count / batchPipeline.totalBatches) * 100
+                );
+                return (
+                  <div key={gov.key} className="flex items-center gap-1.5">
+                    <span
+                      className={`w-2 h-2 rounded-full ${gov.barColor}`}
+                      aria-hidden="true"
+                    />
+                    <span className="text-slate-600">{gov.label}:</span>
+                    <span className={`font-mono-num font-semibold ${gov.textColor}`}>
+                      {gov.count} ({pct}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {batchPipeline.totalBatches === 0 ? (
+          <div className="py-6 text-center text-xs text-slate-500">
+            No clearing batches created yet. Create a batch to track the treasury clearing pipeline.
+          </div>
+        ) : (
+          <div className="pt-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left: Horizontal Bar Chart by Batch Workflow Status */}
+            <div className="lg:col-span-8 space-y-2.5">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <span>Batch Stage Breakdown</span>
+                <span>Batches · Value</span>
+              </div>
+              <div className="space-y-2">
+                {batchPipeline.stages.map((stage) => {
+                  const pct = Math.round(
+                    (stage.count / batchPipeline.totalBatches) * 100
+                  );
+                  const barWidthPct =
+                    stage.count > 0
+                      ? Math.max(6, Math.round((stage.count / batchPipeline.maxStageCount) * 100))
+                      : 0;
+                  const canSelect = Boolean(stage.firstBatchId);
+
+                  return (
+                    <button
+                      key={stage.key}
+                      type="button"
+                      disabled={!canSelect}
+                      onClick={() => {
+                        if (stage.firstBatchId) {
+                          onSelectBatch(stage.firstBatchId);
+                          setBatchScope('active');
+                          setSelectedIds([]);
+                        }
+                      }}
+                      title={
+                        canSelect
+                          ? `View ${stage.label} batch in ledger`
+                          : `No batches in ${stage.label} status`
+                      }
+                      className={`w-full grid grid-cols-12 items-center gap-3 text-left py-1 px-1.5 -mx-1.5 rounded transition-colors ${
+                        canSelect
+                          ? 'hover:bg-slate-50 cursor-pointer'
+                          : 'opacity-55 cursor-default'
+                      }`}
+                    >
+                      <div className="col-span-4 sm:col-span-3 flex items-center gap-2 min-w-0">
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${stage.dotColor}`}
+                          aria-hidden="true"
+                        />
+                        <span className="text-xs font-medium text-slate-800 truncate">
+                          {stage.label}
+                        </span>
+                      </div>
+
+                      <div className="col-span-4 sm:col-span-5">
+                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${stage.barColor}`}
+                            style={{ width: `${barWidthPct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-span-4 text-right font-mono-num text-xs whitespace-nowrap">
+                        <span className={`font-semibold ${stage.textColor}`}>
+                          {stage.count}
+                        </span>
+                        <span className="text-slate-400 ml-1">({pct}%)</span>
+                        <span className="hidden sm:inline text-slate-500 ml-2">
+                          · {formatIndianShort(stage.amount)}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right: Stacked Progress Indicator for Approval & Lock Readiness */}
+            <div className="lg:col-span-4 lg:border-l lg:border-slate-200 lg:pl-6 space-y-3">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <span>Approval &amp; Lock Progress</span>
+                <span className="font-mono-num text-slate-700">
+                  {Math.round(
+                    ((batchPipeline.governance[2]?.count || 0) /
+                      batchPipeline.totalBatches) *
+                      100
+                  )}
+                  % Locked
+                </span>
+              </div>
+
+              {/* Segmented Pipeline Progress Bar */}
+              <div
+                className="h-3.5 w-full bg-slate-100 rounded-full overflow-hidden flex"
+                role="img"
+                aria-label="Batch lock progress indicator"
+              >
+                {batchPipeline.governance.map((gov) => {
+                  const widthPct = (gov.count / batchPipeline.totalBatches) * 100;
+                  if (widthPct <= 0) return null;
+                  return (
+                    <div
+                      key={gov.key}
+                      style={{ width: `${widthPct}%` }}
+                      title={`${gov.label}: ${gov.count} batch(es)`}
+                      className={`h-full ${gov.barColor} transition-all duration-300`}
+                    />
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2 pt-1">
+                {batchPipeline.governance.map((gov) => {
+                  const pct = Math.round(
+                    (gov.count / batchPipeline.totalBatches) * 100
+                  );
+                  return (
+                    <div
+                      key={gov.key}
+                      className="flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <span
+                          className={`w-2.5 h-2.5 rounded-xs ${gov.barColor}`}
+                          aria-hidden="true"
+                        />
+                        <span>{gov.label}</span>
+                      </div>
+                      <div className="font-mono-num">
+                        <span className={`font-semibold ${gov.textColor}`}>
+                          {gov.count}
+                        </span>
+                        <span className="text-slate-400 ml-1">({pct}%)</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Maker-Checker Audit & Batch Lock Control */}
@@ -572,6 +903,17 @@ export function DashboardView({
                 <Printer className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Preview &amp; Print Bank Memo</span>
               </button>
+
+              {onNavigateLetters && (
+                <button
+                  type="button"
+                  onClick={onNavigateLetters}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+                >
+                  <ScrollText className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>Letters / NOC &amp; DD</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -889,13 +1231,21 @@ export function DashboardView({
                 />
                 <span>
                   <strong className="font-semibold">
-                    {reconcileAlert.count} cheque
-                    {reconcileAlert.count === 1 ? '' : 's'} updated to Returned
-                    status
+                    {reconcileAlert.clearedCount > 0 &&
+                      `${reconcileAlert.clearedCount} cheque${
+                        reconcileAlert.clearedCount === 1 ? '' : 's'
+                      } marked Cleared`}
+                    {reconcileAlert.clearedCount > 0 &&
+                      reconcileAlert.returnedCount > 0 &&
+                      ' · '}
+                    {reconcileAlert.returnedCount > 0 &&
+                      `${reconcileAlert.returnedCount} cheque${
+                        reconcileAlert.returnedCount === 1 ? '' : 's'
+                      } marked Returned`}
                   </strong>{' '}
                   <span className="text-emerald-800">
-                    from {reconcileAlert.fileName}. Return reasons have been
-                    populated across all matched batches.
+                    from {reconcileAlert.fileName}. Ledger statuses have been
+                    updated across all matched batches.
                   </span>
                 </span>
               </div>
@@ -1500,7 +1850,11 @@ export function DashboardView({
           batches={batches}
           onConfirmReconcile={(updates, fileName) => {
             onReconcileReturnedCheques(updates, fileName);
-            setReconcileAlert({ count: updates.length, fileName });
+            const clearedCount = updates.filter(
+              (u) => u.matchType === 'CLEARED' || u.targetStatus === 'Cleared'
+            ).length;
+            const returnedCount = updates.length - clearedCount;
+            setReconcileAlert({ clearedCount, returnedCount, fileName });
             setShowReconcileModal(false);
           }}
           onClose={() => setShowReconcileModal(false)}

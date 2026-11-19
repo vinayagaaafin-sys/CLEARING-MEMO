@@ -52,13 +52,15 @@ export function buildBackfillAuditLogs(
   }
 
   for (const comp of companies) {
-    const batchMap = new Map(comp.batches.map((b) => [b.id, b]));
+    const batches = Array.isArray(comp.batches) ? comp.batches : [];
+    const cheques = Array.isArray(comp.cheques) ? comp.cheques : [];
+    const batchMap = new Map(batches.map((b) => [b.id, b]));
     const defaultActor =
-      comp.profile.defaultMaker || comp.profile.defaultChecker || 'Treasury Desk';
+      comp.profile?.defaultMaker || comp.profile?.defaultChecker || 'Treasury Desk';
     const defaultChecker =
-      comp.profile.defaultChecker || comp.profile.defaultMaker || 'Treasury Checker';
+      comp.profile?.defaultChecker || comp.profile?.defaultMaker || 'Treasury Checker';
 
-    for (const batch of comp.batches) {
+    for (const batch of batches) {
       if (!coveredBatchCreated.has(batch.id)) {
         logs.push({
           id: `aud-init-batch-${batch.id}`,
@@ -125,7 +127,7 @@ export function buildBackfillAuditLogs(
       }
     }
 
-    for (const chq of comp.cheques) {
+    for (const chq of cheques) {
       const batch = batchMap.get(chq.batchId);
       logs.push({
         id: `aud-init-chq-${chq.id}`,
@@ -199,86 +201,169 @@ export function buildBackfillAuditLogs(
   return logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
+const DEFAULT_PROFILE: CompanyWorkspace['profile'] = {
+  companyName: 'Your Company Name',
+  registeredAddress: '',
+  pan: '',
+  gstin: '',
+  cin: '',
+  contactPhone: '',
+  treasuryEmail: '',
+  defaultMaker: 'Maker',
+  defaultChecker: 'Checker',
+  checkerPassword: '',
+  signatory1Name: '',
+  signatory1Designation: '',
+  signatory2Name: '',
+  signatory2Designation: '',
+};
+
+function normalizeCompanyWorkspace(
+  comp: Partial<CompanyWorkspace>,
+  index: number,
+  seedCustomersByCompany: Map<string, CompanyWorkspace['customers']>
+): CompanyWorkspace {
+  const id =
+    typeof comp.id === 'string' && comp.id.trim()
+      ? comp.id
+      : `comp-migrated-${index + 1}`;
+  const bankAccounts = Array.isArray(comp.bankAccounts) ? comp.bankAccounts : [];
+  const batches = Array.isArray(comp.batches) ? comp.batches : [];
+  const cheques = Array.isArray(comp.cheques) ? comp.cheques : [];
+  const hasCustomers = Array.isArray(comp.customers);
+  const customers = hasCustomers
+    ? comp.customers
+    : seedCustomersByCompany.get(id) || [];
+  const documents = Array.isArray(comp.documents) ? comp.documents : [];
+  const letters = Array.isArray(comp.letters) ? comp.letters : [];
+
+  const hasValidActiveBatch =
+    typeof comp.activeBatchId === 'string' &&
+    batches.some((b) => b && b.id === comp.activeBatchId);
+
+  return {
+    ...comp,
+    id,
+    profile: {
+      ...DEFAULT_PROFILE,
+      ...(comp.profile || {}),
+    },
+    bankAccounts,
+    batches,
+    cheques,
+    activeBatchId: hasValidActiveBatch
+      ? (comp.activeBatchId as string)
+      : batches[0]?.id || '',
+    customers,
+    documents,
+    letters,
+  };
+}
+
+export function normalizeTreasuryState(
+  rawInput: unknown
+): TreasuryState | null {
+  if (!rawInput || typeof rawInput !== 'object') return null;
+
+  const parsed = rawInput as Partial<TreasuryState> &
+    Partial<LegacyTreasuryState>;
+  const seedCustomersByCompany = new Map(
+    SEED_TREASURY_STATE.companies.map((c) => [c.id, c.customers || []])
+  );
+
+  // Multi-company format (merge every company & top-level field with defaults)
+  if (Array.isArray(parsed.companies) && parsed.companies.length > 0) {
+    const normalizedCompanies = (parsed.companies as unknown[])
+      .filter((c): c is Partial<CompanyWorkspace> => Boolean(c && typeof c === 'object'))
+      .map((comp, idx) =>
+        normalizeCompanyWorkspace(comp, idx, seedCustomersByCompany)
+      );
+
+    if (normalizedCompanies.length === 0) return null;
+
+    const hasValidActive = normalizedCompanies.some(
+      (c) => c.id === parsed.activeCompanyId
+    );
+    const hasAuditArray = Array.isArray(parsed.auditLogs);
+    const auditLogs = hasAuditArray
+      ? (parsed.auditLogs as SystemAuditLogEntry[])
+      : buildBackfillAuditLogs(normalizedCompanies);
+
+    return {
+      ...SEED_TREASURY_STATE,
+      ...parsed,
+      companies: normalizedCompanies,
+      activeCompanyId: hasValidActive
+        ? (parsed.activeCompanyId as string)
+        : normalizedCompanies[0].id,
+      auditLogs,
+    };
+  }
+
+  // Legacy single-company format migration without losing data
+  if (
+    parsed.profile &&
+    (Array.isArray(parsed.cheques) ||
+      Array.isArray(parsed.bankAccounts) ||
+      Array.isArray(parsed.batches))
+  ) {
+    const singleCompany = normalizeCompanyWorkspace(
+      {
+        id: 'comp-default',
+        profile: parsed.profile,
+        bankAccounts: Array.isArray(parsed.bankAccounts)
+          ? parsed.bankAccounts
+          : [],
+        batches: Array.isArray(parsed.batches) ? parsed.batches : [],
+        cheques: Array.isArray(parsed.cheques) ? parsed.cheques : [],
+        activeBatchId: parsed.activeBatchId || '',
+      },
+      0,
+      seedCustomersByCompany
+    );
+
+    const migratedCompanies = [singleCompany];
+    return {
+      activeCompanyId: singleCompany.id,
+      companies: migratedCompanies,
+      auditLogs: Array.isArray(parsed.auditLogs)
+        ? (parsed.auditLogs as SystemAuditLogEntry[])
+        : buildBackfillAuditLogs(migratedCompanies),
+    };
+  }
+
+  return null;
+}
+
 export function loadTreasuryState(): TreasuryState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const initial: TreasuryState = {
         ...SEED_TREASURY_STATE,
+        companies: SEED_TREASURY_STATE.companies.map((c) => ({
+          ...c,
+          letters: c.letters || [],
+          customers: c.customers || [],
+          documents: c.documents || [],
+        })),
         auditLogs: buildBackfillAuditLogs(SEED_TREASURY_STATE.companies),
       };
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
-    const parsed = JSON.parse(raw) as Partial<TreasuryState> & Partial<LegacyTreasuryState>;
 
-    // Multi-company format
-    if (parsed && Array.isArray(parsed.companies) && parsed.companies.length > 0) {
-      const seedCustomersByCompany = new Map(
-        SEED_TREASURY_STATE.companies.map((c) => [c.id, c.customers || []])
-      );
-      const normalizedCompanies = parsed.companies.map((comp) => {
-        const hasCustomers =
-          Array.isArray(comp.customers) && comp.customers.length > 0;
-        return {
-          ...comp,
-          customers: hasCustomers
-            ? comp.customers
-            : seedCustomersByCompany.get(comp.id) || [],
-          documents: Array.isArray(comp.documents) ? comp.documents : [],
-        };
-      });
-      const hasValidActive = normalizedCompanies.some(
-        (c) => c.id === parsed.activeCompanyId
-      );
-      const hasExistingLogs =
-        Array.isArray(parsed.auditLogs) && parsed.auditLogs.length > 0;
-      const nextLogs = hasExistingLogs
-        ? (parsed.auditLogs as SystemAuditLogEntry[])
-        : buildBackfillAuditLogs(normalizedCompanies);
-
-      const loaded: TreasuryState = {
-        companies: normalizedCompanies,
-        activeCompanyId: hasValidActive
-          ? (parsed.activeCompanyId as string)
-          : normalizedCompanies[0].id,
-        auditLogs: nextLogs,
-      };
-      if (!hasExistingLogs && nextLogs.length > 0) {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(loaded));
-      }
-      return loaded;
+    const parsed = JSON.parse(raw) as unknown;
+    const normalized = normalizeTreasuryState(parsed);
+    if (normalized) {
+      return normalized;
     }
 
-    // Migrate legacy single-company state cleanly without losing user data
-    if (
-      parsed &&
-      parsed.profile &&
-      Array.isArray(parsed.cheques) &&
-      Array.isArray(parsed.bankAccounts) &&
-      Array.isArray(parsed.batches)
-    ) {
-      const migratedCompanies: CompanyWorkspace[] = [
-        {
-          id: 'comp-bharat-precision',
-          profile: parsed.profile,
-          bankAccounts: parsed.bankAccounts,
-          batches: parsed.batches,
-          cheques: parsed.cheques,
-          activeBatchId:
-            parsed.activeBatchId || parsed.batches[0]?.id || 'batch-2026-0042',
-        },
-      ];
-      const migrated: TreasuryState = {
-        activeCompanyId: 'comp-bharat-precision',
-        companies: migratedCompanies,
-        auditLogs:
-          Array.isArray(parsed.auditLogs) && parsed.auditLogs.length > 0
-            ? parsed.auditLogs
-            : buildBackfillAuditLogs(migratedCompanies),
-      };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-      return migrated;
+    // Preserve unrecognized existing raw payload before falling back
+    try {
+      window.localStorage.setItem(`${STORAGE_KEY}_backup_raw`, raw);
+    } catch {
+      // Ignore quota errors
     }
 
     return {
@@ -304,10 +389,123 @@ export function saveTreasuryState(state: TreasuryState): void {
 export function resetTreasuryState(): TreasuryState {
   const fresh: TreasuryState = {
     ...SEED_TREASURY_STATE,
+    companies: SEED_TREASURY_STATE.companies.map((c) => ({
+      ...c,
+      letters: c.letters || [],
+      customers: c.customers || [],
+      documents: c.documents || [],
+    })),
     auditLogs: buildBackfillAuditLogs(SEED_TREASURY_STATE.companies),
   };
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
   return fresh;
+}
+
+export interface BackupExportResult {
+  filename: string;
+  companyCount: number;
+  chequeCount: number;
+  batchCount: number;
+}
+
+export function exportFullBackupJson(state: TreasuryState): BackupExportResult {
+  const payload = {
+    app: 'ClearLedger Treasury',
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    state,
+  };
+  const jsonText = JSON.stringify(payload, null, 2);
+  const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const dateTag = new Date().toISOString().slice(0, 10);
+  const filename = `ClearLedger_Full_Backup_${dateTag}.json`;
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  const chequeCount = state.companies.reduce(
+    (sum, c) => sum + (c.cheques?.length || 0),
+    0
+  );
+  const batchCount = state.companies.reduce(
+    (sum, c) => sum + (c.batches?.length || 0),
+    0
+  );
+
+  return {
+    filename,
+    companyCount: state.companies.length,
+    chequeCount,
+    batchCount,
+  };
+}
+
+export type ParsedBackupResult =
+  | {
+      ok: true;
+      state: TreasuryState;
+      exportedAt?: string;
+      companyCount: number;
+      chequeCount: number;
+      batchCount: number;
+    }
+  | {
+      ok: false;
+      error: string;
+    };
+
+export function parseBackupJsonState(jsonText: string): ParsedBackupResult {
+  try {
+    const rawParsed = JSON.parse(jsonText) as Record<string, unknown>;
+    if (!rawParsed || typeof rawParsed !== 'object') {
+      return { ok: false, error: 'Invalid JSON file: root object is missing.' };
+    }
+
+    const candidateState =
+      rawParsed.state && typeof rawParsed.state === 'object'
+        ? rawParsed.state
+        : rawParsed;
+
+    const normalized = normalizeTreasuryState(candidateState);
+    if (!normalized) {
+      return {
+        ok: false,
+        error:
+          'This JSON file does not contain valid ClearLedger company, batch, or cheque data.',
+      };
+    }
+
+    const chequeCount = normalized.companies.reduce(
+      (sum, c) => sum + c.cheques.length,
+      0
+    );
+    const batchCount = normalized.companies.reduce(
+      (sum, c) => sum + c.batches.length,
+      0
+    );
+
+    return {
+      ok: true,
+      state: normalized,
+      exportedAt:
+        typeof rawParsed.exportedAt === 'string'
+          ? rawParsed.exportedAt
+          : undefined,
+      companyCount: normalized.companies.length,
+      chequeCount,
+      batchCount,
+    };
+  } catch {
+    return {
+      ok: false,
+      error: 'Could not parse JSON file. Please select a valid ClearLedger backup (.json).',
+    };
+  }
 }
 
 /**

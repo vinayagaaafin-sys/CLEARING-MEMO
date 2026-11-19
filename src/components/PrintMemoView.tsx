@@ -596,18 +596,6 @@ export function PrintMemoView({
                     {/* BOTTOM CONTENT: Signatory & Teller Receipt on Final Page, or Continuation Footer */}
                     {page.isLastPage ? (
                       <footer className="space-y-3 pt-3 avoid-break">
-                        {/* Maker-Checker Audit Block */}
-                        <div className="grid grid-cols-2 gap-4 pt-2 text-[9.5px] text-slate-600">
-                          <div>
-                            <strong>Prepared By (Maker):</strong>
-                            <div>{doc.batch.makerName}</div>
-                          </div>
-                          <div>
-                            <strong>Verified By (Checker):</strong>
-                            <div>{doc.batch.checkerName}</div>
-                          </div>
-                        </div>
-
                         {/* Perforated Bank Teller Acknowledgement Receipt */}
                         <div className="border-t-2 border-dashed border-slate-500 pt-3">
                           <div className="border border-slate-900 p-4 bg-slate-50/40">

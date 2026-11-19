@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Building2,
   Check,
+  Download,
+  HardDriveDownload,
   Landmark,
   Layers,
   Plus,
   RotateCcw,
   Trash2,
+  Upload,
 } from 'lucide-react';
 import {
   CompanyBankAccount,
@@ -28,6 +31,9 @@ interface SettingsViewProps {
   onUpdateBankAccount: (id: string, patch: Partial<CompanyBankAccount>) => void;
   onDeleteBankAccount: (id: string) => void;
   onResetDemoData: () => void;
+  auditLogsCount?: number;
+  onExportFullBackup: () => void;
+  onRestoreBackupFile: (file: File) => void;
 }
 
 export function SettingsView({
@@ -43,7 +49,11 @@ export function SettingsView({
   onUpdateBankAccount,
   onDeleteBankAccount,
   onResetDemoData,
+  auditLogsCount = 0,
+  onExportFullBackup,
+  onRestoreBackupFile,
 }: SettingsViewProps) {
+  const restoreInputRef = useRef<HTMLInputElement | null>(null);
   const [draftProfile, setDraftProfile] = useState<CorporateProfile>(profile);
   const [savedNotice, setSavedNotice] = useState(false);
 
@@ -88,8 +98,75 @@ export function SettingsView({
     setShowAddBank(false);
   };
 
+  const totalBatches = companies.reduce(
+    (sum, c) => sum + (c.batches?.length || 0),
+    0
+  );
+  const totalCheques = companies.reduce(
+    (sum, c) => sum + (c.cheques?.length || 0),
+    0
+  );
+
   return (
     <div className="space-y-6 max-w-6xl">
+      {/* Full Data Backup & Restore (JSON) */}
+      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-2.5">
+            <HardDriveDownload
+              className="w-4 h-4 text-slate-800 mt-0.5 shrink-0"
+              aria-hidden="true"
+            />
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Full Data Backup &amp; Restore (JSON)
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Download a complete snapshot of all {companies.length}{' '}
+                {companies.length === 1 ? 'company' : 'companies'},{' '}
+                <span className="font-mono-num">{totalBatches}</span> batches,{' '}
+                <span className="font-mono-num">{totalCheques}</span> cheques, customers, and{' '}
+                <span className="font-mono-num">{auditLogsCount}</span> audit logs, or restore from a saved JSON backup.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={onExportFullBackup}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+            >
+              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Export Full Backup (JSON)</span>
+            </button>
+
+            <input
+              ref={restoreInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  onRestoreBackupFile(file);
+                }
+                e.target.value = '';
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => restoreInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+            >
+              <Upload className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Restore Backup (JSON)</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Multi-Company Directory */}
       <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-4">

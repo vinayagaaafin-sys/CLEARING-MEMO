@@ -520,29 +520,11 @@ export function generateBankDepositMemoPDF(
         pdf.setTextColor(15, 23, 42);
         pdf.text(wordsLines, LEFT + 3, y + 4.8);
 
-        // Anchor Maker-Checker + Bank Teller Receipt at bottom of final A4 page
-        const footerTop = Math.max(y + wordsH + 6, 218);
-
-        // Maker & Checker Audit Row (height 10mm)
-        const colW = (WIDTH - 6) / 2;
-        const sigY = footerTop;
-        const sigH = 10;
-
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(7.2);
-        pdf.setTextColor(71, 85, 105);
-        pdf.text('Prepared By (Maker):', LEFT, sigY + 3.5);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(fitText(pdf, doc.batch.makerName, colW), LEFT, sigY + 7.2);
-
-        const checkerX = LEFT + colW + 6;
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Verified By (Checker):', checkerX, sigY + 3.5);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(fitText(pdf, doc.batch.checkerName, colW), checkerX, sigY + 7.2);
+        // Anchor Bank Teller Receipt at bottom of final A4 page
+        const footerTop = Math.max(y + wordsH + 6, 226);
 
         // Perforated Divider
-        const perfY = sigY + sigH + 4;
+        const perfY = footerTop;
         pdf.setDrawColor(100, 116, 139);
         pdf.setLineWidth(0.35);
         pdf.setLineDashPattern([2, 1.5], 0);
