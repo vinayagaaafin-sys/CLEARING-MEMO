@@ -147,7 +147,7 @@ export default function App() {
   >(null);
 
   const prevStateRef = useRef<TreasuryState>(state);
-  const skipNextSupabaseSyncRef = useRef(false);
+  const lastRemoteAppliedStateRef = useRef<TreasuryState | null>(null);
   const supabaseHydratedRef = useRef(false);
   const pendingLocalEditBeforeHydrationRef = useRef(false);
 
@@ -163,12 +163,12 @@ export default function App() {
       (d) => d.id === docId && (!token || d.shareToken === token)
     );
     if (targetComp && foundDoc) {
-      skipNextSupabaseSyncRef.current = true;
-      setState((prev) =>
-        prev.activeCompanyId === targetComp.id
-          ? prev
-          : { ...prev, activeCompanyId: targetComp.id }
-      );
+      setState((prev) => {
+        if (prev.activeCompanyId === targetComp.id) return prev;
+        const next = { ...prev, activeCompanyId: targetComp.id };
+        lastRemoteAppliedStateRef.current = next;
+        return next;
+      });
       setCustomerNavSelection({
         customerKey: foundDoc.customerKey,
         tab: 'documents',
@@ -183,8 +183,8 @@ export default function App() {
     prevStateRef.current = state;
     saveTreasuryState(state);
 
-    if (skipNextSupabaseSyncRef.current) {
-      skipNextSupabaseSyncRef.current = false;
+    if (lastRemoteAppliedStateRef.current === state) {
+      lastRemoteAppliedStateRef.current = null;
       return;
     }
 
@@ -212,17 +212,18 @@ export default function App() {
         remoteState &&
         !pendingLocalEditBeforeHydrationRef.current
       ) {
-        skipNextSupabaseSyncRef.current = true;
+        lastRemoteAppliedStateRef.current = remoteState;
         setState(remoteState);
         resolveDeepLinkDocument(remoteState);
       } else if (pendingLocalEditBeforeHydrationRef.current) {
+        pendingLocalEditBeforeHydrationRef.current = false;
         void syncTreasuryStateDiff(initialSnapshot, prevStateRef.current);
       }
     });
 
     const unsubscribe = subscribeToTreasurySync((remoteState) => {
       if (!active) return;
-      skipNextSupabaseSyncRef.current = true;
+      lastRemoteAppliedStateRef.current = remoteState;
       setState(remoteState);
     });
 
@@ -2252,7 +2253,7 @@ export default function App() {
 
   const handleResetDemoData = () => {
     const fresh = resetTreasuryState();
-    skipNextSupabaseSyncRef.current = true;
+    lastRemoteAppliedStateRef.current = fresh;
     setState(fresh);
     void replaceTreasuryStateInSupabase(fresh);
     setEditingCheque(null);
@@ -2287,7 +2288,7 @@ export default function App() {
   const handleConfirmRestoreBackup = () => {
     if (!pendingRestore) return;
     const restored = pendingRestore.state;
-    skipNextSupabaseSyncRef.current = true;
+    lastRemoteAppliedStateRef.current = restored;
     setState(restored);
     saveTreasuryState(restored);
     void replaceTreasuryStateInSupabase(restored);

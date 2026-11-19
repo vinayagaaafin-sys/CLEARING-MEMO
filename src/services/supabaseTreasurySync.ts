@@ -13,7 +13,11 @@ import {
   SystemAuditLogEntry,
   TreasuryState,
 } from '../types/treasury';
-import { isSupabaseConfigured, supabase } from './supabaseClient';
+import {
+  isSupabaseConfigured,
+  supabase,
+  supabaseConnectionInfo,
+} from './supabaseClient';
 import { normalizeTreasuryState, saveTreasuryState } from './treasuryStore';
 
 interface WorkspaceRow {
@@ -175,6 +179,67 @@ function rowToAuditLog(row: AuditLogRow): SystemAuditLogEntry {
   };
 }
 
+let warnedMissingDayBookColumn = false;
+let warnedPermissionDenied = false;
+
+function isMissingDayBookColumnError(message: string): boolean {
+  return /day_book_entries/i.test(message) && /(column|schema cache)/i.test(message);
+}
+
+function isPermissionOrRlsError(message: string): boolean {
+  return /(permission denied|row-level security|42501|insufficient_privilege)/i.test(
+    message
+  );
+}
+
+function logSupabaseFallbackWarning(context: string, err: unknown): void {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (isPermissionOrRlsError(msg)) {
+    if (!warnedPermissionDenied) {
+      warnedPermissionDenied = true;
+      console.warn(
+        `[ClearLedger] Supabase ${context} blocked (${msg}) — falling back to localStorage. Grant anon/authenticated permissions & RLS policies in Supabase SQL Editor on treasury_workspaces, treasury_app_meta, and treasury_audit_logs.`
+      );
+    }
+    return;
+  }
+  console.warn(
+    `[ClearLedger] Supabase ${context} failed — falling back to localStorage:`,
+    msg
+  );
+}
+
+async function upsertWorkspacesSafe(rows: WorkspaceRow[]): Promise<void> {
+  if (!supabase || rows.length === 0) return;
+
+  const { error } = await supabase
+    .from('treasury_workspaces')
+    .upsert(rows, { onConflict: 'id' });
+
+  if (!error) return;
+
+  if (isMissingDayBookColumnError(error.message)) {
+    if (!warnedMissingDayBookColumn) {
+      warnedMissingDayBookColumn = true;
+      console.warn(
+        '[ClearLedger] Supabase table "treasury_workspaces" is missing column "day_book_entries". Run: ALTER TABLE treasury_workspaces ADD COLUMN IF NOT EXISTS day_book_entries jsonb NOT NULL DEFAULT \'[]\'::jsonb;'
+      );
+    }
+    const legacyRows = rows.map(
+      ({ day_book_entries: _omit, ...rest }) => rest
+    );
+    const { error: retryErr } = await supabase
+      .from('treasury_workspaces')
+      .upsert(legacyRows, { onConflict: 'id' });
+    if (retryErr) {
+      throw new Error(retryErr.message);
+    }
+    return;
+  }
+
+  throw new Error(error.message);
+}
+
 async function upsertAuditLogsInChunks(
   logs: SystemAuditLogEntry[]
 ): Promise<void> {
@@ -276,12 +341,7 @@ export async function replaceTreasuryStateInSupabase(
       const workspaceRows = nextState.companies.map((comp, idx) =>
         workspaceToRow(comp, idx)
       );
-      if (workspaceRows.length > 0) {
-        const { error: upsertWsErr } = await supabase
-          .from('treasury_workspaces')
-          .upsert(workspaceRows, { onConflict: 'id' });
-        if (upsertWsErr) throw new Error(upsertWsErr.message);
-      }
+      await upsertWorkspacesSafe(workspaceRows);
 
       const { error: metaErr } = await supabase
         .from('treasury_app_meta')
@@ -303,10 +363,13 @@ export async function replaceTreasuryStateInSupabase(
 
       await upsertAuditLogsInChunks(nextState.auditLogs || []);
       lastSyncedSnapshot = JSON.stringify(nextState);
+      console.info(
+        `[ClearLedger] Supabase write complete — synced ${workspaceRows.length} workspace(s) and ${(nextState.auditLogs || []).length} audit log(s).`
+      );
     });
     return true;
   } catch (err) {
-    console.warn('[ClearLedger] Supabase full sync failed:', err);
+    logSupabaseFallbackWarning('full sync', err);
     return false;
   }
 }
@@ -314,22 +377,32 @@ export async function replaceTreasuryStateInSupabase(
 export async function loadTreasuryStateFromSupabase(
   localFallback: TreasuryState
 ): Promise<TreasuryState | null> {
-  if (!supabase || !isSupabaseConfigured) return null;
+  if (!supabase || !isSupabaseConfigured) {
+    console.info(
+      `[ClearLedger] Active storage: localStorage (${supabaseConnectionInfo.reason || 'Supabase not configured'}).`
+    );
+    return null;
+  }
 
   try {
     const result = await fetchTreasuryStateFromSupabase();
     if (result.empty) {
-      // Seed Supabase on first connect with current local/seed state
+      console.info(
+        '[ClearLedger] Supabase connected — database is empty, seeding initial workspaces to Supabase...'
+      );
       await replaceTreasuryStateInSupabase(localFallback);
       return localFallback;
     }
     if (result.state) {
       saveTreasuryState(result.state);
+      console.info(
+        `[ClearLedger] Supabase connected — loaded ${result.state.companies.length} workspace(s) and ${(result.state.auditLogs || []).length} audit log(s) from ${supabaseConnectionInfo.url}.`
+      );
       return result.state;
     }
     return null;
   } catch (err) {
-    console.warn('[ClearLedger] Unable to load state from Supabase:', err);
+    logSupabaseFallbackWarning('connection/query', err);
     return null;
   }
 }
@@ -377,48 +450,46 @@ export function syncTreasuryStateDiff(
   return enqueueWrite(async () => {
     if (!supabase) return;
 
-    if (deletedCompanyIds.length > 0) {
-      const { error } = await supabase
-        .from('treasury_workspaces')
-        .delete()
-        .in('id', deletedCompanyIds);
-      if (error) {
-        console.warn('[ClearLedger] Workspace delete sync error:', error.message);
+    try {
+      if (deletedCompanyIds.length > 0) {
+        const { error } = await supabase
+          .from('treasury_workspaces')
+          .delete()
+          .in('id', deletedCompanyIds);
+        if (error) {
+          throw new Error(`Workspace delete sync failed: ${error.message}`);
+        }
       }
-    }
 
-    if (changedWorkspaces.length > 0) {
-      const { error } = await supabase
-        .from('treasury_workspaces')
-        .upsert(changedWorkspaces, { onConflict: 'id' });
-      if (error) {
-        console.warn('[ClearLedger] Workspace upsert sync error:', error.message);
+      if (changedWorkspaces.length > 0) {
+        await upsertWorkspacesSafe(changedWorkspaces);
       }
-    }
 
-    if (activeCompanyChanged) {
-      const { error } = await supabase.from('treasury_app_meta').upsert(
-        {
-          id: APP_META_ID,
-          active_company_id: nextState.activeCompanyId,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      );
-      if (error) {
-        console.warn('[ClearLedger] Active company sync error:', error.message);
+      if (activeCompanyChanged) {
+        const { error } = await supabase.from('treasury_app_meta').upsert(
+          {
+            id: APP_META_ID,
+            active_company_id: nextState.activeCompanyId,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+        if (error) {
+          throw new Error(`Active company sync failed: ${error.message}`);
+        }
       }
-    }
 
-    if (newAuditLogs.length > 0) {
-      try {
+      if (newAuditLogs.length > 0) {
         await upsertAuditLogsInChunks(newAuditLogs);
-      } catch (err) {
-        console.warn('[ClearLedger] Audit log sync error:', err);
       }
-    }
 
-    lastSyncedSnapshot = JSON.stringify(nextState);
+      lastSyncedSnapshot = JSON.stringify(nextState);
+      console.info(
+        `[ClearLedger] Synced update to Supabase (${changedWorkspaces.length} workspace(s), ${newAuditLogs.length} audit log(s)).`
+      );
+    } catch (err) {
+      logSupabaseFallbackWarning('save/update', err);
+    }
   });
 }
 

@@ -423,7 +423,8 @@ export function BankStatementReconcileModal({
     for (const ret of selectedReturnedCandidates) {
       const amt = ret.statementAmount || ret.cheque.amount;
       if (ret.hasPassedAndReturnedPair) {
-        // +amt (cleared) - amt (return reversal) = 0 net, minus any bank charge
+        // Passed leg (+CR) + Return leg (CR or DR)
+        incomingNet += amt + (ret.isCredit ? amt : -amt);
       } else {
         incomingNet += ret.isCredit ? amt : -amt;
       }
