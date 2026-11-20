@@ -5,12 +5,30 @@
     --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-sans: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+    /* Corporate Banking Theme Palette */
+    --cb-navy: #102A43;
+    --cb-secondary-blue: #176B87;
+    --cb-teal: #14B8A6;
+    --cb-bg: #F4F7FA;
+    --cb-card: #FFFFFF;
+    --cb-gold: #D4AF37;
+    --cb-text: #243B53;
+    --cb-text-muted: #627D98;
+    --cb-border: #D9E2EC;
+
+    /* Transaction Status Colours */
+    --cb-cleared: #16A34A;
+    --cb-pending: #F59E0B;
+    --cb-rejected: #DC2626;
+    --cb-processing: #2563EB;
+    --cb-on-hold: #64748B;
   }
 
   body {
     font-family: var(--font-sans);
-    color: #0f172a;
-    background-color: #f8fafc;
+    color: #243B53;
+    background-color: #F4F7FA;
   }
 
   h1, h2, h3, h4, .font-display {
@@ -36,11 +54,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #D9E2EC;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #627D98;
 }
 
 /* Official A4 Bank Deposit Memo Print Engine */
@@ -49,9 +67,9 @@
     width: 210mm;
     min-height: 297mm;
     padding: 12mm 13mm;
-    background: #ffffff;
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
-    border: 1px solid #cbd5e1;
+    background: #FFFFFF;
+    box-shadow: 0 4px 20px rgba(16, 42, 67, 0.08);
+    border: 1px solid #D9E2EC;
     margin: 0 auto 24px auto;
     box-sizing: border-box;
     display: flex;
@@ -110,4 +128,22 @@
     page-break-inside: avoid;
     break-inside: avoid;
   }
+
+  .overdue-blink-badge {
+    animation: none !important;
+  }
 }
+
+@keyframes overdue-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.35;
+  }
+}
+
+.overdue-blink-badge {
+  animation: overdue-blink 1.15s ease-in-out infinite;
+}
+

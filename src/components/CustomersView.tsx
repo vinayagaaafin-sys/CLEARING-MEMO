@@ -450,16 +450,16 @@ export function CustomersView({
   return (
     <div className="space-y-5">
       {/* Top Action & Directory Strip */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-[#D9E2EC] rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-md bg-[#0B192C] text-white flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-md bg-[#102A43] text-[#14B8A6] flex items-center justify-center shrink-0">
             <Users className="w-4 h-4" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-slate-900">
+            <h1 className="text-sm font-semibold text-[#102A43]">
               Customer Profiles, Document Vault &amp; WhatsApp Desk
             </h1>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#627D98]">
               {customers.length} customers · {(company.documents || []).length}{' '}
               stored documents across {company.profile.companyName}
             </p>
@@ -470,14 +470,14 @@ export function CustomersView({
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium border ${
               currentUserRole === 'Admin'
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                : 'bg-slate-100 border-slate-200 text-slate-700'
+                ? 'bg-[#16A34A]/10 border-[#16A34A]/30 text-[#16A34A]'
+                : 'bg-[#F4F7FA] border-[#D9E2EC] text-[#243B53]'
             }`}
           >
             {currentUserRole === 'Admin' ? (
               <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
             ) : (
-              <Lock className="w-3 h-3" aria-hidden="true" />
+              <Lock className="w-3 h-3 text-[#D4AF37]" aria-hidden="true" />
             )}
             <span>
               Session: {currentActorName} ({currentUserRole})
@@ -486,7 +486,7 @@ export function CustomersView({
           <button
             type="button"
             onClick={() => setShowAddCustomer(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] hover:bg-[#0D9488] rounded-md transition-colors whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Add Customer Profile</span>
@@ -497,11 +497,11 @@ export function CustomersView({
       {/* Main Master-Detail Split Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left: Customer Directory */}
-        <aside className="lg:col-span-4 bg-white border border-slate-200 rounded-lg overflow-hidden">
-          <div className="p-3.5 border-b border-slate-200 bg-slate-50 space-y-2.5">
+        <aside className="lg:col-span-4 bg-white border border-[#D9E2EC] rounded-lg overflow-hidden shadow-xs">
+          <div className="p-3.5 border-b border-[#D9E2EC] bg-[#F4F7FA] space-y-2.5">
             <div className="relative">
               <Search
-                className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
+                className="w-3.5 h-3.5 text-[#627D98] absolute left-3 top-1/2 -translate-y-1/2"
                 aria-hidden="true"
               />
               <input
@@ -509,7 +509,7 @@ export function CustomersView({
                 value={directorySearch}
                 onChange={(e) => setDirectorySearch(e.target.value)}
                 placeholder="Search customer, code, mobile, cheque #..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
 
@@ -533,8 +533,8 @@ export function CustomersView({
                   onClick={() => setDirectoryFilter(f.id)}
                   className={`px-2.5 py-1 rounded font-medium transition-colors ${
                     directoryFilter === f.id
-                      ? 'bg-[#0B192C] text-white'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#102A43] text-white'
+                      : 'bg-white border border-[#D9E2EC] text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   {f.label}
@@ -543,9 +543,9 @@ export function CustomersView({
             </div>
           </div>
 
-          <div className="divide-y divide-slate-200 max-h-[680px] overflow-y-auto">
+          <div className="divide-y divide-[#D9E2EC] max-h-[680px] overflow-y-auto">
             {filteredDirectory.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-500">
+              <div className="p-6 text-center text-xs text-[#627D98]">
                 No customers match "{directorySearch}".
               </div>
             ) : (
@@ -557,8 +557,8 @@ export function CustomersView({
                     key={item.customerKey}
                     className={`p-3.5 transition-colors flex items-start justify-between gap-2.5 ${
                       isSelected
-                        ? 'bg-slate-900 text-white'
-                        : 'hover:bg-slate-50 text-slate-900'
+                        ? 'bg-[#102A43] text-white'
+                        : 'hover:bg-[#F4F7FA] text-[#102A43]'
                     }`}
                   >
                     <button
@@ -574,8 +574,8 @@ export function CustomersView({
                           <span
                             className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono-num font-semibold shrink-0 ${
                               isSelected
-                                ? 'bg-slate-700 text-white'
-                                : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+                                ? 'bg-[#14B8A6]/20 text-[#14B8A6] border border-[#14B8A6]/40'
+                                : 'bg-[#176B87]/10 text-[#176B87] border border-[#176B87]/25'
                             }`}
                           >
                             <Paperclip className="w-2.5 h-2.5" />
@@ -586,7 +586,7 @@ export function CustomersView({
 
                       <div
                         className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-mono-num ${
-                          isSelected ? 'text-slate-300' : 'text-slate-500'
+                          isSelected ? 'text-[#D9E2EC]' : 'text-[#627D98]'
                         }`}
                       >
                         <span>{item.profile.customerCode}</span>
@@ -619,9 +619,11 @@ export function CustomersView({
                           className={`inline-flex items-center gap-1 font-mono-num ${
                             item.profile.mobileNumber
                               ? isSelected
-                                ? 'text-emerald-300'
-                                : 'text-emerald-700'
-                              : 'text-slate-400'
+                                ? 'text-[#14B8A6]'
+                                : 'text-[#16A34A]'
+                              : isSelected
+                              ? 'text-[#D9E2EC]/70'
+                              : 'text-[#627D98]'
                           }`}
                         >
                           <Phone className="w-2.5 h-2.5" aria-hidden="true" />
@@ -630,7 +632,7 @@ export function CustomersView({
                         {item.returnedCount > 0 && (
                           <span
                             className={`text-[10px] font-semibold ${
-                              isSelected ? 'text-red-300' : 'text-red-700'
+                              isSelected ? 'text-[#FCA5A5]' : 'text-[#DC2626]'
                             }`}
                           >
                             {item.returnedCount} Returned
@@ -645,8 +647,8 @@ export function CustomersView({
                       title={`Download PDF statement for ${item.profile.partyName}`}
                       className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded border shrink-0 whitespace-nowrap transition-colors ${
                         isSelected
-                          ? 'bg-white text-slate-900 border-white hover:bg-slate-100'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-950'
+                          ? 'bg-[#14B8A6] text-[#102A43] border-[#14B8A6] hover:bg-[#0D9488]'
+                          : 'bg-white text-[#243B53] border-[#D9E2EC] hover:bg-[#F4F7FA] hover:text-[#102A43]'
                       }`}
                     >
                       <Download className="w-3 h-3" aria-hidden="true" />
@@ -662,7 +664,7 @@ export function CustomersView({
         {/* Right: Customer Profile & Document Management Workspace */}
         <section className="lg:col-span-8 space-y-4">
           {!activeCustomer ? (
-            <div className="bg-white border border-slate-200 rounded-lg p-10 text-center text-xs text-slate-500">
+            <div className="bg-white border border-[#D9E2EC] rounded-lg p-10 text-center text-xs text-[#627D98] shadow-xs">
               Select or add a customer to view their profile, documents, and
               audit history.
             </div>
@@ -671,17 +673,17 @@ export function CustomersView({
               {actionNotice && (
                 <div
                   role="status"
-                  className="flex items-center justify-between gap-3 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950"
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#102A43]"
                 >
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                     <span>{actionNotice}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setActionNotice(null)}
                     aria-label="Dismiss notice"
-                    className="p-1 text-emerald-700 hover:text-emerald-950"
+                    className="p-1 text-[#16A34A] hover:text-[#102A43]"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -689,24 +691,24 @@ export function CustomersView({
               )}
 
               {/* Customer Profile Summary Card */}
-              <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+              <div className="bg-white border border-[#D9E2EC] rounded-lg p-5 space-y-4 shadow-xs">
                 {editingProfile && draftProfile ? (
                   <form onSubmit={handleSaveProfileEdit} className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
-                      <h2 className="text-sm font-semibold text-slate-900">
+                    <div className="flex items-center justify-between border-b border-[#D9E2EC] pb-2.5">
+                      <h2 className="text-sm font-semibold text-[#102A43]">
                         Edit Customer Contact &amp; Profile Details
                       </h2>
                       <button
                         type="button"
                         onClick={() => setEditingProfile(false)}
-                        className="text-xs text-slate-500 hover:text-slate-800"
+                        className="text-xs text-[#627D98] hover:text-[#102A43]"
                       >
                         Cancel
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div>
-                        <label className="block font-medium text-slate-700 mb-1">
+                        <label className="block font-medium text-[#243B53] mb-1">
                           Customer / Party Name *
                         </label>
                         <input
@@ -719,11 +721,11 @@ export function CustomersView({
                               partyName: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                          className="w-full px-3 py-1.5 border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                       <div>
-                        <label className="block font-medium text-slate-700 mb-1">
+                        <label className="block font-medium text-[#243B53] mb-1">
                           Customer Code
                         </label>
                         <input
@@ -735,11 +737,11 @@ export function CustomersView({
                               customerCode: e.target.value.toUpperCase(),
                             })
                           }
-                          className="w-full px-3 py-1.5 font-mono-num uppercase border border-slate-300 rounded-md"
+                          className="w-full px-3 py-1.5 font-mono-num uppercase border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                       <div>
-                        <label className="block font-medium text-slate-700 mb-1">
+                        <label className="block font-medium text-[#243B53] mb-1">
                           Saved WhatsApp Mobile Number
                         </label>
                         <input
@@ -752,11 +754,11 @@ export function CustomersView({
                             })
                           }
                           placeholder="+91 98200 12345"
-                          className="w-full px-3 py-1.5 font-mono-num border border-slate-300 rounded-md"
+                          className="w-full px-3 py-1.5 font-mono-num border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                       <div>
-                        <label className="block font-medium text-slate-700 mb-1">
+                        <label className="block font-medium text-[#243B53] mb-1">
                           Contact Person
                         </label>
                         <input
@@ -769,11 +771,11 @@ export function CustomersView({
                             })
                           }
                           placeholder="e.g. Suresh Menon (Finance)"
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                          className="w-full px-3 py-1.5 border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                       <div>
-                        <label className="block font-medium text-slate-700 mb-1">
+                        <label className="block font-medium text-[#243B53] mb-1">
                           Email Address
                         </label>
                         <input
@@ -785,11 +787,11 @@ export function CustomersView({
                               email: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                          className="w-full px-3 py-1.5 border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                       <div>
-                        <label className="block font-medium text-slate-700 mb-1">
+                        <label className="block font-medium text-[#243B53] mb-1">
                           Office / Billing Address
                         </label>
                         <input
@@ -801,7 +803,7 @@ export function CustomersView({
                               address: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                          className="w-full px-3 py-1.5 border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                     </div>
@@ -809,13 +811,13 @@ export function CustomersView({
                       <button
                         type="button"
                         onClick={() => setEditingProfile(false)}
-                        className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md"
+                        className="px-3.5 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md"
+                        className="px-4 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] hover:bg-[#0D9488] rounded-md transition-colors"
                       >
                         Save Customer Profile
                       </button>
@@ -826,20 +828,20 @@ export function CustomersView({
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="space-y-1.5">
                         <div className="flex flex-wrap items-center gap-2.5">
-                          <h2 className="text-base font-bold text-slate-950">
+                          <h2 className="text-base font-bold text-[#102A43]">
                             {activeCustomer.profile.partyName}
                           </h2>
-                          <span className="font-mono-num text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
+                          <span className="font-mono-num text-xs font-semibold px-2 py-0.5 rounded bg-[#F4F7FA] border border-[#D9E2EC] text-[#176B87]">
                             {activeCustomer.profile.customerCode}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#627D98]">
                           <span className="inline-flex items-center gap-1.5 font-mono-num">
                             <Phone
-                              className="w-3.5 h-3.5 text-emerald-700"
+                              className="w-3.5 h-3.5 text-[#16A34A]"
                               aria-hidden="true"
                             />
-                            <strong className="font-medium text-slate-900">
+                            <strong className="font-medium text-[#102A43]">
                               {activeCustomer.profile.mobileNumber ||
                                 'No WhatsApp mobile saved'}
                             </strong>
@@ -847,7 +849,7 @@ export function CustomersView({
                           {activeCustomer.profile.contactPerson && (
                             <span className="inline-flex items-center gap-1.5">
                               <User
-                                className="w-3.5 h-3.5 text-slate-400"
+                                className="w-3.5 h-3.5 text-[#627D98]"
                                 aria-hidden="true"
                               />
                               <span>{activeCustomer.profile.contactPerson}</span>
@@ -856,7 +858,7 @@ export function CustomersView({
                           {activeCustomer.profile.email && (
                             <span className="inline-flex items-center gap-1.5">
                               <Mail
-                                className="w-3.5 h-3.5 text-slate-400"
+                                className="w-3.5 h-3.5 text-[#627D98]"
                                 aria-hidden="true"
                               />
                               <span>{activeCustomer.profile.email}</span>
@@ -864,9 +866,9 @@ export function CustomersView({
                           )}
                         </div>
                         {activeCustomer.profile.address && (
-                          <div className="inline-flex items-center gap-1.5 text-[11px] text-slate-500">
+                          <div className="inline-flex items-center gap-1.5 text-[11px] text-[#627D98]">
                             <MapPin
-                              className="w-3 h-3 text-slate-400 shrink-0"
+                              className="w-3 h-3 text-[#627D98] shrink-0"
                               aria-hidden="true"
                             />
                             <span>{activeCustomer.profile.address}</span>
@@ -878,7 +880,7 @@ export function CustomersView({
                         <button
                           type="button"
                           onClick={() => handleDownloadCustomerPdf(activeCustomer)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#0B192C] hover:bg-slate-800 rounded-md transition-colors whitespace-nowrap"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#176B87] hover:bg-[#102A43] rounded-md transition-colors whitespace-nowrap"
                         >
                           <Download className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>Download PDF</span>
@@ -886,29 +888,29 @@ export function CustomersView({
                         <button
                           type="button"
                           onClick={handleStartEditProfile}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap"
                         >
-                          <Edit3 className="w-3.5 h-3.5" aria-hidden="true" />
+                          <Edit3 className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                           <span>Edit Contact / Mobile</span>
                         </button>
                       </div>
                     </div>
 
                     {/* Customer KPI Strip */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100 text-xs">
-                      <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5">
-                        <div className="text-[11px] text-slate-500">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#D9E2EC] text-xs">
+                      <div className="bg-[#F4F7FA] border border-[#D9E2EC] rounded-md p-2.5">
+                        <div className="text-[11px] text-[#627D98]">
                           {activeCustomer.schedules.length > 0
                             ? `Loan Payable (${activeCustomer.loanSummary.totalLoans})`
                             : 'Total Cheques'}
                         </div>
-                        <div className="font-mono-num font-bold text-slate-950 text-sm mt-0.5">
+                        <div className="font-mono-num font-bold text-[#102A43] text-sm mt-0.5">
                           {activeCustomer.schedules.length > 0 ? (
                             <>
                               {formatIndianShort(
                                 activeCustomer.loanSummary.totalPayable
                               )}{' '}
-                              <span className="text-[11px] font-normal text-slate-500">
+                              <span className="text-[11px] font-normal text-[#627D98]">
                                 ({activeCustomer.loanSummary.paidInstallments}/
                                 {activeCustomer.loanSummary.totalInstallments}{' '}
                                 paid)
@@ -917,15 +919,15 @@ export function CustomersView({
                           ) : (
                             <>
                               {activeCustomer.cheques.length}{' '}
-                              <span className="text-[11px] font-normal text-slate-500">
+                              <span className="text-[11px] font-normal text-[#627D98]">
                                 ({formatIndianShort(activeCustomer.totalAmount)})
                               </span>
                             </>
                           )}
                         </div>
                       </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5">
-                        <div className="text-[11px] text-slate-500">
+                      <div className="bg-[#F4F7FA] border border-[#D9E2EC] rounded-md p-2.5">
+                        <div className="text-[11px] text-[#627D98]">
                           {activeCustomer.schedules.length > 0
                             ? 'Outstanding Loan Balance'
                             : 'Returned Cheques'}
@@ -934,11 +936,11 @@ export function CustomersView({
                           className={`font-mono-num font-bold text-sm mt-0.5 ${
                             activeCustomer.schedules.length > 0
                               ? activeCustomer.loanSummary.unpaidBalance > 0
-                                ? 'text-amber-800'
-                                : 'text-emerald-700'
+                                ? 'text-[#B45309]'
+                                : 'text-[#16A34A]'
                               : activeCustomer.returnedCount > 0
-                              ? 'text-red-700'
-                              : 'text-slate-900'
+                              ? 'text-[#DC2626]'
+                              : 'text-[#102A43]'
                           }`}
                         >
                           {activeCustomer.schedules.length > 0 ? (
@@ -948,7 +950,7 @@ export function CustomersView({
                           ) : (
                             <>
                               {activeCustomer.returnedCount}{' '}
-                              <span className="text-[11px] font-normal text-slate-500">
+                              <span className="text-[11px] font-normal text-[#627D98]">
                                 (
                                 {formatIndianShort(
                                   activeCustomer.returnedAmount
@@ -959,13 +961,13 @@ export function CustomersView({
                           )}
                         </div>
                       </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5">
-                        <div className="text-[11px] text-slate-500">
+                      <div className="bg-[#F4F7FA] border border-[#D9E2EC] rounded-md p-2.5">
+                        <div className="text-[11px] text-[#627D98]">
                           {activeCustomer.schedules.length > 0
                             ? 'Total Paid (Installments)'
                             : 'Recovered Amount'}
                         </div>
-                        <div className="font-mono-num font-bold text-emerald-700 text-sm mt-0.5">
+                        <div className="font-mono-num font-bold text-[#16A34A] text-sm mt-0.5">
                           {formatIndianShort(
                             activeCustomer.schedules.length > 0
                               ? activeCustomer.loanSummary.paidAmount
@@ -973,11 +975,11 @@ export function CustomersView({
                           )}
                         </div>
                       </div>
-                      <div className="bg-indigo-50/70 border border-indigo-200 rounded-md p-2.5">
-                        <div className="text-[11px] text-indigo-800">
+                      <div className="bg-[#14B8A6]/10 border border-[#14B8A6]/30 rounded-md p-2.5">
+                        <div className="text-[11px] text-[#176B87] font-medium">
                           Cheques &amp; Vault Docs
                         </div>
-                        <div className="font-mono-num font-bold text-indigo-950 text-sm mt-0.5">
+                        <div className="font-mono-num font-bold text-[#102A43] text-sm mt-0.5">
                           {activeCustomer.cheques.length} Chq ·{' '}
                           {activeCustomer.documents.length} Files
                         </div>
@@ -988,18 +990,18 @@ export function CustomersView({
               </div>
 
               {/* Customer Detail Tabs */}
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                <div className="border-b border-slate-200 bg-slate-50 px-4 flex flex-wrap items-center gap-1">
+              <div className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden shadow-xs">
+                <div className="border-b border-[#D9E2EC] bg-[#F4F7FA] px-4 flex flex-wrap items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setActiveTab('loans')}
                     className={`inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-colors ${
                       activeTab === 'loans'
-                        ? 'border-[#0B192C] text-slate-950'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                        ? 'border-[#14B8A6] text-[#102A43]'
+                        : 'border-transparent text-[#627D98] hover:text-[#102A43]'
                     }`}
                   >
-                    <CalendarCheck2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <CalendarCheck2 className={`w-3.5 h-3.5 ${activeTab === 'loans' ? 'text-[#176B87]' : ''}`} aria-hidden="true" />
                     <span>
                       Loans &amp; Installments ({activeCustomer.schedules.length})
                     </span>
@@ -1009,11 +1011,11 @@ export function CustomersView({
                     onClick={() => setActiveTab('documents')}
                     className={`inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-colors ${
                       activeTab === 'documents'
-                        ? 'border-[#0B192C] text-slate-950'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                        ? 'border-[#14B8A6] text-[#102A43]'
+                        : 'border-transparent text-[#627D98] hover:text-[#102A43]'
                     }`}
                   >
-                    <Paperclip className="w-3.5 h-3.5" aria-hidden="true" />
+                    <Paperclip className={`w-3.5 h-3.5 ${activeTab === 'documents' ? 'text-[#176B87]' : ''}`} aria-hidden="true" />
                     <span>
                       Documents / Attachments ({activeCustomer.documents.length})
                     </span>
@@ -1023,11 +1025,11 @@ export function CustomersView({
                     onClick={() => setActiveTab('cheques')}
                     className={`inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-colors ${
                       activeTab === 'cheques'
-                        ? 'border-[#0B192C] text-slate-950'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                        ? 'border-[#14B8A6] text-[#102A43]'
+                        : 'border-transparent text-[#627D98] hover:text-[#102A43]'
                     }`}
                   >
-                    <FileText className="w-3.5 h-3.5" aria-hidden="true" />
+                    <FileText className={`w-3.5 h-3.5 ${activeTab === 'cheques' ? 'text-[#176B87]' : ''}`} aria-hidden="true" />
                     <span>
                       Cheque Ledger ({activeCustomer.cheques.length})
                     </span>
@@ -1037,11 +1039,11 @@ export function CustomersView({
                     onClick={() => setActiveTab('audit')}
                     className={`inline-flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-colors ${
                       activeTab === 'audit'
-                        ? 'border-[#0B192C] text-slate-950'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                        ? 'border-[#14B8A6] text-[#102A43]'
+                        : 'border-transparent text-[#627D98] hover:text-[#102A43]'
                     }`}
                   >
-                    <History className="w-3.5 h-3.5" aria-hidden="true" />
+                    <History className={`w-3.5 h-3.5 ${activeTab === 'audit' ? 'text-[#176B87]' : ''}`} aria-hidden="true" />
                     <span>
                       Activity / Audit History ({customerAuditEntries.length})
                     </span>
@@ -1053,12 +1055,12 @@ export function CustomersView({
                   <div className="p-5 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h3 className="text-xs font-semibold text-slate-900">
+                        <h3 className="text-xs font-semibold text-[#102A43]">
                           Loan Summary &amp; Full Installment Payment History
                         </h3>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <p className="text-[11px] text-[#627D98] mt-0.5">
                           Showing all loan schemes and due schedules for{' '}
-                          <strong className="text-slate-700">
+                          <strong className="text-[#243B53]">
                             {activeCustomer.profile.partyName}
                           </strong>
                           .
@@ -1067,68 +1069,68 @@ export function CustomersView({
                       <button
                         type="button"
                         onClick={() => handleDownloadCustomerPdf(activeCustomer)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 rounded-md transition-colors whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#243B53] bg-white border border-[#D9E2EC] hover:bg-[#F4F7FA] rounded-md transition-colors whitespace-nowrap"
                       >
-                        <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                        <Download className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                         <span>Download PDF Statement</span>
                       </button>
                     </div>
 
                     {activeCustomer.schedules.length === 0 ? (
-                      <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-xs text-slate-500 bg-slate-50/40">
+                      <div className="border border-dashed border-[#D9E2EC] rounded-lg p-8 text-center text-xs text-[#627D98] bg-[#F4F7FA]/50">
                         No loan installment schedules found for{' '}
                         {activeCustomer.profile.partyName}. Create a new loan
-                        schedule under <strong>Customer Schedule</strong> to
+                        schedule under <strong className="text-[#243B53]">Customer Schedule</strong> to
                         auto-generate dues and payment history here.
                       </div>
                     ) : (
                       <div className="space-y-5">
                         {/* Aggregated Customer Loan KPI Bar */}
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
-                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                            <div className="text-[11px] text-slate-500">
+                          <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
+                            <div className="text-[11px] text-[#627D98]">
                               Total Principal
                             </div>
-                            <div className="font-mono-num font-bold text-slate-900 mt-0.5">
+                            <div className="font-mono-num font-bold text-[#102A43] mt-0.5">
                               {formatINR(
                                 activeCustomer.loanSummary.totalPrincipal
                               )}
                             </div>
                           </div>
-                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                            <div className="text-[11px] text-slate-500">
+                          <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
+                            <div className="text-[11px] text-[#627D98]">
                               Total Interest
                             </div>
-                            <div className="font-mono-num font-bold text-slate-900 mt-0.5">
+                            <div className="font-mono-num font-bold text-[#102A43] mt-0.5">
                               {formatINR(
                                 activeCustomer.loanSummary.totalInterest
                               )}
                             </div>
                           </div>
-                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                            <div className="text-[11px] text-slate-500">
+                          <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
+                            <div className="text-[11px] text-[#627D98]">
                               Total Payable
                             </div>
-                            <div className="font-mono-num font-bold text-slate-950 mt-0.5">
+                            <div className="font-mono-num font-bold text-[#102A43] mt-0.5">
                               {formatINR(
                                 activeCustomer.loanSummary.totalPayable
                               )}
                             </div>
                           </div>
-                          <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-md">
-                            <div className="text-[11px] text-emerald-800">
+                          <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md">
+                            <div className="text-[11px] text-[#16A34A] font-medium">
                               Paid ({activeCustomer.loanSummary.paidInstallments}
                               /{activeCustomer.loanSummary.totalInstallments})
                             </div>
-                            <div className="font-mono-num font-bold text-emerald-800 mt-0.5">
+                            <div className="font-mono-num font-bold text-[#16A34A] mt-0.5">
                               {formatINR(activeCustomer.loanSummary.paidAmount)}
                             </div>
                           </div>
-                          <div className="p-3 bg-[#0B192C] text-white rounded-md">
-                            <div className="text-[11px] text-slate-300">
+                          <div className="p-3 bg-[#102A43] text-white rounded-md">
+                            <div className="text-[11px] text-[#D9E2EC]">
                               Outstanding Balance
                             </div>
-                            <div className="font-mono-num font-bold mt-0.5">
+                            <div className="font-mono-num font-bold text-[#14B8A6] mt-0.5">
                               {formatINR(
                                 activeCustomer.loanSummary.unpaidBalance
                               )}
@@ -1173,24 +1175,24 @@ export function CustomersView({
                           return (
                             <div
                               key={sch.id}
-                              className="border border-slate-200 rounded-lg overflow-hidden"
+                              className="border border-[#D9E2EC] rounded-lg overflow-hidden"
                             >
-                              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <div className="px-4 py-3 bg-[#F4F7FA] border-b border-[#D9E2EC] flex flex-wrap items-center justify-between gap-2 text-xs">
                                 <div className="space-y-0.5">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <span className="font-semibold text-slate-900">
+                                    <span className="font-semibold text-[#102A43]">
                                       Loan Ref:{' '}
-                                      <span className="font-mono-num">
+                                      <span className="font-mono-num text-[#176B87]">
                                         {sch.loanRefNo || sch.id.slice(-8)}
                                       </span>
                                     </span>
                                     {sch.frequency && (
-                                      <span className="text-[11px] text-slate-600">
+                                      <span className="text-[11px] text-[#627D98]">
                                         · {getFrequencyLabel(sch.frequency)}
                                       </span>
                                     )}
                                     {sch.interestType && (
-                                      <span className="text-[11px] text-slate-600">
+                                      <span className="text-[11px] text-[#627D98]">
                                         ·{' '}
                                         {getInterestTypeLabel(sch.interestType)}
                                         {sch.interestType !== 'ZERO_INTEREST'
@@ -1199,7 +1201,7 @@ export function CustomersView({
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-[11px] text-slate-500">
+                                  <div className="text-[11px] text-[#627D98]">
                                     {sch.draweeBank || 'Bank N/A'}
                                     {sch.draweeBranch
                                       ? ` (${sch.draweeBranch})`
@@ -1208,22 +1210,22 @@ export function CustomersView({
                                   </div>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-3 font-mono-num text-[11px]">
+                                <div className="flex flex-wrap items-center gap-3 font-mono-num text-[11px] text-[#627D98]">
                                   <span>
                                     Principal:{' '}
-                                    <strong className="text-slate-900">
+                                    <strong className="text-[#102A43]">
                                       {formatINR(schPrincipal)}
                                     </strong>
                                   </span>
                                   <span>
                                     Paid:{' '}
-                                    <strong className="text-emerald-700">
+                                    <strong className="text-[#16A34A]">
                                       {formatINR(schPaid)}
                                     </strong>
                                   </span>
                                   <span>
                                     Remaining:{' '}
-                                    <strong className="text-slate-950">
+                                    <strong className="text-[#102A43]">
                                       {formatINR(schBal)}
                                     </strong>
                                   </span>
@@ -1233,7 +1235,7 @@ export function CustomersView({
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse text-xs">
                                   <thead>
-                                    <tr className="border-b border-slate-200 bg-white text-[11px] font-semibold text-slate-600">
+                                    <tr className="border-b border-[#D9E2EC] bg-white text-[11px] font-semibold text-[#627D98]">
                                       <th className="py-2 px-3">Inst. #</th>
                                       <th className="py-2 px-3">Due Date</th>
                                       <th className="py-2 px-3">
@@ -1249,7 +1251,7 @@ export function CustomersView({
                                       </th>
                                     </tr>
                                   </thead>
-                                  <tbody className="divide-y divide-slate-200">
+                                  <tbody className="divide-y divide-[#D9E2EC]">
                                     {rowsWithBal.map(
                                       ({ item, runningBalance }, idx) => {
                                         const paidInfo =
@@ -1260,45 +1262,45 @@ export function CustomersView({
                                         return (
                                           <tr
                                             key={item.id}
-                                            className="hover:bg-slate-50/70"
+                                            className="hover:bg-[#F4F7FA]/80"
                                           >
-                                            <td className="py-2 px-3 font-mono-num text-slate-500">
+                                            <td className="py-2 px-3 font-mono-num text-[#627D98]">
                                               {item.dueNumber ?? idx + 1}
                                             </td>
-                                            <td className="py-2 px-3 font-mono-num text-slate-700 whitespace-nowrap">
+                                            <td className="py-2 px-3 font-mono-num text-[#627D98] whitespace-nowrap">
                                               {formatIndianDate(
                                                 item.originalDate
                                               )}
                                             </td>
-                                            <td className="py-2 px-3 font-mono-num text-slate-900 whitespace-nowrap">
+                                            <td className="py-2 px-3 font-mono-num text-[#102A43] whitespace-nowrap">
                                               {formatIndianDate(
                                                 item.effectiveDate
                                               )}
                                             </td>
-                                            <td className="py-2 px-3 font-mono-num font-semibold text-slate-900">
+                                            <td className="py-2 px-3 font-mono-num font-semibold text-[#176B87]">
                                               #{item.chequeNumber}
                                             </td>
-                                            <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-900">
+                                            <td className="py-2 px-3 text-right font-mono-num font-semibold text-[#102A43]">
                                               {formatINR(item.amount)}
                                             </td>
                                             <td className="py-2 px-3 whitespace-nowrap">
                                               <span
                                                 className={`text-[11px] font-semibold ${
                                                   paidInfo.isPaid
-                                                    ? 'text-emerald-700'
+                                                    ? 'text-[#16A34A]'
                                                     : paidInfo.effectiveStatus ===
                                                       'Returned / Bounced'
-                                                    ? 'text-red-700'
+                                                    ? 'text-[#DC2626]'
                                                     : paidInfo.effectiveStatus ===
                                                       'In Clearing'
-                                                    ? 'text-blue-700'
-                                                    : 'text-slate-600'
+                                                    ? 'text-[#2563EB]'
+                                                    : 'text-[#64748B]'
                                                 }`}
                                               >
                                                 {paidInfo.paidLabel}
                                               </span>
                                             </td>
-                                            <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-900">
+                                            <td className="py-2 px-3 text-right font-mono-num font-semibold text-[#102A43]">
                                               {formatINR(
                                                 item.balance ?? runningBalance
                                               )}
@@ -1337,8 +1339,8 @@ export function CustomersView({
                       }}
                       className={`border-2 border-dashed rounded-lg p-5 transition-colors text-center space-y-3 ${
                         isDragging
-                          ? 'border-slate-900 bg-slate-100'
-                          : 'border-slate-300 bg-slate-50/70 hover:bg-slate-50'
+                          ? 'border-[#14B8A6] bg-[#14B8A6]/10'
+                          : 'border-[#D9E2EC] bg-[#F4F7FA]/70 hover:bg-[#F4F7FA]'
                       }`}
                     >
                       <input
@@ -1369,14 +1371,14 @@ export function CustomersView({
                       />
 
                       <div className="flex flex-col items-center gap-1.5">
-                        <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700">
+                        <div className="w-10 h-10 rounded-full bg-white border border-[#D9E2EC] flex items-center justify-center text-[#176B87]">
                           <Upload className="w-4 h-4" aria-hidden="true" />
                         </div>
-                        <div className="text-xs font-semibold text-slate-900">
+                        <div className="text-xs font-semibold text-[#102A43]">
                           Drag &amp; drop scanned documents here, or choose files
                         </div>
-                        <p className="text-[11px] text-slate-500">
-                          Supports multiple <strong>PDF, JPG, PNG, JPEG</strong>{' '}
+                        <p className="text-[11px] text-[#627D98]">
+                          Supports multiple <strong className="text-[#243B53]">PDF, JPG, PNG, JPEG</strong>{' '}
                           files · Saved securely in browser document vault
                         </p>
                       </div>
@@ -1385,7 +1387,7 @@ export function CustomersView({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] hover:bg-[#0D9488] rounded-md transition-colors"
                         >
                           <Upload className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>Upload Files (PDF / Images)</span>
@@ -1393,16 +1395,16 @@ export function CustomersView({
                         <button
                           type="button"
                           onClick={() => cameraInputRef.current?.click()}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 rounded-md transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#243B53] bg-white border border-[#D9E2EC] hover:bg-[#F4F7FA] rounded-md transition-colors"
                         >
-                          <Camera className="w-3.5 h-3.5" aria-hidden="true" />
+                          <Camera className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                           <span>Mobile Camera Scan</span>
                         </button>
                       </div>
                     </div>
 
                     {uploadError && (
-                      <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-800">
+                      <div className="flex items-start gap-2 p-3 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md text-xs text-[#DC2626]">
                         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                         <span>{uploadError}</span>
                       </div>
@@ -1410,16 +1412,16 @@ export function CustomersView({
 
                     {/* Staged Multi-File Metadata Editor */}
                     {queuedFiles.length > 0 && (
-                      <div className="border border-slate-300 rounded-lg bg-slate-50 overflow-hidden">
-                        <div className="px-4 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-2">
+                      <div className="border border-[#D9E2EC] rounded-lg bg-[#F4F7FA] overflow-hidden">
+                        <div className="px-4 py-3 border-b border-[#D9E2EC] bg-white flex flex-wrap items-center justify-between gap-2">
                           <div>
-                            <h3 className="text-xs font-semibold text-slate-900">
+                            <h3 className="text-xs font-semibold text-[#102A43]">
                               Ready to Upload ({queuedFiles.length} file
                               {queuedFiles.length === 1 ? '' : 's'})
                             </h3>
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-[11px] text-[#627D98]">
                               Uploaded By:{' '}
-                              <strong className="text-slate-700">
+                              <strong className="text-[#243B53]">
                                 {currentActorName} ({currentUserRole})
                               </strong>
                             </p>
@@ -1428,7 +1430,7 @@ export function CustomersView({
                             <button
                               type="button"
                               onClick={() => setQueuedFiles([])}
-                              className="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-slate-900"
+                              className="px-2.5 py-1 text-xs font-medium text-[#627D98] hover:text-[#102A43]"
                             >
                               Clear Queue
                             </button>
@@ -1436,7 +1438,7 @@ export function CustomersView({
                               type="button"
                               disabled={isSavingUploads}
                               onClick={handleSaveQueuedUploads}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 rounded-md transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] hover:bg-[#0D9488] disabled:opacity-50 rounded-md transition-colors"
                             >
                               <Check className="w-3.5 h-3.5" />
                               <span>
@@ -1448,14 +1450,14 @@ export function CustomersView({
                           </div>
                         </div>
 
-                        <div className="divide-y divide-slate-200">
+                        <div className="divide-y divide-[#D9E2EC]">
                           {queuedFiles.map((item) => (
                             <div
                               key={item.tempId}
                               className="p-4 grid grid-cols-1 md:grid-cols-12 gap-3 items-start text-xs"
                             >
                               <div className="md:col-span-4 space-y-1">
-                                <label className="block text-[11px] font-medium text-slate-600">
+                                <label className="block text-[11px] font-medium text-[#627D98]">
                                   Document Title *
                                 </label>
                                 <input
@@ -1470,16 +1472,16 @@ export function CustomersView({
                                       )
                                     )
                                   }
-                                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white"
+                                  className="w-full px-2.5 py-1.5 border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                                 />
-                                <div className="text-[10px] font-mono-num text-slate-500 truncate">
+                                <div className="text-[10px] font-mono-num text-[#627D98] truncate">
                                   {item.file.name} (
                                   {formatFileSize(item.file.size)})
                                 </div>
                               </div>
 
                               <div className="md:col-span-3 space-y-1">
-                                <label className="block text-[11px] font-medium text-slate-600">
+                                <label className="block text-[11px] font-medium text-[#627D98]">
                                   Document Type
                                 </label>
                                 <select
@@ -1497,7 +1499,7 @@ export function CustomersView({
                                       )
                                     )
                                   }
-                                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white"
+                                  className="w-full px-2.5 py-1.5 border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                                 >
                                   {CUSTOMER_DOCUMENT_TYPES.map((t) => (
                                     <option key={t} value={t}>
@@ -1508,7 +1510,7 @@ export function CustomersView({
                               </div>
 
                               <div className="md:col-span-3 space-y-1">
-                                <label className="block text-[11px] font-medium text-slate-600">
+                                <label className="block text-[11px] font-medium text-[#627D98]">
                                   Link to Cheque / Batch (Optional)
                                 </label>
                                 <select
@@ -1525,7 +1527,7 @@ export function CustomersView({
                                       )
                                     )
                                   }
-                                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white"
+                                  className="w-full px-2.5 py-1.5 border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                                 >
                                   <option value="">General Customer Doc</option>
                                   {activeCustomer.cheques.map((chq) => {
@@ -1543,7 +1545,7 @@ export function CustomersView({
 
                               <div className="md:col-span-2 flex items-end gap-1.5">
                                 <div className="flex-1 space-y-1">
-                                  <label className="block text-[11px] font-medium text-slate-600">
+                                  <label className="block text-[11px] font-medium text-[#627D98]">
                                     Note
                                   </label>
                                   <input
@@ -1559,7 +1561,7 @@ export function CustomersView({
                                       )
                                     }
                                     placeholder="Optional"
-                                    className="w-full px-2 py-1.5 border border-slate-300 rounded bg-white"
+                                    className="w-full px-2 py-1.5 border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                                   />
                                 </div>
                                 <button
@@ -1572,7 +1574,7 @@ export function CustomersView({
                                     )
                                   }
                                   aria-label="Remove queued file"
-                                  className="p-1.5 text-slate-400 hover:text-red-700 rounded hover:bg-red-50"
+                                  className="p-1.5 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10"
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
@@ -1589,7 +1591,7 @@ export function CustomersView({
                         <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[240px]">
                           <div className="relative flex-1 min-w-[180px] max-w-xs">
                             <Search
-                              className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"
+                              className="w-3.5 h-3.5 text-[#627D98] absolute left-2.5 top-1/2 -translate-y-1/2"
                               aria-hidden="true"
                             />
                             <input
@@ -1597,14 +1599,14 @@ export function CustomersView({
                               value={docSearch}
                               onChange={(e) => setDocSearch(e.target.value)}
                               placeholder="Search title, cheque #, note..."
-                              className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-slate-300 rounded-md"
+                              className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                             />
                           </div>
                           <select
                             aria-label="Filter documents by type"
                             value={docTypeFilter}
                             onChange={(e) => setDocTypeFilter(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                            className="px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                           >
                             <option value="ALL">All Document Types</option>
                             {CUSTOMER_DOCUMENT_TYPES.map((t) => (
@@ -1620,7 +1622,7 @@ export function CustomersView({
                             <button
                               type="button"
                               onClick={handleBulkWhatsAppShare}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-md transition-colors"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
                               <span>
@@ -1631,7 +1633,7 @@ export function CustomersView({
                             <button
                               type="button"
                               onClick={() => setSelectedDocIds([])}
-                              className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1"
+                              className="text-xs text-[#627D98] hover:text-[#102A43] px-2 py-1"
                             >
                               Clear
                             </button>
@@ -1640,20 +1642,20 @@ export function CustomersView({
                       </div>
 
                       {customerDocs.length === 0 ? (
-                        <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-xs text-slate-500 bg-slate-50/40">
+                        <div className="border border-dashed border-[#D9E2EC] rounded-lg p-8 text-center text-xs text-[#627D98] bg-[#F4F7FA]/50">
                           {activeCustomer.documents.length === 0
                             ? `No documents attached for ${activeCustomer.profile.partyName} yet. Upload scanned cheques, return memos, KYC proofs, or signed acknowledgements above.`
                             : 'No documents match your search or category filter.'}
                         </div>
                       ) : (
-                        <div className="border border-slate-200 rounded-lg overflow-hidden">
-                          <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[11px] font-semibold text-slate-600">
+                        <div className="border border-[#D9E2EC] rounded-lg overflow-hidden">
+                          <div className="px-4 py-2 bg-[#F4F7FA] border-b border-[#D9E2EC] flex items-center justify-between text-[11px] font-semibold text-[#627D98]">
                             <label className="inline-flex items-center gap-2 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={allVisibleDocsSelected}
                                 onChange={toggleSelectAllDocs}
-                                className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                               />
                               <span>
                                 Select All ({customerDocs.length} Document
@@ -1661,15 +1663,15 @@ export function CustomersView({
                               </span>
                             </label>
                             {currentUserRole !== 'Admin' && (
-                              <span className="inline-flex items-center gap-1 text-slate-500 font-normal">
-                                <ShieldAlert className="w-3 h-3 text-amber-600" />
+                              <span className="inline-flex items-center gap-1 text-[#627D98] font-normal">
+                                <ShieldAlert className="w-3 h-3 text-[#F59E0B]" />
                                 Switch session to Admin in top bar to delete
                                 documents
                               </span>
                             )}
                           </div>
 
-                          <div className="divide-y divide-slate-200">
+                          <div className="divide-y divide-[#D9E2EC]">
                             {customerDocs.map((doc) => {
                               const isPdf =
                                 doc.mimeType === 'application/pdf' ||
@@ -1683,7 +1685,7 @@ export function CustomersView({
                               return (
                                 <div
                                   key={doc.id}
-                                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition-colors"
+                                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#F4F7FA]/70 transition-colors"
                                 >
                                   <div className="flex items-start gap-3 min-w-0">
                                     <input
@@ -1693,13 +1695,13 @@ export function CustomersView({
                                       onChange={() =>
                                         toggleDocSelection(doc.id)
                                       }
-                                      className="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                      className="mt-1 rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                                     />
                                     <div
                                       className={`w-9 h-9 rounded-md border flex items-center justify-center shrink-0 ${
                                         isPdf
-                                          ? 'bg-red-50 border-red-200 text-red-700'
-                                          : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                                          ? 'bg-[#DC2626]/10 border-[#DC2626]/30 text-[#DC2626]'
+                                          : 'bg-[#176B87]/10 border-[#176B87]/30 text-[#176B87]'
                                       }`}
                                     >
                                       {isPdf ? (
@@ -1710,14 +1712,14 @@ export function CustomersView({
                                     </div>
                                     <div className="min-w-0 space-y-1">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-semibold text-slate-900">
+                                        <span className="text-xs font-semibold text-[#102A43]">
                                           {doc.title}
                                         </span>
-                                        <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
+                                        <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[#F4F7FA] border border-[#D9E2EC] text-[#243B53]">
                                           {doc.docType}
                                         </span>
                                         {doc.linkedChequeNumber && (
-                                          <span className="font-mono-num text-[11px] font-medium text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                                          <span className="font-mono-num text-[11px] font-medium text-[#176B87] bg-[#176B87]/10 border border-[#176B87]/25 px-2 py-0.5 rounded">
                                             Chq #{doc.linkedChequeNumber}
                                             {doc.linkedBatchRef
                                               ? ` · ${doc.linkedBatchRef}`
@@ -1726,7 +1728,7 @@ export function CustomersView({
                                         )}
                                       </div>
 
-                                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-slate-500">
+                                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-[#627D98]">
                                         <span className="font-mono-num">
                                           {doc.fileName} (
                                           {formatFileSize(doc.fileSize)})
@@ -1736,14 +1738,14 @@ export function CustomersView({
                                           Uploaded{' '}
                                           {formatAuditTimestamp(doc.uploadedAt)}{' '}
                                           by{' '}
-                                          <strong className="font-medium text-slate-700">
+                                          <strong className="font-medium text-[#243B53]">
                                             {doc.uploadedBy}
                                           </strong>
                                         </span>
                                         {(doc.shareCount ?? 0) > 0 && (
                                           <>
                                             <span aria-hidden="true">·</span>
-                                            <span className="text-emerald-700 font-medium">
+                                            <span className="text-[#16A34A] font-medium">
                                               Shared {doc.shareCount}x
                                               {doc.lastSharedTo
                                                 ? ` (${doc.lastSharedTo})`
@@ -1754,7 +1756,7 @@ export function CustomersView({
                                       </div>
 
                                       {doc.note && (
-                                        <p className="text-[11px] text-slate-600 italic">
+                                        <p className="text-[11px] text-[#627D98] italic">
                                           Note: {doc.note}
                                         </p>
                                       )}
@@ -1766,9 +1768,9 @@ export function CustomersView({
                                       type="button"
                                       onClick={() => setPreviewDoc(doc)}
                                       title="View Document in Preview Modal"
-                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 rounded-md transition-colors"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] hover:bg-[#F4F7FA] rounded-md transition-colors"
                                     >
-                                      <Eye className="w-3.5 h-3.5" />
+                                      <Eye className="w-3.5 h-3.5 text-[#176B87]" />
                                       <span>View</span>
                                     </button>
                                     <button
@@ -1780,16 +1782,16 @@ export function CustomersView({
                                         )
                                       }
                                       title="Download File Locally"
-                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 rounded-md transition-colors"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] hover:bg-[#F4F7FA] rounded-md transition-colors"
                                     >
-                                      <Download className="w-3.5 h-3.5" />
+                                      <Download className="w-3.5 h-3.5 text-[#176B87]" />
                                       <span>Download</span>
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => setShareDocs([doc])}
                                       title="Share via WhatsApp"
-                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md transition-colors"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-md transition-colors"
                                     >
                                       <Share2 className="w-3.5 h-3.5" />
                                       <span>Share via WhatsApp</span>
@@ -1806,7 +1808,7 @@ export function CustomersView({
                                               prev.filter((id) => id !== doc.id)
                                             );
                                           }}
-                                          className="px-2.5 py-1.5 text-xs font-semibold text-white bg-red-700 hover:bg-red-800 rounded-md"
+                                          className="px-2.5 py-1.5 text-xs font-semibold text-white bg-[#DC2626] hover:bg-[#B91C1C] rounded-md"
                                         >
                                           Confirm Delete
                                         </button>
@@ -1815,7 +1817,7 @@ export function CustomersView({
                                           onClick={() =>
                                             setConfirmDeleteDocId(null)
                                           }
-                                          className="px-2 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900"
+                                          className="px-2 py-1.5 text-xs font-medium text-[#627D98] hover:text-[#102A43]"
                                         >
                                           Cancel
                                         </button>
@@ -1834,8 +1836,8 @@ export function CustomersView({
                                         }
                                         className={`p-1.5 rounded-md border transition-colors ${
                                           currentUserRole === 'Admin'
-                                            ? 'text-slate-500 border-slate-200 hover:text-red-700 hover:border-red-200 hover:bg-red-50'
-                                            : 'text-slate-300 border-slate-200 cursor-not-allowed'
+                                            ? 'text-[#627D98] border-[#D9E2EC] hover:text-[#DC2626] hover:border-[#DC2626]/40 hover:bg-[#DC2626]/10'
+                                            : 'text-[#D9E2EC] border-[#D9E2EC] cursor-not-allowed'
                                         }`}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -1856,14 +1858,14 @@ export function CustomersView({
                 {activeTab === 'cheques' && (
                   <div className="overflow-x-auto">
                     {activeCustomer.cheques.length === 0 ? (
-                      <div className="p-8 text-center text-xs text-slate-500">
+                      <div className="p-8 text-center text-xs text-[#627D98]">
                         No cheques logged for {activeCustomer.profile.partyName}{' '}
                         yet.
                       </div>
                     ) : (
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
-                          <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+                          <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98]">
                             <th className="py-2.5 px-4">Cheque Date</th>
                             <th className="py-2.5 px-3">Cheque #</th>
                             <th className="py-2.5 px-3">Batch Ref</th>
@@ -1877,7 +1879,7 @@ export function CustomersView({
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody className="divide-y divide-[#D9E2EC]">
                           {activeCustomer.cheques.map((chq) => {
                             const batch = batchMap.get(chq.batchId);
                             const linkedDocsCount =
@@ -1885,26 +1887,26 @@ export function CustomersView({
                                 (d) => d.linkedChequeId === chq.id
                               ).length;
                             return (
-                              <tr key={chq.id} className="hover:bg-slate-50">
-                                <td className="py-2.5 px-4 font-mono-num whitespace-nowrap">
+                              <tr key={chq.id} className="hover:bg-[#F4F7FA]/80">
+                                <td className="py-2.5 px-4 font-mono-num text-[#243B53] whitespace-nowrap">
                                   {formatIndianDate(chq.chequeDate)}
                                 </td>
-                                <td className="py-2.5 px-3 font-mono-num font-semibold text-slate-900">
+                                <td className="py-2.5 px-3 font-mono-num font-semibold text-[#176B87]">
                                   #{chq.chequeNumber}
                                 </td>
-                                <td className="py-2.5 px-3 font-mono-num text-slate-600">
+                                <td className="py-2.5 px-3 font-mono-num text-[#627D98]">
                                   {batch?.batchRef || '—'}
                                 </td>
-                                <td className="py-2.5 px-3 text-slate-700">
+                                <td className="py-2.5 px-3 text-[#243B53]">
                                   {chq.draweeBank}
                                 </td>
-                                <td className="py-2.5 px-3 text-right font-mono-num font-semibold text-slate-900">
+                                <td className="py-2.5 px-3 text-right font-mono-num font-semibold text-[#102A43]">
                                   {formatINR(chq.amount)}
                                 </td>
                                 <td className="py-2.5 px-3">
                                   <StatusTag status={chq.status} />
                                   {chq.bounceReason && (
-                                    <div className="text-[10px] text-red-700 mt-0.5">
+                                    <div className="text-[10px] text-[#DC2626] mt-0.5">
                                       {chq.bounceReason}
                                     </div>
                                   )}
@@ -1916,7 +1918,7 @@ export function CustomersView({
                                       setDefaultLinkedChequeId(chq.id);
                                       setActiveTab('documents');
                                     }}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-indigo-800 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded transition-colors"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#176B87] bg-[#176B87]/10 border border-[#176B87]/25 hover:bg-[#176B87]/20 rounded transition-colors"
                                   >
                                     <Paperclip className="w-3 h-3" />
                                     <span>
@@ -1939,11 +1941,11 @@ export function CustomersView({
                 {activeTab === 'audit' && (
                   <div className="p-5 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-[#102A43]">
                         Customer Document &amp; Cheque Audit Trail (
                         {customerAuditEntries.length})
                       </span>
-                      <span className="text-[11px] text-slate-500">
+                      <span className="text-[11px] text-[#627D98]">
                         Logs document uploads, Admin deletions, WhatsApp shares,
                         and cheque status transitions
                       </span>
@@ -1963,30 +1965,30 @@ export function CustomersView({
       {/* Add Customer Modal */}
       {showAddCustomer && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 backdrop-blur-[1px] p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-customer-modal-title"
         >
-          <div className="bg-white border border-slate-200 rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div className="bg-white border border-[#D9E2EC] rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between">
               <h3
                 id="add-customer-modal-title"
-                className="text-sm font-semibold text-slate-900"
+                className="text-sm font-semibold text-[#102A43]"
               >
                 Add New Customer Profile
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddCustomer(false)}
-                className="p-1 text-slate-400 hover:text-slate-700"
+                className="p-1 text-[#627D98] hover:text-[#102A43]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <form onSubmit={handleCreateCustomerSubmit} className="p-5 space-y-3.5 text-xs">
               <div>
-                <label className="block font-medium text-slate-700 mb-1">
+                <label className="block font-medium text-[#243B53] mb-1">
                   Customer / Party Name *
                 </label>
                 <input
@@ -1995,12 +1997,12 @@ export function CustomersView({
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
                   placeholder="e.g. Reliance Infrastructure Ltd."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Customer Code
                   </label>
                   <input
@@ -2010,11 +2012,11 @@ export function CustomersView({
                       setNewCustCode(e.target.value.toUpperCase())
                     }
                     placeholder="CUST-RI-001"
-                    className="w-full px-3 py-2 font-mono-num uppercase border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 font-mono-num uppercase border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     WhatsApp Mobile Number
                   </label>
                   <input
@@ -2022,13 +2024,13 @@ export function CustomersView({
                     value={newCustMobile}
                     onChange={(e) => setNewCustMobile(e.target.value)}
                     placeholder="+91 98200 12345"
-                    className="w-full px-3 py-2 font-mono-num border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 font-mono-num border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Contact Person
                   </label>
                   <input
@@ -2036,11 +2038,11 @@ export function CustomersView({
                     value={newCustContact}
                     onChange={(e) => setNewCustContact(e.target.value)}
                     placeholder="Finance Manager"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Email
                   </label>
                   <input
@@ -2048,7 +2050,7 @@ export function CustomersView({
                     value={newCustEmail}
                     onChange={(e) => setNewCustEmail(e.target.value)}
                     placeholder="accounts@company.in"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
@@ -2056,13 +2058,13 @@ export function CustomersView({
                 <button
                   type="button"
                   onClick={() => setShowAddCustomer(false)}
-                  className="px-3.5 py-2 font-medium text-slate-700 bg-white border border-slate-300 rounded-md"
+                  className="px-3.5 py-2 font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md"
+                  className="px-4 py-2 font-semibold text-[#102A43] bg-[#14B8A6] hover:bg-[#0D9488] rounded-md transition-colors"
                 >
                   Create Customer
                 </button>

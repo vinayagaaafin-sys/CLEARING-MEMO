@@ -173,13 +173,13 @@ export function PrintMemoView({
   return (
     <div className="space-y-6">
       {/* Control Toolbar - Hidden when printing */}
-      <section className="no-print bg-white border border-slate-200 rounded-lg p-5 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <section className="no-print bg-white border border-[#D9E2EC] rounded-lg p-5 space-y-4 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#D9E2EC]">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">
+            <h2 className="text-base font-semibold text-[#102A43]">
               Official Bank Deposit Memo Engine (A4 Print / PDF)
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#627D98] mt-0.5">
               Generates bank-compliant A4 schedules with repeating headers, B/F &amp; C/F subtotals, Indian currency words, and Teller Receipt
             </p>
           </div>
@@ -189,7 +189,7 @@ export function PrintMemoView({
               type="button"
               onClick={handleDownloadPdf}
               disabled={memoDocuments.length === 0}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
             >
               <Download className="w-4 h-4" aria-hidden="true" />
               <span>Save / Download A4 PDF</span>
@@ -199,18 +199,18 @@ export function PrintMemoView({
               type="button"
               onClick={handleBrowserPrint}
               disabled={memoDocuments.length === 0}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
             >
-              <Printer className="w-4 h-4" aria-hidden="true" />
+              <Printer className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
               <span>Browser Print</span>
             </button>
           </div>
         </div>
 
         {pdfDownloadNotice && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950 flex flex-wrap items-center justify-between gap-2">
+          <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#102A43] flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
               <span>
                 A4 PDF Memo generated: <strong className="font-mono-num">{pdfDownloadNotice.filename}</strong>
               </span>
@@ -218,7 +218,7 @@ export function PrintMemoView({
             <a
               href={pdfDownloadNotice.blobUrl}
               download={pdfDownloadNotice.filename}
-              className="font-semibold text-emerald-800 underline hover:text-emerald-950"
+              className="font-semibold text-[#16A34A] underline hover:text-[#102A43]"
             >
               Click here if download didn&apos;t start
             </a>
@@ -226,20 +226,20 @@ export function PrintMemoView({
         )}
 
         {printFallbackHint && (
-          <div className="p-3 bg-slate-100 border border-slate-300 rounded-md text-xs text-slate-800">
+          <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs text-[#243B53]">
             Embedded preview frames may block the browser print dialog. Use <strong>Save / Download A4 PDF</strong> above to export the exact A4 PDF file directly.
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-end">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-[#243B53] mb-1">
               Clearing Batch
             </label>
             <select
               value={selectedBatch?.id || ''}
               onChange={(e) => setSelectedBatchId(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-mono-num font-medium border border-slate-300 rounded-md bg-white"
+              className="w-full px-3 py-2 text-xs font-mono-num font-medium border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
             >
               {batches.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -250,17 +250,17 @@ export function PrintMemoView({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-[#243B53] mb-1">
               Memo Slip Grouping
             </label>
-            <div className="flex p-0.5 bg-slate-100 border border-slate-200 rounded-md">
+            <div className="flex p-0.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
               <button
                 type="button"
                 onClick={() => setGroupingMode('by-clearing-type')}
                 className={`flex-1 px-2.5 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
                   groupingMode === 'by-clearing-type'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                    : 'text-[#627D98] hover:text-[#102A43]'
                 }`}
               >
                 Separate by Type
@@ -270,8 +270,8 @@ export function PrintMemoView({
                 onClick={() => setGroupingMode('consolidated')}
                 className={`flex-1 px-2.5 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
                   groupingMode === 'consolidated'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                    : 'text-[#627D98] hover:text-[#102A43]'
                 }`}
               >
                 Consolidated
@@ -280,21 +280,21 @@ export function PrintMemoView({
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-xs text-[#243B53] cursor-pointer">
               <input
                 type="checkbox"
                 checked={excludeComplianceHolds}
                 onChange={(e) => setExcludeComplianceHolds(e.target.checked)}
-                className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
               />
               <span>Exclude PDC &amp; Stale Cheques ({excludedHolds.length} held)</span>
             </label>
-            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-xs text-[#243B53] cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeClearedToo}
                 onChange={(e) => setIncludeClearedToo(e.target.checked)}
-                className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
               />
               <span>Include Already Cleared Cheques</span>
             </label>
@@ -306,11 +306,11 @@ export function PrintMemoView({
               onClick={() => setSimulate55Cheques((v) => !v)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
                 simulate55Cheques
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  ? 'bg-[#102A43] text-white border-[#14B8A6]'
+                  : 'bg-white text-[#243B53] border-[#D9E2EC] hover:bg-[#F4F7FA]'
               }`}
             >
-              <Layers className="w-3.5 h-3.5" aria-hidden="true" />
+              <Layers className="w-3.5 h-3.5 text-[#14B8A6]" aria-hidden="true" />
               <span>
                 {simulate55Cheques
                   ? '55-Cheque Multi-Page Preview: ON'
@@ -321,18 +321,18 @@ export function PrintMemoView({
         </div>
 
         {excludedHolds.length > 0 && excludeComplianceHolds && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-950 flex items-center gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+          <div className="p-3 bg-[#F59E0B]/10 border border-[#F59E0B]/40 rounded-md text-xs text-[#243B53] flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-[#F59E0B] shrink-0" />
             <span>
-              <strong>Compliance Guard Active:</strong> {excludedHolds.length} Post-Dated / Stale instrument(s) (
+              <strong className="text-[#B45309]">Compliance Guard Active:</strong> {excludedHolds.length} Post-Dated / Stale instrument(s) (
               {excludedHolds.map((h) => `#${h.chequeNumber} - ${h.partyName}`).join(', ')}) are automatically held back from the bank deposit memo.
             </span>
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 pt-1">
-          <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-            <FileSpreadsheet className="w-3.5 h-3.5" />
+        <div className="flex flex-wrap items-center gap-4 text-xs text-[#627D98] pt-1">
+          <span className="inline-flex items-center gap-1.5 font-medium text-[#243B53]">
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#176B87]" />
             <span>
               Generated Memos: {memoDocuments.length} document{memoDocuments.length === 1 ? '' : 's'}
             </span>
@@ -340,13 +340,13 @@ export function PrintMemoView({
           <span aria-hidden="true">·</span>
           <span>
             Total Instruments in Print Queue:{' '}
-            <strong className="font-mono-num text-slate-900">
+            <strong className="font-mono-num text-[#102A43]">
               {eligibleCheques.length}
             </strong>
           </span>
           <span aria-hidden="true">·</span>
           <span>
-            Print Tip: In browser print dialog, set Paper Size to <strong>A4</strong> and Margins to <strong>None</strong> (built-in 12mm letterhead margins applied).
+            Print Tip: In browser print dialog, set Paper Size to <strong className="text-[#243B53]">A4</strong> and Margins to <strong className="text-[#243B53]">None</strong> (built-in 12mm letterhead margins applied).
           </span>
         </div>
       </section>
@@ -354,7 +354,7 @@ export function PrintMemoView({
       {/* Printable A4 Sheets Area */}
       <div className="print-only-root">
         {memoDocuments.length === 0 ? (
-          <div className="no-print bg-white border border-slate-200 rounded-lg p-12 text-center text-sm text-slate-500">
+          <div className="no-print bg-white border border-[#D9E2EC] rounded-lg p-12 text-center text-sm text-[#627D98] shadow-xs">
             No eligible cheques found in the selected batch for printing. Adjust your filters or add instruments first.
           </div>
         ) : (

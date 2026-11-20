@@ -152,6 +152,7 @@ export function DashboardView({
   onNavigateSchedules,
 }: DashboardViewProps) {
   const [batchScope, setBatchScope] = useState<'active' | 'all'>('active');
+  const [pipelineViewMode, setPipelineViewMode] = useState<'cheques' | 'batches'>('cheques');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBankId, setFilterBankId] = useState<string>('ALL');
   const [filterClearingType, setFilterClearingType] = useState<string>('ALL');
@@ -330,14 +331,144 @@ export function DashboardView({
     };
   }, [filteredCheques, batchMap]);
 
-  // High-level Batch Pipeline summary across all company batches
+  // High-level Pipeline summary across ALL company batches & ALL cheque statuses
   const batchPipeline = useMemo(() => {
+    const chequesByBatchId = new Map<string, ChequeEntry[]>();
     const amountByBatchId = new Map<string, number>();
     const countByBatchId = new Map<string, number>();
+
+    const chequeStages: {
+      key: ChequeStatus;
+      label: string;
+      barColor: string;
+      dotColor: string;
+      textColor: string;
+      count: number;
+      amount: number;
+      batchIds: Set<string>;
+    }[] = [
+      {
+        key: 'Draft',
+        label: 'Draft',
+        barColor: 'bg-[#64748B]',
+        dotColor: 'bg-[#64748B]',
+        textColor: 'text-[#64748B]',
+        count: 0,
+        amount: 0,
+        batchIds: new Set<string>(),
+      },
+      {
+        key: 'Submitted to Bank',
+        label: 'Submitted to Bank',
+        barColor: 'bg-[#2563EB]',
+        dotColor: 'bg-[#2563EB]',
+        textColor: 'text-[#2563EB]',
+        count: 0,
+        amount: 0,
+        batchIds: new Set<string>(),
+      },
+      {
+        key: 'Cleared',
+        label: 'Cleared',
+        barColor: 'bg-[#16A34A]',
+        dotColor: 'bg-[#16A34A]',
+        textColor: 'text-[#16A34A]',
+        count: 0,
+        amount: 0,
+        batchIds: new Set<string>(),
+      },
+      {
+        key: 'Returned / Bounced',
+        label: 'Returned / Bounced',
+        barColor: 'bg-[#DC2626]',
+        dotColor: 'bg-[#DC2626]',
+        textColor: 'text-[#DC2626]',
+        count: 0,
+        amount: 0,
+        batchIds: new Set<string>(),
+      },
+      {
+        key: 'Settled / Recovered',
+        label: 'Settled / Recovered',
+        barColor: 'bg-[#14B8A6]',
+        dotColor: 'bg-[#14B8A6]',
+        textColor: 'text-[#0F766E]',
+        count: 0,
+        amount: 0,
+        batchIds: new Set<string>(),
+      },
+      {
+        key: 'Re-Deposited',
+        label: 'Re-Deposited',
+        barColor: 'bg-[#176B87]',
+        dotColor: 'bg-[#176B87]',
+        textColor: 'text-[#176B87]',
+        count: 0,
+        amount: 0,
+        batchIds: new Set<string>(),
+      },
+    ];
+
+    const chequeStageMap = new Map(chequeStages.map((s) => [s.key, s]));
+    let totalPipelineAmount = 0;
+
     for (const c of cheques) {
-      amountByBatchId.set(c.batchId, (amountByBatchId.get(c.batchId) || 0) + c.amount);
+      const list = chequesByBatchId.get(c.batchId) || [];
+      list.push(c);
+      chequesByBatchId.set(c.batchId, list);
+      const amt = Number(c.amount) || 0;
+      totalPipelineAmount += amt;
+      amountByBatchId.set(c.batchId, (amountByBatchId.get(c.batchId) || 0) + amt);
       countByBatchId.set(c.batchId, (countByBatchId.get(c.batchId) || 0) + 1);
+
+      const cs = chequeStageMap.get(c.status) || chequeStages[0];
+      cs.count += 1;
+      cs.amount += amt;
+      if (c.batchId) cs.batchIds.add(c.batchId);
     }
+
+    const resolveEffectiveStage = (
+      batch: ClearingBatch,
+      batchCheques: ChequeEntry[]
+    ): BatchStatus => {
+      const manualStatus: BatchStatus = batch.status || 'Draft';
+      if (batchCheques.length === 0) return manualStatus;
+
+      let submittedCount = 0;
+      let clearedCount = 0;
+      let returnedCount = 0;
+
+      for (const chq of batchCheques) {
+        if (
+          chq.status === 'Submitted to Bank' ||
+          chq.status === 'Re-Deposited'
+        ) {
+          submittedCount += 1;
+        } else if (
+          chq.status === 'Cleared' ||
+          chq.status === 'Settled / Recovered'
+        ) {
+          clearedCount += 1;
+        } else if (chq.status === 'Returned / Bounced') {
+          returnedCount += 1;
+        }
+      }
+
+      const total = batchCheques.length;
+      if (clearedCount === total) {
+        return 'Cleared';
+      }
+      if (returnedCount === total) {
+        return 'Returned / Bounced';
+      }
+      if (clearedCount > 0 || returnedCount > 0) {
+        return 'Partially Realized';
+      }
+      if (submittedCount > 0) {
+        return 'Submitted to Bank';
+      }
+      return manualStatus;
+    };
 
     const stages: {
       key: BatchStatus;
@@ -348,68 +479,73 @@ export function DashboardView({
       count: number;
       amount: number;
       chequeCount: number;
-      firstBatchId?: string;
+      batchIds: string[];
     }[] = [
       {
         key: 'Draft',
         label: 'Draft',
-        barColor: 'bg-slate-500',
-        dotColor: 'bg-slate-500',
-        textColor: 'text-slate-700',
+        barColor: 'bg-[#64748B]',
+        dotColor: 'bg-[#64748B]',
+        textColor: 'text-[#64748B]',
         count: 0,
         amount: 0,
         chequeCount: 0,
+        batchIds: [],
       },
       {
         key: 'Submitted to Bank',
         label: 'Submitted to Bank',
-        barColor: 'bg-sky-600',
-        dotColor: 'bg-sky-600',
-        textColor: 'text-sky-800',
+        barColor: 'bg-[#2563EB]',
+        dotColor: 'bg-[#2563EB]',
+        textColor: 'text-[#2563EB]',
         count: 0,
         amount: 0,
         chequeCount: 0,
+        batchIds: [],
       },
       {
         key: 'Partially Realized',
         label: 'Partially Realized',
-        barColor: 'bg-amber-500',
-        dotColor: 'bg-amber-500',
-        textColor: 'text-amber-800',
+        barColor: 'bg-[#F59E0B]',
+        dotColor: 'bg-[#F59E0B]',
+        textColor: 'text-[#B45309]',
         count: 0,
         amount: 0,
         chequeCount: 0,
+        batchIds: [],
       },
       {
         key: 'Cleared',
         label: 'Cleared',
-        barColor: 'bg-emerald-600',
-        dotColor: 'bg-emerald-600',
-        textColor: 'text-emerald-800',
+        barColor: 'bg-[#16A34A]',
+        dotColor: 'bg-[#16A34A]',
+        textColor: 'text-[#16A34A]',
         count: 0,
         amount: 0,
         chequeCount: 0,
+        batchIds: [],
       },
       {
         key: 'Returned / Bounced',
         label: 'Returned / Bounced',
-        barColor: 'bg-red-600',
-        dotColor: 'bg-red-600',
-        textColor: 'text-red-800',
+        barColor: 'bg-[#DC2626]',
+        dotColor: 'bg-[#DC2626]',
+        textColor: 'text-[#DC2626]',
         count: 0,
         amount: 0,
         chequeCount: 0,
+        batchIds: [],
       },
     ];
 
     const stageMap = new Map(stages.map((s) => [s.key, s]));
-    let totalPipelineAmount = 0;
     let lockedCount = 0;
     let pendingApprovalCount = 0;
     let unlockedDraftCount = 0;
 
     for (const b of batches) {
-      const status: BatchStatus = b.status || 'Draft';
+      const batchCheques = chequesByBatchId.get(b.id) || [];
+      const status = resolveEffectiveStage(b, batchCheques);
       const stage = stageMap.get(status) || stages[0];
       const batchAmt = amountByBatchId.get(b.id) || 0;
       const batchChqCount = countByBatchId.get(b.id) || 0;
@@ -417,8 +553,7 @@ export function DashboardView({
       stage.count += 1;
       stage.amount += batchAmt;
       stage.chequeCount += batchChqCount;
-      if (!stage.firstBatchId) stage.firstBatchId = b.id;
-      totalPipelineAmount += batchAmt;
+      stage.batchIds.push(b.id);
 
       if (b.isLocked) {
         lockedCount += 1;
@@ -430,34 +565,39 @@ export function DashboardView({
     }
 
     const totalBatches = batches.length;
+    const totalCheques = cheques.length;
     const maxStageCount = Math.max(1, ...stages.map((s) => s.count));
+    const maxChequeStageCount = Math.max(1, ...chequeStages.map((s) => s.count));
 
     return {
       totalBatches,
+      totalCheques,
       totalPipelineAmount,
       maxStageCount,
+      maxChequeStageCount,
       stages,
+      chequeStages,
       governance: [
         {
           key: 'draft',
           label: 'Draft (Open)',
           count: unlockedDraftCount,
-          barColor: 'bg-slate-400',
-          textColor: 'text-slate-700',
+          barColor: 'bg-[#64748B]',
+          textColor: 'text-[#64748B]',
         },
         {
           key: 'pending',
           label: 'Pending Checker Lock',
           count: pendingApprovalCount,
-          barColor: 'bg-amber-500',
-          textColor: 'text-amber-800',
+          barColor: 'bg-[#F59E0B]',
+          textColor: 'text-[#B45309]',
         },
         {
           key: 'locked',
           label: 'Locked (Approved)',
           count: lockedCount,
-          barColor: 'bg-emerald-600',
-          textColor: 'text-emerald-800',
+          barColor: 'bg-[#16A34A]',
+          textColor: 'text-[#16A34A]',
         },
       ],
     };
@@ -524,17 +664,17 @@ export function DashboardView({
       {/* KPI Summary Strip - 4 clean flat cells with hairline dividers */}
       <section
         aria-label="Treasury KPIs"
-        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 bg-white border border-slate-200 rounded-lg divide-y sm:divide-y-0 sm:divide-x divide-slate-200"
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 bg-white border border-[#D9E2EC] rounded-lg divide-y sm:divide-y-0 sm:divide-x divide-[#D9E2EC] shadow-xs"
       >
         <div className="p-5">
-          <div className="text-xs font-medium text-slate-500">
+          <div className="text-xs font-medium text-[#627D98]">
             {batchScope === 'active' ? 'Batch Deposit Total' : 'Consolidated Schedule Total'}
           </div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 font-mono-num">
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-[#102A43] font-mono-num">
             {formatINR(kpis.totalAmount)}
           </div>
-          <div className="mt-1.5 text-xs text-slate-600 flex items-center gap-2">
-            <span className="font-semibold text-slate-800 font-mono-num">
+          <div className="mt-1.5 text-xs text-[#627D98] flex items-center gap-2">
+            <span className="font-semibold text-[#176B87] font-mono-num">
               {formatIndianShort(kpis.totalAmount)}
             </span>
             <span aria-hidden="true">·</span>
@@ -543,18 +683,18 @@ export function DashboardView({
         </div>
 
         <div className="p-5">
-          <div className="text-xs font-medium text-slate-500">Total Instruments</div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 font-mono-num">
+          <div className="text-xs font-medium text-[#627D98]">Total Instruments</div>
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-[#102A43] font-mono-num">
             {kpis.totalCount} Cheques
           </div>
-          <div className="mt-1.5 text-xs text-slate-600 flex items-center gap-2">
-            <span>{kpis.clearedCount} Cleared</span>
+          <div className="mt-1.5 text-xs text-[#627D98] flex items-center gap-2">
+            <span className="text-[#16A34A] font-medium">{kpis.clearedCount} Cleared</span>
             <span aria-hidden="true">·</span>
             <span>{kpis.pendingCount} In Pipeline</span>
             {kpis.pdcOrStaleCount > 0 && (
               <>
                 <span aria-hidden="true">·</span>
-                <span className="text-amber-700 font-medium">
+                <span className="text-[#B45309] font-semibold">
                   {kpis.pdcOrStaleCount} Hold Alert
                 </span>
               </>
@@ -563,14 +703,14 @@ export function DashboardView({
         </div>
 
         <div className="p-5">
-          <div className="text-xs font-medium text-slate-500">
+          <div className="text-xs font-medium text-[#627D98]">
             High-Value Clearing (≥ ₹2 Lakhs)
           </div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 font-mono-num">
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-[#102A43] font-mono-num">
             {kpis.highValueCount} Cheques
           </div>
-          <div className="mt-1.5 text-xs text-slate-600 flex items-center gap-2">
-            <span className="font-mono-num font-medium text-slate-800">
+          <div className="mt-1.5 text-xs text-[#627D98] flex items-center gap-2">
+            <span className="font-mono-num font-semibold text-[#243B53]">
               {formatINR(kpis.highValueAmount)}
             </span>
             <span aria-hidden="true">·</span>
@@ -579,24 +719,24 @@ export function DashboardView({
         </div>
 
         <div className="p-5">
-          <div className="text-xs font-medium text-slate-500">
+          <div className="text-xs font-medium text-[#627D98]">
             Realization vs. Pending
           </div>
           <div className="mt-1.5 flex items-baseline gap-2">
-            <span className="text-xl font-bold tracking-tight text-emerald-700 font-mono-num">
+            <span className="text-xl font-bold tracking-tight text-[#16A34A] font-mono-num">
               {formatIndianShort(kpis.clearedAmount)}
             </span>
-            <span className="text-xs text-slate-400">/</span>
-            <span className="text-base font-semibold text-slate-700 font-mono-num">
+            <span className="text-xs text-[#627D98]">/</span>
+            <span className="text-base font-semibold text-[#243B53] font-mono-num">
               {formatIndianShort(kpis.pendingAmount)} pending
             </span>
           </div>
-          <div className="mt-1.5 text-xs text-slate-600 flex items-center gap-2">
+          <div className="mt-1.5 text-xs text-[#627D98] flex items-center gap-2">
             <span>Cleared: {formatINR(kpis.clearedAmount)}</span>
             {kpis.bouncedCount > 0 && (
               <>
                 <span aria-hidden="true">·</span>
-                <span className="text-red-700 font-medium">
+                <span className="text-[#DC2626] font-semibold">
                   {kpis.bouncedCount} Bounced ({formatIndianShort(kpis.bouncedAmount)})
                 </span>
               </>
@@ -608,21 +748,26 @@ export function DashboardView({
       {/* Treasury Batch Pipeline Overview Card */}
       <section
         aria-label="Treasury Batch Pipeline Overview"
-        className="bg-white border border-slate-200 rounded-lg p-5"
+        className="bg-white border border-[#D9E2EC] rounded-lg p-5 shadow-xs"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#D9E2EC]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-md bg-[#102A43] border border-[#D4AF37]/40 text-[#14B8A6] flex items-center justify-center shrink-0">
               <BarChart3 className="w-4 h-4" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-[#102A43]">
                 Treasury Batch Pipeline
               </h2>
-              <p className="text-xs text-slate-500">
-                High-level status distribution across {batchPipeline.totalBatches}{' '}
-                clearing batch{batchPipeline.totalBatches === 1 ? '' : 'es'} · Total Value{' '}
-                <span className="font-mono-num font-semibold text-slate-700">
+              <p className="text-xs text-[#627D98]">
+                Consolidated across all {batchPipeline.totalBatches} clearing batch
+                {batchPipeline.totalBatches === 1 ? '' : 'es'} ·{' '}
+                <span className="font-mono-num font-semibold text-[#243B53]">
+                  {batchPipeline.totalCheques} Cheque
+                  {batchPipeline.totalCheques === 1 ? '' : 's'}
+                </span>{' '}
+                · Total Value{' '}
+                <span className="font-mono-num font-semibold text-[#243B53]">
                   {formatINR(batchPipeline.totalPipelineAmount)}
                 </span>
               </p>
@@ -641,7 +786,7 @@ export function DashboardView({
                       className={`w-2 h-2 rounded-full ${gov.barColor}`}
                       aria-hidden="true"
                     />
-                    <span className="text-slate-600">{gov.label}:</span>
+                    <span className="text-[#627D98]">{gov.label}:</span>
                     <span className={`font-mono-num font-semibold ${gov.textColor}`}>
                       {gov.count} ({pct}%)
                     </span>
@@ -652,131 +797,281 @@ export function DashboardView({
           )}
         </div>
 
-        {batchPipeline.totalBatches === 0 ? (
-          <div className="py-6 text-center text-xs text-slate-500">
+        {batchPipeline.totalBatches === 0 && batchPipeline.totalCheques === 0 ? (
+          <div className="py-6 text-center text-xs text-[#627D98]">
             No clearing batches created yet. Create a batch to track the treasury clearing pipeline.
           </div>
         ) : (
           <div className="pt-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left: Horizontal Bar Chart by Batch Workflow Status */}
+            {/* Left: Horizontal Bar Chart across All Batches & All Statuses */}
             <div className="lg:col-span-8 space-y-2.5">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                <span>Batch Stage Breakdown</span>
-                <span>Batches · Value</span>
-              </div>
-              <div className="space-y-2">
-                {batchPipeline.stages.map((stage) => {
-                  const pct = Math.round(
-                    (stage.count / batchPipeline.totalBatches) * 100
-                  );
-                  const barWidthPct =
-                    stage.count > 0
-                      ? Math.max(6, Math.round((stage.count / batchPipeline.maxStageCount) * 100))
-                      : 0;
-                  const canSelect = Boolean(stage.firstBatchId);
-
-                  return (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex p-0.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-[11px]">
                     <button
-                      key={stage.key}
                       type="button"
-                      disabled={!canSelect}
-                      onClick={() => {
-                        if (stage.firstBatchId) {
-                          onSelectBatch(stage.firstBatchId);
-                          setBatchScope('active');
-                          setSelectedIds([]);
-                        }
-                      }}
-                      title={
-                        canSelect
-                          ? `View ${stage.label} batch in ledger`
-                          : `No batches in ${stage.label} status`
-                      }
-                      className={`w-full grid grid-cols-12 items-center gap-3 text-left py-1 px-1.5 -mx-1.5 rounded transition-colors ${
-                        canSelect
-                          ? 'hover:bg-slate-50 cursor-pointer'
-                          : 'opacity-55 cursor-default'
+                      onClick={() => setPipelineViewMode('cheques')}
+                      className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap ${
+                        pipelineViewMode === 'cheques'
+                          ? 'bg-white text-[#102A43] font-semibold shadow-2xs'
+                          : 'font-medium text-[#627D98] hover:text-[#102A43]'
                       }`}
                     >
-                      <div className="col-span-4 sm:col-span-3 flex items-center gap-2 min-w-0">
-                        <span
-                          className={`w-2 h-2 rounded-full shrink-0 ${stage.dotColor}`}
-                          aria-hidden="true"
-                        />
-                        <span className="text-xs font-medium text-slate-800 truncate">
-                          {stage.label}
-                        </span>
-                      </div>
-
-                      <div className="col-span-4 sm:col-span-5">
-                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${stage.barColor}`}
-                            style={{ width: `${barWidthPct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="col-span-4 text-right font-mono-num text-xs whitespace-nowrap">
-                        <span className={`font-semibold ${stage.textColor}`}>
-                          {stage.count}
-                        </span>
-                        <span className="text-slate-400 ml-1">({pct}%)</span>
-                        <span className="hidden sm:inline text-slate-500 ml-2">
-                          · {formatIndianShort(stage.amount)}
-                        </span>
-                      </div>
+                      All Statuses ({batchPipeline.totalCheques} Cheques)
                     </button>
-                  );
-                })}
+                    <button
+                      type="button"
+                      onClick={() => setPipelineViewMode('batches')}
+                      className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap ${
+                        pipelineViewMode === 'batches'
+                          ? 'bg-white text-[#102A43] font-semibold shadow-2xs'
+                          : 'font-medium text-[#627D98] hover:text-[#102A43]'
+                      }`}
+                    >
+                      Batch Stages ({batchPipeline.totalBatches})
+                    </button>
+                  </div>
+                  {pipelineViewMode === 'cheques' && filterStatus !== 'ALL' && (
+                    <button
+                      type="button"
+                      onClick={() => setFilterStatus('ALL')}
+                      className="text-[11px] font-medium text-[#176B87] hover:text-[#102A43] underline"
+                    >
+                      Show All Statuses
+                    </button>
+                  )}
+                </div>
+                <span className="text-[11px] font-semibold text-[#627D98] uppercase tracking-wider">
+                  {pipelineViewMode === 'cheques'
+                    ? 'Cheques · Value'
+                    : 'Batches · Value'}
+                </span>
               </div>
+
+              {pipelineViewMode === 'cheques' ? (
+                <div className="space-y-2">
+                  {batchPipeline.chequeStages.map((row) => {
+                    const pct =
+                      batchPipeline.totalCheques > 0
+                        ? Math.round(
+                            (row.count / batchPipeline.totalCheques) * 100
+                          )
+                        : 0;
+                    const barWidthPct =
+                      row.count > 0
+                        ? Math.max(
+                            6,
+                            Math.round(
+                              (row.count / batchPipeline.maxChequeStageCount) *
+                                100
+                            )
+                          )
+                        : 0;
+                    const canSelect = row.count > 0;
+                    const isSelected =
+                      batchScope === 'all' && filterStatus === row.key;
+
+                    return (
+                      <button
+                        key={row.key}
+                        type="button"
+                        disabled={!canSelect}
+                        onClick={() => {
+                          if (!canSelect) return;
+                          const nextStatus = isSelected ? 'ALL' : row.key;
+                          setBatchScope('all');
+                          setFilterStatus(nextStatus);
+                          setSelectedIds([]);
+                        }}
+                        title={
+                          canSelect
+                            ? `${row.label}: ${row.count} cheque(s) across ${row.batchIds.size} batch(es). Click to view all batches in this status.`
+                            : `No cheques in ${row.label} status`
+                        }
+                        className={`w-full grid grid-cols-12 items-center gap-3 text-left py-1 px-1.5 -mx-1.5 rounded transition-colors ${
+                          isSelected
+                            ? 'bg-[#14B8A6]/15 hover:bg-[#14B8A6]/20 cursor-pointer'
+                            : canSelect
+                            ? 'hover:bg-[#F4F7FA] cursor-pointer'
+                            : 'opacity-55 cursor-default'
+                        }`}
+                      >
+                        <div className="col-span-4 sm:col-span-3 flex items-center gap-2 min-w-0">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${row.dotColor}`}
+                            aria-hidden="true"
+                          />
+                          <span className="text-xs font-medium text-[#243B53] truncate">
+                            {row.label}
+                          </span>
+                        </div>
+
+                        <div className="col-span-4 sm:col-span-5">
+                          <div className="h-2.5 w-full bg-[#F4F7FA] border border-[#D9E2EC]/60 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${row.barColor}`}
+                              style={{ width: `${barWidthPct}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-span-4 text-right font-mono-num text-xs whitespace-nowrap">
+                          <span className={`font-semibold ${row.textColor}`}>
+                            {row.count}
+                          </span>
+                          <span className="text-[#627D98] ml-1">({pct}%)</span>
+                          <span className="hidden sm:inline text-[#627D98] ml-2">
+                            · {formatIndianShort(row.amount)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {batchPipeline.stages.map((stage) => {
+                    const pct =
+                      batchPipeline.totalBatches > 0
+                        ? Math.round(
+                            (stage.count / batchPipeline.totalBatches) * 100
+                          )
+                        : 0;
+                    const barWidthPct =
+                      stage.count > 0
+                        ? Math.max(
+                            6,
+                            Math.round(
+                              (stage.count / batchPipeline.maxStageCount) * 100
+                            )
+                          )
+                        : 0;
+                    const canSelect = stage.batchIds.length > 0;
+                    const isActiveStage =
+                      Boolean(activeBatch?.id) &&
+                      stage.batchIds.includes(activeBatch.id);
+
+                    return (
+                      <button
+                        key={stage.key}
+                        type="button"
+                        disabled={!canSelect}
+                        onClick={() => {
+                          if (stage.batchIds.length > 0) {
+                            const currentIdx = stage.batchIds.indexOf(
+                              activeBatch?.id || ''
+                            );
+                            const nextId =
+                              currentIdx >= 0
+                                ? stage.batchIds[
+                                    (currentIdx + 1) % stage.batchIds.length
+                                  ]
+                                : stage.batchIds[0];
+                            onSelectBatch(nextId);
+                            setBatchScope('active');
+                            setSelectedIds([]);
+                          }
+                        }}
+                        title={
+                          canSelect
+                            ? `View ${stage.label} batch in ledger`
+                            : `No batches in ${stage.label} status`
+                        }
+                        className={`w-full grid grid-cols-12 items-center gap-3 text-left py-1 px-1.5 -mx-1.5 rounded transition-colors ${
+                          isActiveStage
+                            ? 'bg-[#14B8A6]/10 hover:bg-[#14B8A6]/15 cursor-pointer'
+                            : canSelect
+                            ? 'hover:bg-[#F4F7FA] cursor-pointer'
+                            : 'opacity-55 cursor-default'
+                        }`}
+                      >
+                        <div className="col-span-4 sm:col-span-3 flex items-center gap-2 min-w-0">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${stage.dotColor}`}
+                            aria-hidden="true"
+                          />
+                          <span className="text-xs font-medium text-[#243B53] truncate">
+                            {stage.label}
+                          </span>
+                        </div>
+
+                        <div className="col-span-4 sm:col-span-5">
+                          <div className="h-2.5 w-full bg-[#F4F7FA] border border-[#D9E2EC]/60 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${stage.barColor}`}
+                              style={{ width: `${barWidthPct}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-span-4 text-right font-mono-num text-xs whitespace-nowrap">
+                          <span className={`font-semibold ${stage.textColor}`}>
+                            {stage.count}
+                          </span>
+                          <span className="text-[#627D98] ml-1">({pct}%)</span>
+                          <span className="hidden sm:inline text-[#627D98] ml-2">
+                            · {formatIndianShort(stage.amount)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Right: Stacked Progress Indicator for Approval & Lock Readiness */}
-            <div className="lg:col-span-4 lg:border-l lg:border-slate-200 lg:pl-6 space-y-3">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="lg:col-span-4 lg:border-l lg:border-[#D9E2EC] lg:pl-6 space-y-3">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-[#627D98] uppercase tracking-wider">
                 <span>Approval &amp; Lock Progress</span>
-                <span className="font-mono-num text-slate-700">
-                  {Math.round(
-                    ((batchPipeline.governance[2]?.count || 0) /
-                      batchPipeline.totalBatches) *
-                      100
-                  )}
+                <span className="font-mono-num text-[#102A43]">
+                  {batchPipeline.totalBatches > 0
+                    ? Math.round(
+                        ((batchPipeline.governance[2]?.count || 0) /
+                          batchPipeline.totalBatches) *
+                          100
+                      )
+                    : 0}
                   % Locked
                 </span>
               </div>
 
               {/* Segmented Pipeline Progress Bar */}
               <div
-                className="h-3.5 w-full bg-slate-100 rounded-full overflow-hidden flex"
+                className="h-3.5 w-full bg-[#F4F7FA] border border-[#D9E2EC]/60 rounded-full overflow-hidden flex"
                 role="img"
                 aria-label="Batch lock progress indicator"
               >
-                {batchPipeline.governance.map((gov) => {
-                  const widthPct = (gov.count / batchPipeline.totalBatches) * 100;
-                  if (widthPct <= 0) return null;
-                  return (
-                    <div
-                      key={gov.key}
-                      style={{ width: `${widthPct}%` }}
-                      title={`${gov.label}: ${gov.count} batch(es)`}
-                      className={`h-full ${gov.barColor} transition-all duration-300`}
-                    />
-                  );
-                })}
+                {batchPipeline.totalBatches > 0 &&
+                  batchPipeline.governance.map((gov) => {
+                    const widthPct =
+                      (gov.count / batchPipeline.totalBatches) * 100;
+                    if (widthPct <= 0) return null;
+                    return (
+                      <div
+                        key={gov.key}
+                        style={{ width: `${widthPct}%` }}
+                        title={`${gov.label}: ${gov.count} batch(es)`}
+                        className={`h-full ${gov.barColor} transition-all duration-300`}
+                      />
+                    );
+                  })}
               </div>
 
               <div className="space-y-2 pt-1">
                 {batchPipeline.governance.map((gov) => {
-                  const pct = Math.round(
-                    (gov.count / batchPipeline.totalBatches) * 100
-                  );
+                  const pct =
+                    batchPipeline.totalBatches > 0
+                      ? Math.round(
+                          (gov.count / batchPipeline.totalBatches) * 100
+                        )
+                      : 0;
                   return (
                     <div
                       key={gov.key}
                       className="flex items-center justify-between text-xs"
                     >
-                      <div className="flex items-center gap-2 text-slate-700">
+                      <div className="flex items-center gap-2 text-[#243B53]">
                         <span
                           className={`w-2.5 h-2.5 rounded-xs ${gov.barColor}`}
                           aria-hidden="true"
@@ -787,7 +1082,7 @@ export function DashboardView({
                         <span className={`font-semibold ${gov.textColor}`}>
                           {gov.count}
                         </span>
-                        <span className="text-slate-400 ml-1">({pct}%)</span>
+                        <span className="text-[#627D98] ml-1">({pct}%)</span>
                       </div>
                     </div>
                   );
@@ -802,18 +1097,18 @@ export function DashboardView({
       {activeBatch && (
         <section
           aria-label="Batch Audit & Maker-Checker Controls"
-          className="bg-white border border-slate-200 rounded-lg p-5"
+          className="bg-white border border-[#D9E2EC] rounded-lg p-5 shadow-xs"
         >
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#D9E2EC]">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center p-0.5 bg-slate-100 rounded-md border border-slate-200">
+              <div className="flex items-center p-0.5 bg-[#F4F7FA] rounded-md border border-[#D9E2EC]">
                 <button
                   type="button"
                   onClick={() => setBatchScope('active')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
+                  className={`px-3 py-1.5 text-xs rounded transition-colors whitespace-nowrap ${
                     batchScope === 'active'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white text-[#102A43] font-semibold shadow-2xs'
+                      : 'font-medium text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   Active Batch
@@ -821,10 +1116,10 @@ export function DashboardView({
                 <button
                   type="button"
                   onClick={() => setBatchScope('all')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
+                  className={`px-3 py-1.5 text-xs rounded transition-colors whitespace-nowrap ${
                     batchScope === 'all'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white text-[#102A43] font-semibold shadow-2xs'
+                      : 'font-medium text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   All Batches ({batches.length})
@@ -840,7 +1135,7 @@ export function DashboardView({
                       onSelectBatch(e.target.value);
                       setSelectedIds([]);
                     }}
-                    className="px-3 py-1.5 text-xs font-mono-num font-semibold text-slate-900 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="px-3 py-1.5 text-xs font-mono-num font-semibold text-[#102A43] bg-white border border-[#D9E2EC] rounded-md focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     {batches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -856,9 +1151,9 @@ export function DashboardView({
                       setNewBatchBankId(activeBatch.companyBankAccountId);
                       setShowNewBatchModal(true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap"
                   >
-                    <FilePlus2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <FilePlus2 className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                     <span>New Batch</span>
                   </button>
                 </div>
@@ -873,8 +1168,8 @@ export function DashboardView({
                     onClick={() => setShowAuditHistory((v) => !v)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md transition-colors whitespace-nowrap ${
                       showAuditHistory
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-[#102A43] text-white border-[#102A43]'
+                        : 'bg-white text-[#243B53] border-[#D9E2EC] hover:bg-[#F4F7FA]'
                     }`}
                   >
                     <History className="w-3.5 h-3.5" aria-hidden="true" />
@@ -895,8 +1190,8 @@ export function DashboardView({
                     }
                     className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
                       activeBatch.isLocked
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                        : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/30 hover:bg-[#16A34A]/15 font-semibold'
+                        : 'bg-white text-[#243B53] border-[#D9E2EC] hover:bg-[#F4F7FA]'
                     }`}
                   >
                     {activeBatch.isLocked ? (
@@ -906,7 +1201,7 @@ export function DashboardView({
                       </>
                     ) : (
                       <>
-                        <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                        <Lock className="w-3.5 h-3.5 text-[#D4AF37]" aria-hidden="true" />
                         <span>Lock Batch</span>
                       </>
                     )}
@@ -923,7 +1218,7 @@ export function DashboardView({
                     ? `Generate acknowledgement letter for ${scopedReturnedCount} returned cheque(s)`
                     : 'Mark at least one cheque as Returned / Bounced to enable acknowledgement generation'
                 }
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-red-800 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-[#DC2626] bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md hover:bg-[#DC2626]/15 disabled:bg-[#F4F7FA] disabled:text-[#627D98]/60 disabled:border-[#D9E2EC] disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
                 <FileCheck2 className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>
@@ -935,7 +1230,7 @@ export function DashboardView({
               <button
                 type="button"
                 onClick={onNavigatePrintMemo}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap shadow-2xs"
               >
                 <Printer className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Preview &amp; Print Bank Memo</span>
@@ -945,9 +1240,9 @@ export function DashboardView({
                 <button
                   type="button"
                   onClick={onNavigateLetters}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap"
                 >
-                  <ScrollText className="w-3.5 h-3.5" aria-hidden="true" />
+                  <ScrollText className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                   <span>Letters / NOC &amp; DD</span>
                 </button>
               )}
@@ -955,9 +1250,9 @@ export function DashboardView({
           </div>
 
           {isBatchLocked && (
-            <div className="mt-4 p-3 bg-slate-900 text-slate-100 rounded-md text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="mt-4 p-3 bg-[#102A43] border border-[#D4AF37]/40 text-white rounded-md text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[#14B8A6] shrink-0" />
                 <span>
                   <strong>Read-Only Batch Lock Active:</strong> Locked by{' '}
                   {activeBatch.lockedBy || activeBatch.checkerName}
@@ -965,13 +1260,13 @@ export function DashboardView({
                     ? ` on ${new Date(activeBatch.lockedAt).toLocaleString('en-IN')}`
                     : ''}
                   . Batch fields, cheque amounts, and core details are read-only;{' '}
-                  <strong className="text-emerald-300">Status remains editable</strong> at any time.
+                  <strong className="text-[#14B8A6]">Status remains editable</strong> at any time.
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setLockModalMode('unlock')}
-                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-[11px] font-medium text-white whitespace-nowrap shrink-0 self-start sm:self-auto"
+                className="px-2.5 py-1 bg-[#176B87]/40 hover:bg-[#176B87]/70 border border-[#176B87] rounded text-[11px] font-medium text-white whitespace-nowrap shrink-0 self-start sm:self-auto"
               >
                 Unlock via Password
               </button>
@@ -979,15 +1274,15 @@ export function DashboardView({
           )}
 
           {batchScope === 'active' && showAuditHistory && (
-            <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-md space-y-3">
+            <div className="mt-4 p-4 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-semibold text-slate-900">
+                <div className="text-xs font-semibold text-[#102A43]">
                   Batch Activity History &amp; Audit Timeline · {activeBatch.batchRef}
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowAuditHistory(false)}
-                  className="text-[11px] text-slate-500 hover:text-slate-900"
+                  className="text-[11px] text-[#627D98] hover:text-[#102A43]"
                 >
                   Hide
                 </button>
@@ -1004,9 +1299,9 @@ export function DashboardView({
           {batchScope === 'active' && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 pt-4">
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-[#627D98] mb-1">
                   {activeBatch.isLocked && (
-                    <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                    <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                   )}
                   <span>Deposit Schedule Date</span>
                 </label>
@@ -1017,14 +1312,14 @@ export function DashboardView({
                   onChange={(e) =>
                     onUpdateBatch(activeBatch.id, { depositDate: e.target.value })
                   }
-                  className="w-full px-3 py-1.5 text-xs font-mono-num border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-[#627D98] mb-1">
                   {activeBatch.isLocked && (
-                    <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                    <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                   )}
                   <span>Prepared By (Maker)</span>
                 </label>
@@ -1036,14 +1331,14 @@ export function DashboardView({
                     onUpdateBatch(activeBatch.id, { makerName: e.target.value })
                   }
                   placeholder="Maker name & designation"
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-[#627D98] mb-1">
                   {activeBatch.isLocked && (
-                    <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                    <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                   )}
                   <span>Verified / Approved By (Checker)</span>
                 </label>
@@ -1055,7 +1350,7 @@ export function DashboardView({
                     onUpdateBatch(activeBatch.id, { checkerName: e.target.value })
                   }
                   placeholder="Checker name & designation"
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
@@ -1063,12 +1358,12 @@ export function DashboardView({
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <label
                     htmlFor="batch-status-select"
-                    className="text-xs font-medium text-slate-700"
+                    className="text-xs font-medium text-[#243B53]"
                   >
                     Batch Status
                   </label>
                   {activeBatch.isLocked && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A]">
                       <Unlock className="w-2.5 h-2.5" aria-hidden="true" />
                       <span>Editable</span>
                     </span>
@@ -1082,7 +1377,7 @@ export function DashboardView({
                       setDraftBatchStatus(e.target.value as BatchStatus);
                       setBatchStatusSaved(false);
                     }}
-                    className="flex-1 min-w-0 px-2.5 py-1.5 text-xs font-semibold border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+                    className="flex-1 min-w-0 px-2.5 py-1.5 text-xs font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     <option value="Draft">Draft</option>
                     <option value="Submitted to Bank">Submitted to Bank</option>
@@ -1097,7 +1392,7 @@ export function DashboardView({
                       setBatchStatusSaved(true);
                       setTimeout(() => setBatchStatusSaved(false), 2500);
                     }}
-                    className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                    className="px-3 py-1.5 text-xs font-semibold text-white bg-[#102A43] rounded-md hover:bg-[#176B87] transition-colors whitespace-nowrap shrink-0"
                   >
                     {batchStatusSaved ? 'Updated' : 'Update'}
                   </button>
@@ -1109,13 +1404,13 @@ export function DashboardView({
       )}
 
       {/* Filters & Tally/SAP Export Toolbar */}
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-slate-200 space-y-3">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden shadow-xs">
+        <div className="p-4 border-b border-[#D9E2EC] space-y-3">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2.5 flex-1">
               <div className="relative min-w-[240px] flex-1 max-w-sm">
                 <Search
-                  className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
+                  className="w-3.5 h-3.5 text-[#627D98] absolute left-3 top-1/2 -translate-y-1/2"
                   aria-hidden="true"
                 />
                 <input
@@ -1123,7 +1418,7 @@ export function DashboardView({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search party, cheque #, invoice, MICR..."
-                  className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
@@ -1131,7 +1426,7 @@ export function DashboardView({
                 aria-label="Filter by deposit bank account"
                 value={filterBankId}
                 onChange={(e) => setFilterBankId(e.target.value)}
-                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 <option value="ALL">All Deposit Accounts</option>
                 {bankAccounts.map((acc) => (
@@ -1145,7 +1440,7 @@ export function DashboardView({
                 aria-label="Filter by clearing type"
                 value={filterClearingType}
                 onChange={(e) => setFilterClearingType(e.target.value)}
-                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 <option value="ALL">All Clearing Types</option>
                 <option value="High-Value Clearing">High-Value Clearing</option>
@@ -1158,7 +1453,7 @@ export function DashboardView({
                 aria-label="Filter by status"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="Draft">Draft</option>
@@ -1175,20 +1470,20 @@ export function DashboardView({
                 onChange={(e) =>
                   setFilterCompliance(e.target.value as 'ALL' | 'ALERTS')
                 }
-                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 <option value="ALL">All Instruments</option>
                 <option value="ALERTS">PDC / Stale / Duplicate Alerts</option>
               </select>
 
-              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <div className="flex items-center gap-1.5 text-xs text-[#627D98]">
                 <span>Chq Date:</span>
                 <input
                   type="date"
                   aria-label="Cheque date from"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="px-2 py-1 text-xs border border-slate-300 rounded-md bg-white text-slate-800"
+                  className="px-2 py-1 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
                 <span>to</span>
                 <input
@@ -1196,7 +1491,7 @@ export function DashboardView({
                   aria-label="Cheque date to"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="px-2 py-1 text-xs border border-slate-300 rounded-md bg-white text-slate-800"
+                  className="px-2 py-1 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
@@ -1204,7 +1499,7 @@ export function DashboardView({
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#627D98] hover:text-[#102A43] transition-colors"
                 >
                   <RotateCcw className="w-3 h-3" aria-hidden="true" />
                   <span>Reset</span>
@@ -1216,7 +1511,7 @@ export function DashboardView({
               <button
                 type="button"
                 onClick={() => setShowReconcileModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] hover:text-white transition-colors whitespace-nowrap shadow-xs"
               >
                 <Upload className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Upload Bank Statement</span>
@@ -1225,7 +1520,7 @@ export function DashboardView({
                 type="button"
                 onClick={() => exportChequesToCSV(filteredCheques, batches, bankAccounts)}
                 disabled={filteredCheques.length === 0}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#176B87] bg-white border border-[#176B87]/35 rounded-md hover:bg-[#F4F7FA] disabled:opacity-50 transition-colors whitespace-nowrap"
               >
                 <Download className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Export CSV (Tally / SAP)</span>
@@ -1236,11 +1531,11 @@ export function DashboardView({
           {recoveryNotice && (
             <div
               role="status"
-              className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950"
+              className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#243B53]"
             >
               <div className="flex items-center gap-2">
                 <CheckCircle2
-                  className="w-4 h-4 text-emerald-700 shrink-0"
+                  className="w-4 h-4 text-[#16A34A] shrink-0"
                   aria-hidden="true"
                 />
                 <span>{recoveryNotice}</span>
@@ -1249,7 +1544,7 @@ export function DashboardView({
                 type="button"
                 onClick={() => setRecoveryNotice(null)}
                 aria-label="Dismiss recovery alert"
-                className="p-1 text-emerald-700 hover:text-emerald-950 rounded hover:bg-emerald-100 transition-colors"
+                className="p-1 text-[#16A34A] hover:text-[#102A43] rounded hover:bg-[#16A34A]/15 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -1259,15 +1554,15 @@ export function DashboardView({
           {reconcileAlert && (
             <div
               role="status"
-              className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950"
+              className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#243B53]"
             >
               <div className="flex items-center gap-2">
                 <CheckCircle2
-                  className="w-4 h-4 text-emerald-700 shrink-0"
+                  className="w-4 h-4 text-[#16A34A] shrink-0"
                   aria-hidden="true"
                 />
                 <span>
-                  <strong className="font-semibold">
+                  <strong className="font-semibold text-[#102A43]">
                     {[
                       reconcileAlert.clearedCount > 0
                         ? `${reconcileAlert.clearedCount} cheque${
@@ -1288,7 +1583,7 @@ export function DashboardView({
                       .filter(Boolean)
                       .join(' · ') || 'Bank statement reconciled'}
                   </strong>{' '}
-                  <span className="text-emerald-800">
+                  <span className="text-[#243B53]">
                     from {reconcileAlert.fileName}. Ledger &amp; Day Book have been
                     updated.
                   </span>
@@ -1299,7 +1594,7 @@ export function DashboardView({
                   <button
                     type="button"
                     onClick={onNavigateDayBook}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-900 bg-white border border-emerald-300 rounded hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#176B87] bg-white border border-[#176B87]/35 rounded hover:bg-[#F4F7FA] transition-colors whitespace-nowrap"
                   >
                     <span>Open Day Book</span>
                   </button>
@@ -1308,7 +1603,7 @@ export function DashboardView({
                   <button
                     type="button"
                     onClick={() => onNavigateReturnAck(batchScope)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-red-800 bg-white border border-red-200 rounded hover:bg-red-50 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#DC2626] bg-white border border-[#DC2626]/30 rounded hover:bg-[#DC2626]/5 transition-colors whitespace-nowrap"
                   >
                     <FileCheck2 className="w-3 h-3" aria-hidden="true" />
                     <span>Generate Return Cheque Acknowledgement</span>
@@ -1318,7 +1613,7 @@ export function DashboardView({
                   type="button"
                   onClick={() => setReconcileAlert(null)}
                   aria-label="Dismiss reconciliation alert"
-                  className="p-1 text-emerald-700 hover:text-emerald-950 rounded hover:bg-emerald-100 transition-colors"
+                  className="p-1 text-[#16A34A] hover:text-[#102A43] rounded hover:bg-[#16A34A]/15 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1328,7 +1623,7 @@ export function DashboardView({
 
           {/* Bulk Action Bar when rows are selected */}
           {selectedIds.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2 bg-slate-900 text-white rounded-md text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2 bg-[#102A43] text-white rounded-md text-xs">
               <div className="font-medium">
                 {selectedIds.length} instrument{selectedIds.length > 1 ? 's' : ''} selected
               </div>
@@ -1336,7 +1631,7 @@ export function DashboardView({
                 <button
                   type="button"
                   onClick={() => handleBulkStatus('Submitted to Bank')}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs font-medium transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#176B87] hover:bg-[#176B87]/80 border border-white/15 rounded text-xs font-medium transition-colors"
                 >
                   <Send className="w-3 h-3" aria-hidden="true" />
                   <span>Mark Submitted</span>
@@ -1344,7 +1639,7 @@ export function DashboardView({
                 <button
                   type="button"
                   onClick={() => handleBulkStatus('Cleared')}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 rounded text-xs font-medium transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#14B8A6] hover:bg-[#0D9488] text-[#102A43] hover:text-white rounded text-xs font-semibold transition-colors"
                 >
                   <Check className="w-3 h-3" aria-hidden="true" />
                   <span>Mark Cleared</span>
@@ -1352,7 +1647,7 @@ export function DashboardView({
                 <button
                   type="button"
                   onClick={() => setSelectedIds([])}
-                  className="px-2.5 py-1 text-slate-300 hover:text-white transition-colors"
+                  className="px-2.5 py-1 text-[#D9E2EC] hover:text-white transition-colors"
                 >
                   Clear Selection
                 </button>
@@ -1365,7 +1660,7 @@ export function DashboardView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600 tracking-wide">
+              <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98] tracking-wide">
                 <th className="py-2.5 pl-4 pr-2 w-9">
                   <input
                     type="checkbox"
@@ -1373,7 +1668,7 @@ export function DashboardView({
                     disabled={filteredCheques.length === 0}
                     checked={allSelected}
                     onChange={toggleSelectAll}
-                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-40"
+                    className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]/40 disabled:opacity-40"
                   />
                 </th>
                 <th className="py-2.5 px-2.5 w-11">S.No</th>
@@ -1387,15 +1682,15 @@ export function DashboardView({
                 <th className="py-2.5 pl-3 pr-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-xs">
+            <tbody className="divide-y divide-[#D9E2EC] text-xs">
               {filteredCheques.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-12 px-6 text-center">
                     <div className="max-w-md mx-auto space-y-2">
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-sm font-medium text-[#102A43]">
                         No cheques match the current view
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[#627D98]">
                         {hasActiveFilters
                           ? 'Clear your search or filter criteria to inspect all instruments in this schedule.'
                           : 'Start logging corporate cheques into this clearing batch using high-speed keyboard entry.'}
@@ -1405,7 +1700,7 @@ export function DashboardView({
                           <button
                             type="button"
                             onClick={resetFilters}
-                            className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                            className="px-3.5 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
                           >
                             Reset Filters
                           </button>
@@ -1413,7 +1708,7 @@ export function DashboardView({
                           <button
                             type="button"
                             onClick={onNavigateRapidEntry}
-                            className="px-3.5 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800"
+                            className="px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] hover:text-white transition-colors"
                           >
                             Open Rapid Cheque Entry
                           </button>
@@ -1439,9 +1734,9 @@ export function DashboardView({
                   return (
                     <tr
                       key={chq.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${
+                      className={`hover:bg-[#F4F7FA]/80 transition-colors ${
                         dateEval.flag !== 'VALID' || isDup
-                          ? 'bg-amber-50/35'
+                          ? 'bg-[#F59E0B]/5'
                           : ''
                       }`}
                     >
@@ -1451,14 +1746,14 @@ export function DashboardView({
                           aria-label={`Select cheque ${chq.chequeNumber}`}
                           checked={selectedIds.includes(chq.id)}
                           onChange={() => toggleSelectOne(chq.id)}
-                          className="mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                          className="mt-0.5 rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]/40"
                         />
                       </td>
-                      <td className="py-2.5 px-2.5 align-top font-mono-num text-slate-500">
+                      <td className="py-2.5 px-2.5 align-top font-mono-num text-[#627D98]">
                         {String(idx + 1).padStart(2, '0')}
                       </td>
                       <td className="py-2.5 px-3 align-top">
-                        <div className="font-mono-num font-medium text-slate-900 whitespace-nowrap">
+                        <div className="font-mono-num font-medium text-[#243B53] whitespace-nowrap">
                           {formatIndianDate(chq.chequeDate)}
                         </div>
                         <ComplianceIndicator
@@ -1468,14 +1763,14 @@ export function DashboardView({
                         />
                       </td>
                       <td className="py-2.5 px-3 align-top">
-                        <div className="font-mono-num font-semibold text-slate-900">
+                        <div className="font-mono-num font-semibold text-[#102A43]">
                           {chq.chequeNumber}
                         </div>
-                        <div className="font-mono-num text-[11px] text-slate-500">
+                        <div className="font-mono-num text-[11px] text-[#627D98]">
                           MICR {chq.micrCode}
                         </div>
                         {(chq.presentationCount ?? 1) > 1 && (
-                          <div className="text-[10px] font-semibold text-indigo-700 mt-0.5">
+                          <div className="text-[10px] font-semibold text-[#176B87] mt-0.5">
                             {chq.presentationCount}
                             {chq.presentationCount === 2
                               ? 'nd'
@@ -1486,14 +1781,14 @@ export function DashboardView({
                           </div>
                         )}
                         {chq.replacesChequeNumber && (
-                          <div className="text-[10px] font-medium text-emerald-700 mt-0.5 font-mono-num">
+                          <div className="text-[10px] font-medium text-[#16A34A] mt-0.5 font-mono-num">
                             Replaces #{chq.replacesChequeNumber}
                           </div>
                         )}
                       </td>
                       <td className="py-2.5 px-3 align-top">
-                        <div className="font-medium text-slate-900">{chq.draweeBank}</div>
-                        <div className="text-[11px] text-slate-500">{chq.draweeBranch}</div>
+                        <div className="font-medium text-[#243B53]">{chq.draweeBank}</div>
+                        <div className="text-[11px] text-[#627D98]">{chq.draweeBranch}</div>
                       </td>
                       <td className="py-2.5 px-3 align-top max-w-[230px]">
                         {onOpenCustomerDocuments ? (
@@ -1509,29 +1804,29 @@ export function DashboardView({
                               })
                             }
                             title={`Open Customer Profile & Documents for ${chq.partyName}`}
-                            className="font-medium text-slate-900 hover:text-indigo-700 hover:underline truncate text-left block max-w-full"
+                            className="font-medium text-[#102A43] hover:text-[#176B87] hover:underline truncate text-left block max-w-full"
                           >
                             {chq.partyName}
                           </button>
                         ) : (
                           <div
-                            className="font-medium text-slate-900 truncate"
+                            className="font-medium text-[#102A43] truncate"
                             title={chq.partyName}
                           >
                             {chq.partyName}
                           </div>
                         )}
-                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 truncate">
+                        <div className="text-[11px] text-[#627D98] flex items-center gap-1.5 truncate">
                           <span className="font-mono-num">{chq.customerCode || '—'}</span>
                           <span aria-hidden="true">·</span>
                           <span className="font-mono-num">{chq.invoiceRef || '—'}</span>
                         </div>
                       </td>
                       <td className="py-2.5 px-3 align-top">
-                        <div className="text-slate-900 font-medium whitespace-nowrap">
+                        <div className="text-[#243B53] font-medium whitespace-nowrap">
                           {chq.clearingType}
                         </div>
-                        <div className="text-[11px] text-slate-500 truncate max-w-[175px]">
+                        <div className="text-[11px] text-[#627D98] truncate max-w-[175px]">
                           {depositAcc
                             ? `${depositAcc.bankName.replace(' Ltd.', '')} · ${depositAcc.accountNumber.slice(-4)}`
                             : '—'}
@@ -1539,16 +1834,16 @@ export function DashboardView({
                         </div>
                       </td>
                       <td className="py-2.5 px-3 align-top text-right">
-                        <div className="font-mono-num font-semibold text-slate-900 whitespace-nowrap">
+                        <div className="font-mono-num font-semibold text-[#102A43] whitespace-nowrap">
                           {formatINR(chq.amount)}
                         </div>
                         {chq.status === 'Returned / Bounced' && chq.penaltyAmount ? (
-                          <div className="font-mono-num text-[11px] text-red-700 whitespace-nowrap">
+                          <div className="font-mono-num text-[11px] text-[#DC2626] whitespace-nowrap">
                             Penalty: {formatINR(chq.penaltyAmount)}
                           </div>
                         ) : null}
                         {(chq.recoveredAmount ?? 0) > 0 && (
-                          <div className="font-mono-num text-[10px] text-emerald-700 whitespace-nowrap">
+                          <div className="font-mono-num text-[10px] text-[#16A34A] whitespace-nowrap">
                             Paid: {formatINR(chq.recoveredAmount ?? 0)}
                             {(chq.recoveredAmount ?? 0) < chq.amount &&
                               ` · Bal: ${formatINR(
@@ -1557,7 +1852,7 @@ export function DashboardView({
                           </div>
                         )}
                         {(chq.bounceChargesCollected ?? 0) > 0 && (
-                          <div className="font-mono-num text-[10px] text-slate-600 whitespace-nowrap">
+                          <div className="font-mono-num text-[10px] text-[#627D98] whitespace-nowrap">
                             Chgs Coll: {formatINR(chq.bounceChargesCollected ?? 0)}
                           </div>
                         )}
@@ -1574,17 +1869,17 @@ export function DashboardView({
                               onUpdateChequeStatus([chq.id], nextStatus);
                             }
                           }}
-                          className={`px-2 py-1 text-[11px] font-semibold rounded border bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15 ${
+                          className={`px-2 py-1 text-[11px] font-semibold rounded border bg-white focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 ${
                             chq.status === 'Cleared' ||
                             chq.status === 'Settled / Recovered'
-                              ? 'border-emerald-300 text-emerald-800'
+                              ? 'border-[#16A34A]/40 text-[#16A34A]'
                               : chq.status === 'Re-Deposited'
-                              ? 'border-indigo-300 text-indigo-800'
+                              ? 'border-[#176B87]/40 text-[#176B87]'
                               : chq.status === 'Submitted to Bank'
-                              ? 'border-blue-300 text-blue-800'
+                              ? 'border-[#2563EB]/40 text-[#2563EB]'
                               : chq.status === 'Returned / Bounced'
-                              ? 'border-red-300 text-red-800'
-                              : 'border-slate-300 text-slate-700'
+                              ? 'border-[#DC2626]/40 text-[#DC2626]'
+                              : 'border-[#64748B]/40 text-[#64748B]'
                           }`}
                         >
                           <option value="Draft">Draft</option>
@@ -1600,7 +1895,7 @@ export function DashboardView({
                               type="button"
                               onClick={() => setBounceTarget(chq)}
                               title="Edit Reason of Return"
-                              className="block text-left text-[11px] text-red-700 hover:text-red-900 underline decoration-dotted max-w-[165px] truncate"
+                              className="block text-left text-[11px] text-[#DC2626] hover:text-[#B91C1C] underline decoration-dotted max-w-[165px] truncate"
                             >
                               {chq.bounceReason || 'Specify Reason of Return'}
                             </button>
@@ -1608,7 +1903,7 @@ export function DashboardView({
                               <button
                                 type="button"
                                 onClick={() => setRecoveryTarget(chq)}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-white bg-[#0B192C] hover:bg-slate-800 rounded transition-colors whitespace-nowrap"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#102A43] bg-[#14B8A6] hover:bg-[#0D9488] hover:text-white rounded transition-colors whitespace-nowrap"
                               >
                                 <Wallet className="w-2.5 h-2.5" aria-hidden="true" />
                                 <span>Record Recovery / Action</span>
@@ -1617,7 +1912,7 @@ export function DashboardView({
                           </div>
                         )}
                         {chq.status === 'Settled / Recovered' && (
-                          <div className="mt-1 space-y-0.5 text-[10px] text-slate-600">
+                          <div className="mt-1 space-y-0.5 text-[10px] text-[#627D98]">
                             <div className="font-mono-num truncate max-w-[165px]">
                               {chq.recoveryMode}
                               {chq.replacementChequeNumber
@@ -1631,7 +1926,7 @@ export function DashboardView({
                                 <button
                                   type="button"
                                   onClick={() => setRecoveryTarget(chq)}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-amber-900 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded transition-colors whitespace-nowrap"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#B45309] bg-[#F59E0B]/10 border border-[#F59E0B]/40 hover:bg-[#F59E0B]/20 rounded transition-colors whitespace-nowrap"
                                 >
                                   <Wallet className="w-2.5 h-2.5" aria-hidden="true" />
                                   <span>Add Part Payment</span>
@@ -1640,7 +1935,7 @@ export function DashboardView({
                           </div>
                         )}
                         {chq.status === 'Re-Deposited' && chq.reDepositedToBatchRef && (
-                          <div className="mt-1 text-[10px] font-mono-num text-indigo-700 truncate max-w-[165px]">
+                          <div className="mt-1 text-[10px] font-mono-num text-[#176B87] truncate max-w-[165px]">
                             Moved → {chq.reDepositedToBatchRef}
                           </div>
                         )}
@@ -1655,7 +1950,7 @@ export function DashboardView({
                                 type="button"
                                 onClick={() => setRecoveryTarget(chq)}
                                 title="Record Recovery / Action"
-                                className="p-1.5 text-slate-700 hover:text-slate-950 hover:bg-slate-100 rounded transition-colors"
+                                className="p-1.5 text-[#176B87] hover:text-[#102A43] hover:bg-[#F4F7FA] rounded transition-colors"
                               >
                                 <Wallet className="w-3.5 h-3.5" />
                               </button>
@@ -1667,7 +1962,7 @@ export function DashboardView({
                                 onUpdateChequeStatus([chq.id], 'Submitted to Bank')
                               }
                               title="Mark Submitted to Bank"
-                              className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                              className="p-1.5 text-[#627D98] hover:text-[#2563EB] hover:bg-[#2563EB]/10 rounded transition-colors"
                             >
                               <Send className="w-3.5 h-3.5" />
                             </button>
@@ -1678,7 +1973,7 @@ export function DashboardView({
                               type="button"
                               onClick={() => onUpdateChequeStatus([chq.id], 'Cleared')}
                               title="Mark Cleared"
-                              className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors"
+                              className="p-1.5 text-[#627D98] hover:text-[#16A34A] hover:bg-[#16A34A]/10 rounded transition-colors"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                             </button>
@@ -1690,7 +1985,7 @@ export function DashboardView({
                                 type="button"
                                 onClick={() => setBounceTarget(chq)}
                                 title="Record Return / Bounce"
-                                className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                className="p-1.5 text-[#627D98] hover:text-[#DC2626] hover:bg-[#DC2626]/10 rounded transition-colors"
                               >
                                 <XCircle className="w-3.5 h-3.5" />
                               </button>
@@ -1715,11 +2010,11 @@ export function DashboardView({
                                   })
                                 }
                                 title="Customer Documents & Attachments"
-                                className="inline-flex items-center gap-0.5 p-1.5 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 rounded transition-colors"
+                                className="inline-flex items-center gap-0.5 p-1.5 text-[#627D98] hover:text-[#176B87] hover:bg-[#176B87]/10 rounded transition-colors"
                               >
                                 <Paperclip className="w-3.5 h-3.5" />
                                 {chqDocCount > 0 && (
-                                  <span className="text-[10px] font-mono-num font-semibold text-indigo-700">
+                                  <span className="text-[10px] font-mono-num font-semibold text-[#176B87]">
                                     {chqDocCount}
                                   </span>
                                 )}
@@ -1730,7 +2025,7 @@ export function DashboardView({
                             type="button"
                             onClick={() => setHistoryDrawerCheque(chq)}
                             title="View Cheque Activity History"
-                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                            className="p-1.5 text-[#627D98] hover:text-[#102A43] hover:bg-[#F4F7FA] rounded transition-colors"
                           >
                             <History className="w-3.5 h-3.5" />
                           </button>
@@ -1742,14 +2037,14 @@ export function DashboardView({
                                 ? 'Update Status (Core fields locked)'
                                 : 'Edit Cheque'
                             }
-                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                            className="p-1.5 text-[#627D98] hover:text-[#102A43] hover:bg-[#F4F7FA] rounded transition-colors"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                           {isRowLocked ? (
                             <span
                               title="Batch locked: items cannot be deleted"
-                              className="p-1.5 text-slate-300 cursor-not-allowed inline-flex items-center"
+                              className="p-1.5 text-[#D4AF37] cursor-not-allowed inline-flex items-center"
                             >
                               <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                             </span>
@@ -1758,7 +2053,7 @@ export function DashboardView({
                               type="button"
                               onClick={() => onDeleteCheque(chq.id)}
                               title="Delete Cheque"
-                              className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                              className="p-1.5 text-[#627D98] hover:text-[#DC2626] hover:bg-[#DC2626]/10 rounded transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1772,14 +2067,14 @@ export function DashboardView({
             </tbody>
             {filteredCheques.length > 0 && (
               <tfoot>
-                <tr className="border-t-2 border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900">
+                <tr className="border-t-2 border-[#D9E2EC] bg-[#F4F7FA] text-xs font-semibold text-[#102A43]">
                   <td colSpan={7} className="py-3 px-4 text-right">
                     Schedule Total ({filteredCheques.length} Instruments):
                   </td>
                   <td className="py-3 px-3 text-right font-mono-num whitespace-nowrap">
                     {formatINR(kpis.totalAmount)}
                   </td>
-                  <td colSpan={2} className="py-3 px-3 text-xs font-normal text-slate-500">
+                  <td colSpan={2} className="py-3 px-3 text-xs font-normal text-[#627D98]">
                     {formatIndianShort(kpis.totalAmount)}
                   </td>
                 </tr>
@@ -1829,36 +2124,36 @@ export function DashboardView({
       {/* Create New Daily Clearing Batch Modal */}
       {showNewBatchModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 backdrop-blur-[1px] p-4"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-lg shadow-xl p-6 space-y-4">
+          <div className="w-full max-w-md bg-white border border-[#D9E2EC] rounded-lg shadow-xl p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-900">
+              <h3 className="text-base font-semibold text-[#102A43]">
                 Create New Daily Clearing Batch
               </h3>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Deposit Date
                 </label>
                 <input
                   type="date"
                   value={newBatchDate}
                   onChange={(e) => setNewBatchDate(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Primary Deposit Bank Account
                 </label>
                 <select
                   value={newBatchBankId}
                   onChange={(e) => setNewBatchBankId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 >
                   {bankAccounts.map((acc) => (
                     <option key={acc.id} value={acc.id}>
@@ -1867,8 +2162,8 @@ export function DashboardView({
                   ))}
                 </select>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-600 flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs text-[#627D98] flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-[#F59E0B] shrink-0 mt-0.5" />
                 <span>
                   A sequential FY batch reference (e.g. CLR/2026-27/NOV/0043) will be
                   assigned automatically.
@@ -1879,7 +2174,7 @@ export function DashboardView({
               <button
                 type="button"
                 onClick={() => setShowNewBatchModal(false)}
-                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
               >
                 Cancel
               </button>
@@ -1889,7 +2184,7 @@ export function DashboardView({
                   onCreateBatch(newBatchDate, newBatchBankId);
                   setShowNewBatchModal(false);
                 }}
-                className="px-4 py-2 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800"
+                className="px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] hover:text-white transition-colors"
               >
                 Create Batch
               </button>

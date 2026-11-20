@@ -96,22 +96,22 @@ export function BatchLockModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="batch-lock-modal-title"
     >
-      <div className="w-full max-w-lg bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+      <div className="w-full max-w-lg bg-white border border-[#D9E2EC] rounded-lg shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA]">
           <div className="flex items-center gap-2.5">
             {mode === 'lock' ? (
-              <Lock className="w-4 h-4 text-slate-900" aria-hidden="true" />
+              <Lock className="w-4 h-4 text-[#D4AF37]" aria-hidden="true" />
             ) : (
-              <KeyRound className="w-4 h-4 text-amber-700" aria-hidden="true" />
+              <KeyRound className="w-4 h-4 text-[#B45309]" aria-hidden="true" />
             )}
             <h3
               id="batch-lock-modal-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-[#102A43]"
             >
               {mode === 'lock'
                 ? 'Approve & Lock Batch for Print Integrity'
@@ -121,7 +121,7 @@ export function BatchLockModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-800 rounded hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 text-[#627D98] hover:text-[#102A43] rounded hover:bg-[#D9E2EC]/50 transition-colors"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -130,40 +130,40 @@ export function BatchLockModal({
 
         {mode === 'lock' ? (
           <form onSubmit={handleLockSubmit} className="p-6 space-y-4">
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-md text-xs space-y-1.5">
+            <div className="p-3.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="font-mono-num font-semibold text-slate-900">
+                <span className="font-mono-num font-semibold text-[#102A43]">
                   {batch.batchRef}
                 </span>
-                <span className="font-mono-num text-slate-600">
+                <span className="font-mono-num text-[#627D98]">
                   {formatIndianDate(batch.depositDate)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-slate-700">
+              <div className="flex items-center justify-between text-[#243B53]">
                 <span>{chequeCount} Instruments</span>
-                <span className="font-mono-num font-semibold text-slate-900">
+                <span className="font-mono-num font-semibold text-[#102A43]">
                   {formatINR(batchTotalAmount)}
                 </span>
               </div>
-              <div className="pt-1.5 border-t border-slate-200 text-slate-600 space-y-0.5">
+              <div className="pt-1.5 border-t border-[#D9E2EC] text-[#627D98] space-y-0.5">
                 <div>
-                  Maker: <strong className="text-slate-900">{batch.makerName || '—'}</strong>
+                  Maker: <strong className="text-[#102A43]">{batch.makerName || '—'}</strong>
                 </div>
                 <div>
-                  Checker: <strong className="text-slate-900">{batch.checkerName || '—'}</strong>
+                  Checker: <strong className="text-[#102A43]">{batch.checkerName || '—'}</strong>
                 </div>
               </div>
             </div>
 
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950 flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+            <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#102A43] flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
               <span>
                 Once locked, all batch metadata, cheque amounts, entries, deletions, and clearing statuses become strictly <strong>read-only</strong> to guarantee print integrity. Modifying any record will require the Maker/Checker password bypass.
               </span>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              <label className="block text-xs font-medium text-[#243B53] mb-1.5">
                 Checker Unlock / Bypass Password
               </label>
               <div className="relative">
@@ -171,14 +171,14 @@ export function BatchLockModal({
                   type={showLockPwd ? 'text' : 'password'}
                   value={lockPassword}
                   onChange={(e) => setLockPassword(e.target.value)}
-                  className="w-full pl-3 pr-10 py-2 text-sm font-mono-num border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full pl-3 pr-10 py-2 text-sm font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   placeholder="Enter password to protect this batch"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowLockPwd((v) => !v)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#627D98] hover:text-[#102A43] p-1"
                   aria-label={showLockPwd ? 'Hide password' : 'Show password'}
                 >
                   {showLockPwd ? (
@@ -188,29 +188,29 @@ export function BatchLockModal({
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-[11px] text-slate-500">
-                Pre-filled with your Corporate Checker Password (<span className="font-mono-num">{defaultPwd}</span>). You may customize it for this batch.
+              <p className="mt-1 text-[11px] text-[#627D98]">
+                Pre-filled with your Corporate Checker Password (<span className="font-mono-num text-[#102A43]">{defaultPwd}</span>). You may customize it for this batch.
               </p>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-center gap-2">
+              <div className="p-3 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md text-xs text-[#DC2626] flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#D9E2EC]">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
               >
                 <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Confirm &amp; Lock Batch</span>
@@ -219,12 +219,12 @@ export function BatchLockModal({
           </form>
         ) : (
           <form onSubmit={handleUnlockSubmit} className="p-6 space-y-4">
-            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-950 space-y-1">
+            <div className="p-3.5 bg-[#F59E0B]/10 border border-[#F59E0B]/35 rounded-md text-xs text-[#102A43] space-y-1">
               <div className="font-semibold flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-800" />
+                <Lock className="w-3.5 h-3.5 text-[#B45309]" />
                 <span>Batch {batch.batchRef} is Read-Only Locked</span>
               </div>
-              <div className="text-amber-900">
+              <div className="text-[#243B53]">
                 Locked by {batch.lockedBy || batch.checkerName || 'Checker'}
                 {batch.lockedAt
                   ? ` on ${new Date(batch.lockedAt).toLocaleString('en-IN')}`
@@ -234,7 +234,7 @@ export function BatchLockModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorizing Role
                 </label>
                 <select
@@ -246,29 +246,29 @@ export function BatchLockModal({
                       role === 'Checker' ? batch.checkerName : batch.makerName
                     );
                   }}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 >
                   <option value="Checker">Checker Authorization</option>
                   <option value="Maker">Maker Authorization</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorizing Officer Name
                 </label>
                 <input
                   type="text"
                   value={actorName}
                   onChange={(e) => setActorName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Maker / Checker Password <span className="text-red-600">*</span>
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
+                Maker / Checker Password <span className="text-[#DC2626]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -276,14 +276,14 @@ export function BatchLockModal({
                   value={bypassPassword}
                   onChange={(e) => setBypassPassword(e.target.value)}
                   placeholder="Enter authorization password"
-                  className="w-full pl-3 pr-10 py-2 text-sm font-mono-num border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full pl-3 pr-10 py-2 text-sm font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   autoFocus
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowBypassPwd((v) => !v)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#627D98] hover:text-[#102A43] p-1"
                   aria-label={showBypassPwd ? 'Hide password' : 'Show password'}
                 >
                   {showBypassPwd ? (
@@ -293,43 +293,43 @@ export function BatchLockModal({
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-[11px] text-slate-500">
-                Default Corporate Checker Password: <strong className="font-mono-num text-slate-700">{defaultPwd}</strong> (unless customized when locking · configurable in Company Settings).
+              <p className="mt-1 text-[11px] text-[#627D98]">
+                Default Corporate Checker Password: <strong className="font-mono-num text-[#102A43]">{defaultPwd}</strong> (unless customized when locking · configurable in Company Settings).
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Audit Reason for Unlock / Bypass <span className="text-red-600">*</span>
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
+                Audit Reason for Unlock / Bypass <span className="text-[#DC2626]">*</span>
               </label>
               <textarea
                 rows={2}
                 value={bypassReason}
                 onChange={(e) => setBypassReason(e.target.value)}
                 placeholder="e.g., Correct cheque number typo before physical deposit at Fort Branch"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 required
               />
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-center gap-2">
+              <div className="p-3 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md text-xs text-[#DC2626] flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#D9E2EC]">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors"
               >
                 Keep Batch Locked
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-amber-700 rounded-md hover:bg-amber-800 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#B45309] rounded-md hover:bg-[#92400E] transition-colors"
               >
                 <Unlock className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Verify Password &amp; Unlock</span>

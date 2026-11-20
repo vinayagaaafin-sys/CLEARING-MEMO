@@ -185,16 +185,16 @@ export function DocumentPreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-3 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/75 p-3 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="doc-preview-title"
     >
-      <div className="bg-white border border-slate-200 rounded-lg shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white border border-[#D9E2EC] rounded-lg shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
         {/* Header Bar */}
-        <div className="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 border-b border-[#D9E2EC] bg-[#F4F7FA] flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-md bg-[#0B192C] text-white flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-9 h-9 rounded-md bg-[#102A43] text-[#14B8A6] border border-[#D4AF37]/40 flex items-center justify-center shrink-0 mt-0.5">
               {isPdf ? (
                 <FileText className="w-4 h-4" aria-hidden="true" />
               ) : (
@@ -204,12 +204,12 @@ export function DocumentPreviewModal({
             <div className="min-w-0">
               <h3
                 id="doc-preview-title"
-                className="text-sm font-semibold text-slate-900 truncate"
+                className="text-sm font-semibold text-[#102A43] truncate"
               >
                 {documentItem.title}
               </h3>
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-slate-500">
-                <span className="font-medium text-slate-700">
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-[#627D98]">
+                <span className="font-medium text-[#243B53]">
                   {documentItem.docType}
                 </span>
                 <span aria-hidden="true">·</span>
@@ -217,7 +217,7 @@ export function DocumentPreviewModal({
                 {documentItem.linkedChequeNumber && (
                   <>
                     <span aria-hidden="true">·</span>
-                    <span className="font-mono-num text-slate-700">
+                    <span className="font-mono-num text-[#176B87] font-medium">
                       Chq #{documentItem.linkedChequeNumber}
                     </span>
                   </>
@@ -235,7 +235,7 @@ export function DocumentPreviewModal({
               <button
                 type="button"
                 onClick={() => onShareWhatsApp(documentItem)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-md transition-colors whitespace-nowrap"
               >
                 <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Share via WhatsApp</span>
@@ -244,7 +244,7 @@ export function DocumentPreviewModal({
             <button
               type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] hover:bg-[#0D9488] rounded-md transition-colors whitespace-nowrap"
             >
               <Download className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Download</span>
@@ -252,7 +252,7 @@ export function DocumentPreviewModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 text-slate-500 hover:text-slate-900 rounded hover:bg-slate-200/70"
+              className="p-1.5 text-[#627D98] hover:text-[#102A43] rounded hover:bg-[#D9E2EC]/50 transition-colors"
               aria-label="Close document preview"
             >
               <X className="w-4 h-4" />
@@ -261,17 +261,17 @@ export function DocumentPreviewModal({
         </div>
 
         {/* Viewer Controls Toolbar */}
-        <div className="px-4 sm:px-6 py-2 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
-          <div className="flex flex-wrap items-center gap-2 text-slate-600">
-            <span className="font-mono-num text-[11px] text-slate-500">
+        <div className="px-4 sm:px-6 py-2 border-b border-[#D9E2EC] bg-white flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+          <div className="flex flex-wrap items-center gap-2 text-[#627D98]">
+            <span className="font-mono-num text-[11px] text-[#627D98]">
               {documentItem.fileName}
             </span>
-            <span className="text-slate-300" aria-hidden="true">
+            <span className="text-[#D9E2EC]" aria-hidden="true">
               |
             </span>
             <span className="text-[11px]">
               Uploaded {formatAuditTimestamp(documentItem.uploadedAt)} by{' '}
-              <strong className="font-medium text-slate-800">
+              <strong className="font-medium text-[#102A43]">
                 {documentItem.uploadedBy}
               </strong>
             </span>
@@ -279,17 +279,17 @@ export function DocumentPreviewModal({
 
           <div className="flex items-center gap-2">
             {isPdf && pdfDoc && (
-              <div className="flex items-center gap-1 pr-2 mr-1 border-r border-slate-200">
+              <div className="flex items-center gap-1 pr-2 mr-1 border-r border-[#D9E2EC]">
                 <button
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage <= 1}
                   aria-label="Previous PDF page"
-                  className="p-1 border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-40"
+                  className="p-1 border border-[#D9E2EC] text-[#243B53] rounded hover:bg-[#F4F7FA] disabled:opacity-40"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
-                <span className="font-mono-num text-[11px] px-1.5 text-slate-700">
+                <span className="font-mono-num text-[11px] px-1.5 text-[#243B53]">
                   Page {currentPage} / {totalPages}
                 </span>
                 <button
@@ -299,7 +299,7 @@ export function DocumentPreviewModal({
                   }
                   disabled={currentPage >= totalPages}
                   aria-label="Next PDF page"
-                  className="p-1 border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-40"
+                  className="p-1 border border-[#D9E2EC] text-[#243B53] rounded hover:bg-[#F4F7FA] disabled:opacity-40"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
@@ -311,14 +311,14 @@ export function DocumentPreviewModal({
               onClick={() => setZoom((z) => Math.max(50, z - 25))}
               disabled={zoom <= 50}
               aria-label="Zoom out"
-              className="p-1 border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-40"
+              className="p-1 border border-[#D9E2EC] text-[#243B53] rounded hover:bg-[#F4F7FA] disabled:opacity-40"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
               onClick={() => setZoom(100)}
-              className="px-2 py-0.5 text-[11px] font-mono-num font-medium text-slate-700 border border-slate-300 rounded hover:bg-slate-100"
+              className="px-2 py-0.5 text-[11px] font-mono-num font-medium text-[#102A43] border border-[#D9E2EC] rounded hover:bg-[#F4F7FA]"
               title="Reset zoom to 100%"
             >
               {zoom}%
@@ -328,7 +328,7 @@ export function DocumentPreviewModal({
               onClick={() => setZoom((z) => Math.min(300, z + 25))}
               disabled={zoom >= 300}
               aria-label="Zoom in"
-              className="p-1 border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-40"
+              className="p-1 border border-[#D9E2EC] text-[#243B53] rounded hover:bg-[#F4F7FA] disabled:opacity-40"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
@@ -338,7 +338,7 @@ export function DocumentPreviewModal({
               onClick={() => setRotation((r) => (r + 90) % 360)}
               aria-label="Rotate 90 degrees"
               title="Rotate 90°"
-              className="p-1 border border-slate-300 rounded hover:bg-slate-100 ml-1"
+              className="p-1 border border-[#D9E2EC] text-[#243B53] rounded hover:bg-[#F4F7FA] ml-1"
             >
               <RotateCw className="w-3.5 h-3.5" />
             </button>
@@ -346,29 +346,29 @@ export function DocumentPreviewModal({
         </div>
 
         {/* Preview Stage */}
-        <div className="flex-1 bg-slate-100 overflow-auto p-4 sm:p-6 flex items-start justify-center">
+        <div className="flex-1 bg-[#F4F7FA] overflow-auto p-4 sm:p-6 flex items-start justify-center">
           {loading ? (
-            <div className="self-center flex flex-col items-center gap-2 text-slate-600 text-xs">
-              <Loader2 className="w-6 h-6 animate-spin text-slate-700" />
+            <div className="self-center flex flex-col items-center gap-2 text-[#627D98] text-xs">
+              <Loader2 className="w-6 h-6 animate-spin text-[#176B87]" />
               <span>Loading document preview...</span>
             </div>
           ) : error ? (
-            <div className="self-center max-w-md bg-white border border-red-200 rounded-md p-5 text-center space-y-2">
-              <p className="text-xs font-semibold text-red-800">{error}</p>
+            <div className="self-center max-w-md bg-white border border-[#DC2626]/30 rounded-md p-5 text-center space-y-2">
+              <p className="text-xs font-semibold text-[#DC2626]">{error}</p>
               <button
                 type="button"
                 onClick={handleDownload}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488]"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Download File</span>
               </button>
             </div>
           ) : isPdf ? (
-            <div className="relative bg-white border border-slate-300 shadow-sm p-2">
+            <div className="relative bg-white border border-[#D9E2EC] shadow-sm p-2">
               {renderingPage && (
                 <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-                  <Loader2 className="w-5 h-5 animate-spin text-slate-700" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[#176B87]" />
                 </div>
               )}
               <canvas ref={canvasRef} className="block max-w-none" />
@@ -384,7 +384,7 @@ export function DocumentPreviewModal({
                   transform: rotation ? `rotate(${rotation}deg)` : undefined,
                   transition: 'width 120ms ease, transform 150ms ease',
                 }}
-                className="bg-white border border-slate-300 shadow-sm object-contain"
+                className="bg-white border border-[#D9E2EC] shadow-sm object-contain"
               />
             </div>
           ) : null}
@@ -392,8 +392,8 @@ export function DocumentPreviewModal({
 
         {/* Optional Note Footer */}
         {documentItem.note && (
-          <div className="px-4 sm:px-6 py-2.5 border-t border-slate-200 bg-slate-50 text-xs text-slate-700 shrink-0">
-            <strong className="font-semibold text-slate-900">Note: </strong>
+          <div className="px-4 sm:px-6 py-2.5 border-t border-[#D9E2EC] bg-[#F4F7FA] text-xs text-[#243B53] shrink-0">
+            <strong className="font-semibold text-[#102A43]">Note: </strong>
             {documentItem.note}
           </div>
         )}

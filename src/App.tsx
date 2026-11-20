@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
@@ -40,10 +40,12 @@ import {
   LetterAuditPayload,
   LettersCertificatesView,
 } from './components/LettersCertificatesView';
+import { OverdueReturnedChequeModal } from './components/OverdueReturnedChequeModal';
 import { PrintMemoView } from './components/PrintMemoView';
 import { RapidEntryView } from './components/RapidEntryView';
 import { RecoveryActionSubmission } from './components/RecoveryActionModal';
 import {
+  ChecklistFocusTarget,
   ChequeRecoveryPatch,
   ReturnAnalyticsView,
 } from './components/ReturnAnalyticsView';
@@ -101,6 +103,12 @@ import {
   formatINR,
   generateBatchRef,
 } from './utils/indianCurrency';
+import {
+  clearAlertTrackerForCheques,
+  evaluateOverdueAlerts,
+  OverdueChequeAlertItem,
+  recordAlertShownForCheques,
+} from './utils/returnedChequeAlerts';
 
 type ActiveModule =
   | 'dashboard'
@@ -136,6 +144,9 @@ export default function App() {
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>('Admin');
   const [customerNavSelection, setCustomerNavSelection] =
     useState<CustomerInitialSelection | null>(null);
+  const [checklistFocusTarget, setChecklistFocusTarget] =
+    useState<ChecklistFocusTarget | null>(null);
+  const [alertEvalNowMs, setAlertEvalNowMs] = useState(() => Date.now());
   const [deepLinkDoc, setDeepLinkDoc] = useState<CustomerDocument | null>(null);
   const headerBackupInputRef = useRef<HTMLInputElement | null>(null);
   const [backupNotice, setBackupNotice] = useState<{
@@ -676,6 +687,13 @@ export default function App() {
                         payload.status === 'Returned / Bounced'
                           ? payload.bouncedDate || now.slice(0, 10)
                           : c.bouncedDate,
+                      returnUpdatedTimestamp:
+                        payload.status === 'Returned / Bounced'
+                          ? c.status !== 'Returned / Bounced' ||
+                            !c.returnUpdatedTimestamp
+                            ? now
+                            : c.returnUpdatedTimestamp
+                          : c.returnUpdatedTimestamp,
                       bounceReason:
                         payload.status === 'Returned / Bounced'
                           ? payload.bounceReason ?? c.bounceReason
@@ -769,7 +787,20 @@ export default function App() {
               : {
                   ...comp,
                   cheques: comp.cheques.map((c) =>
-                    c.id === existingId ? { ...c, ...payload, updatedAt: now } : c
+                    c.id === existingId
+                      ? {
+                          ...c,
+                          ...payload,
+                          returnUpdatedTimestamp:
+                            payload.status === 'Returned / Bounced'
+                              ? c.status !== 'Returned / Bounced' ||
+                                !c.returnUpdatedTimestamp
+                                ? now
+                                : c.returnUpdatedTimestamp
+                              : c.returnUpdatedTimestamp,
+                          updatedAt: now,
+                        }
+                      : c
                   ),
                 }
           ),
@@ -778,6 +809,8 @@ export default function App() {
       } else {
         const newCheque: ChequeEntry = {
           ...payload,
+          returnUpdatedTimestamp:
+            payload.status === 'Returned / Bounced' ? now : undefined,
           id: `chq-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           createdAt: now,
           updatedAt: now,
@@ -861,14 +894,26 @@ export default function App() {
           );
         }
 
-        if (status === 'Returned / Bounced' && bounceData) {
+        if (status === 'Returned / Bounced') {
+          const nextReturnUpdatedAt =
+            c.status !== 'Returned / Bounced' || !c.returnUpdatedTimestamp
+              ? now
+              : c.returnUpdatedTimestamp;
           return {
             ...c,
             status,
-            bounceReason: bounceData.bounceReason,
-            penaltyAmount: bounceData.penaltyAmount,
-            bouncedDate: bounceData.bouncedDate,
-            remarks: bounceData.remarks || c.remarks,
+            bounceReason: bounceData ? bounceData.bounceReason : c.bounceReason,
+            penaltyAmount: bounceData
+              ? bounceData.penaltyAmount
+              : c.penaltyAmount,
+            bouncedDate: bounceData
+              ? bounceData.bouncedDate
+              : c.bouncedDate || today,
+            returnUpdatedTimestamp: nextReturnUpdatedAt,
+            remarks:
+              bounceData && bounceData.remarks
+                ? bounceData.remarks
+                : c.remarks,
             updatedAt: now,
           };
         }
@@ -879,6 +924,10 @@ export default function App() {
           updatedAt: now,
         };
       });
+
+      if (status !== 'Returned / Bounced') {
+        clearAlertTrackerForCheques(chequeIds);
+      }
 
       const linkedStatus: ScheduledChequeStatus | null =
         status === 'Cleared'
@@ -1285,6 +1334,10 @@ export default function App() {
           status: 'Returned / Bounced' as ChequeStatus,
           bounceReason: reason,
           bouncedDate: retDate,
+          returnUpdatedTimestamp:
+            c.status !== 'Returned / Bounced' || !c.returnUpdatedTimestamp
+              ? now
+              : c.returnUpdatedTimestamp,
           penaltyAmount:
             match.associatedChargeAmount ?? c.penaltyAmount,
           updatedAt: now,
@@ -1562,7 +1615,13 @@ export default function App() {
                 ...comp,
                 cheques: comp.cheques.map((c) =>
                   c.id === chequeId
-                    ? { ...c, bounceReason: reason, updatedAt: now }
+                    ? {
+                        ...c,
+                        bounceReason: reason,
+                        returnUpdatedTimestamp:
+                          c.returnUpdatedTimestamp || now,
+                        updatedAt: now,
+                      }
                     : c
                 ),
               }
@@ -1657,6 +1716,9 @@ export default function App() {
     patch: ChequeRecoveryPatch
   ) => {
     const now = new Date().toISOString();
+    if (patch.bankCollectionStatus === 'Collected from Bank') {
+      clearAlertTrackerForCheques([chequeId]);
+    }
     setState((prev) => {
       const targetComp = prev.companies.find((c) => c.id === companyId);
       if (!targetComp) return prev;
@@ -1734,6 +1796,7 @@ export default function App() {
   ) => {
     const now = new Date().toISOString();
     const today = now.slice(0, 10);
+    clearAlertTrackerForCheques([chequeId]);
 
     setState((prev) => {
       const targetComp = prev.companies.find((c) => c.id === companyId);
@@ -2893,6 +2956,90 @@ export default function App() {
     });
   };
 
+  const overdueEvaluation = useMemo(
+    () => evaluateOverdueAlerts(state.companies, alertEvalNowMs),
+    [state.companies, alertEvalNowMs]
+  );
+
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        setAlertEvalNowMs(Date.now());
+      }
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+
+    const safetyInterval = window.setInterval(() => {
+      setAlertEvalNowMs(Date.now());
+    }, 30000);
+
+    let wakeupTimer: number | null = null;
+    if (overdueEvaluation.nextWakeupMs !== null) {
+      wakeupTimer = window.setTimeout(() => {
+        setAlertEvalNowMs(Date.now());
+      }, overdueEvaluation.nextWakeupMs);
+    }
+
+    return () => {
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.clearInterval(safetyInterval);
+      if (wakeupTimer !== null) {
+        window.clearTimeout(wakeupTimer);
+      }
+    };
+  }, [overdueEvaluation.nextWakeupMs]);
+
+  const snoozeDueOverdueAlerts = (itemsToSnooze: OverdueChequeAlertItem[]) => {
+    if (itemsToSnooze.length === 0) return;
+    const snoozedAtMs = Date.now();
+    const snoozedIso = new Date(snoozedAtMs).toISOString();
+    const chequeIdSet = new Set(itemsToSnooze.map((i) => i.cheque.id));
+
+    recordAlertShownForCheques(Array.from(chequeIdSet), snoozedAtMs);
+    setState((prev) => ({
+      ...prev,
+      companies: prev.companies.map((comp) => {
+        const hasMatch = comp.cheques.some((c) => chequeIdSet.has(c.id));
+        if (!hasMatch) return comp;
+        return {
+          ...comp,
+          cheques: comp.cheques.map((c) =>
+            chequeIdSet.has(c.id)
+              ? { ...c, lastAlertShownTime: snoozedIso }
+              : c
+          ),
+        };
+      }),
+    }));
+    setAlertEvalNowMs(snoozedAtMs);
+  };
+
+  const handleMarkOverdueChequeCollected = (
+    companyId: string,
+    chequeId: string
+  ) => {
+    const today = new Date().toISOString().slice(0, 10);
+    handleUpdateChequeRecovery(companyId, chequeId, {
+      bankCollectionStatus: 'Collected from Bank',
+      collectedFromBankDate: today,
+    });
+    setAlertEvalNowMs(Date.now());
+  };
+
+  const handleViewOverdueInChecklist = (item: OverdueChequeAlertItem) => {
+    snoozeDueOverdueAlerts(overdueEvaluation.dueAlertItems);
+    setChecklistFocusTarget({
+      companyId: item.companyId,
+      chequeId: item.cheque.id,
+      requestedAt: Date.now(),
+    });
+    setActiveModule('return-analytics');
+  };
+
+  const overdueReturnedCount = overdueEvaluation.overdueItems.length;
+
   const todayIso = toIsoDate(new Date());
   const dueTodayScheduleCount = (activeCompany.chequeSchedules || []).reduce(
     (sum, sch) =>
@@ -2914,6 +3061,7 @@ export default function App() {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     count?: number;
+    urgentOverdueCount?: number;
   }[] = [
     { id: 'dashboard', label: 'Clearing Dashboard', icon: LayoutDashboard },
     {
@@ -2951,6 +3099,7 @@ export default function App() {
       id: 'return-analytics',
       label: 'Return Analytics',
       icon: BarChart3,
+      urgentOverdueCount: overdueReturnedCount,
     },
     {
       id: 'audit-log',
@@ -2976,27 +3125,32 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex bg-[#F4F7FA] text-[#243B53]">
       {/* Executive Deep Navy Sidebar (Hidden in Print) */}
       <aside
-        className={`no-print fixed inset-y-0 left-0 z-40 w-[248px] bg-[#0B192C] text-slate-100 flex flex-col justify-between transition-transform duration-200 lg:static lg:translate-x-0 shrink-0 ${
+        className={`no-print fixed inset-y-0 left-0 z-40 w-[248px] bg-[#102A43] text-[#F4F7FA] flex flex-col justify-between border-r border-[#176B87]/25 transition-transform duration-200 lg:static lg:translate-x-0 shrink-0 ${
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div>
-          <div className="px-5 py-5 border-b border-slate-800/80 flex items-center justify-between">
+          <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-md bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                <Landmark className="w-4 h-4 text-white" aria-hidden="true" />
+              <div className="w-8 h-8 rounded-md bg-[#176B87]/35 border border-[#D4AF37]/60 flex items-center justify-center shrink-0 shadow-xs">
+                <Landmark className="w-4 h-4 text-[#D4AF37]" aria-hidden="true" />
               </div>
-              <span className="font-display text-sm font-bold tracking-tight text-white whitespace-nowrap truncate">
-                ClearLedger
-              </span>
+              <div className="min-w-0">
+                <span className="font-display text-sm font-bold tracking-tight text-white whitespace-nowrap truncate block">
+                  ClearLedger
+                </span>
+                <span className="text-[10px] font-medium tracking-wider uppercase text-[#14B8A6] block leading-none mt-0.5">
+                  Corporate Treasury
+                </span>
+              </div>
             </div>
             <button
               type="button"
               onClick={() => setMobileNavOpen(false)}
-              className="lg:hidden p-1 text-slate-400 hover:text-white"
+              className="lg:hidden p-1 text-[#D9E2EC] hover:text-white"
               aria-label="Close navigation"
             >
               <X className="w-4 h-4" />
@@ -3016,16 +3170,38 @@ export default function App() {
                     setActiveModule(item.id);
                     setMobileNavOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-md text-xs transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                      ? 'bg-[#14B8A6] text-[#102A43] font-semibold shadow-xs'
+                      : 'font-medium text-[#D9E2EC] hover:text-white hover:bg-[#176B87]/35'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <Icon
+                    className={`w-4 h-4 shrink-0 ${
+                      isActive ? 'text-[#102A43]' : 'text-[#9FB3C8]'
+                    }`}
+                    aria-hidden="true"
+                  />
                   <span className="flex-1 text-left">{item.label}</span>
+                  {item.urgentOverdueCount !== undefined &&
+                    item.urgentOverdueCount > 0 && (
+                      <span
+                        title="Returned cheques overdue 12+ hours"
+                        className="overdue-blink-badge text-[10px] font-mono-num font-bold px-1.5 py-0.5 rounded bg-[#DC2626] text-white"
+                      >
+                        {item.urgentOverdueCount} 12h+
+                      </span>
+                    )}
                   {item.count !== undefined && item.count > 0 && (
-                    <span className="text-[10px] font-mono-num font-semibold text-red-300">
+                    <span
+                      className={`text-[10px] font-mono-num font-semibold px-1.5 py-0.5 rounded ${
+                        isActive
+                          ? 'bg-[#102A43]/15 text-[#102A43]'
+                          : item.id === 'return-ack'
+                          ? 'bg-[#DC2626]/25 text-red-200'
+                          : 'text-[#D9E2EC]/90'
+                      }`}
+                    >
                       {item.count}
                     </span>
                   )}
@@ -3036,13 +3212,14 @@ export default function App() {
         </div>
 
         {/* Active Corporate Switcher & Batch Context Footer in Sidebar */}
-        <div className="p-4 border-t border-slate-800/80 space-y-3 text-xs">
+        <div className="p-4 border-t border-white/10 space-y-3 text-xs bg-[#0B1F33]/50">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-slate-400">
-                Active Corporate Entity
+              <span className="text-[11px] font-medium text-[#9FB3C8] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" aria-hidden="true" />
+                <span>Active Corporate Entity</span>
               </span>
-              <span className="text-[10px] font-mono-num text-slate-400">
+              <span className="text-[10px] font-mono-num text-[#D4AF37]">
                 {state.companies.length} {state.companies.length === 1 ? 'Co.' : 'Cos.'}
               </span>
             </div>
@@ -3050,10 +3227,10 @@ export default function App() {
               aria-label="Switch active company"
               value={activeCompany.id}
               onChange={(e) => handleSwitchCompany(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs font-medium text-white bg-slate-800 border border-slate-700 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-500 truncate"
+              className="w-full px-2.5 py-1.5 text-xs font-medium text-white bg-[#176B87]/30 border border-[#176B87]/60 rounded-md focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/60 truncate"
             >
               {state.companies.map((comp) => (
-                <option key={comp.id} value={comp.id}>
+                <option key={comp.id} value={comp.id} className="bg-[#102A43] text-white">
                   {comp.profile.companyName}
                 </option>
               ))}
@@ -3061,29 +3238,29 @@ export default function App() {
             <button
               type="button"
               onClick={() => setShowAddCompanyModal(true)}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-slate-200 bg-slate-800/70 hover:bg-slate-800 border border-slate-700/80 rounded-md transition-colors"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-[#F4F7FA] bg-[#176B87]/30 hover:bg-[#176B87]/50 border border-[#176B87]/60 rounded-md transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+              <Plus className="w-3.5 h-3.5 text-[#14B8A6]" aria-hidden="true" />
               <span>Add New Company</span>
             </button>
           </div>
 
-          <div className="pt-2.5 border-t border-slate-800/80 space-y-1 text-[11px] text-slate-400">
+          <div className="pt-2.5 border-t border-white/10 space-y-1 text-[11px] text-[#9FB3C8]">
             <div className="flex justify-between gap-2">
               <span>Batch</span>
-              <span className="font-mono-num text-slate-200">
+              <span className="font-mono-num text-white">
                 {activeBatch?.batchRef}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span>Batch Total</span>
-              <span className="font-mono-num text-slate-200">
+              <span className="font-mono-num text-[#14B8A6] font-semibold">
                 {formatIndianShort(activeBatchTotal)}
               </span>
             </div>
             <div className="flex justify-between gap-2">
               <span>Bank Accounts</span>
-              <span className="font-mono-num text-slate-200">
+              <span className="font-mono-num text-white">
                 {activeCompany.bankAccounts.length}
               </span>
             </div>
@@ -3094,7 +3271,7 @@ export default function App() {
       {/* Mobile Nav Backdrop */}
       {mobileNavOpen && (
         <div
-          className="no-print fixed inset-0 z-30 bg-slate-950/50 lg:hidden"
+          className="no-print fixed inset-0 z-30 bg-[#102A43]/60 lg:hidden"
           onClick={() => setMobileNavOpen(false)}
         />
       )}
@@ -3102,22 +3279,22 @@ export default function App() {
       {/* Main Workspace Viewport */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar Contract (Hidden on Print) */}
-        <header className="no-print h-14 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-6 shrink-0">
+        <header className="no-print h-14 bg-white border-b border-[#D9E2EC] px-4 sm:px-6 flex items-center justify-between gap-6 shrink-0 shadow-2xs">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
-              className="lg:hidden p-1.5 text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-100"
+              className="lg:hidden p-1.5 text-[#627D98] hover:text-[#102A43] rounded-md hover:bg-[#F4F7FA]"
               aria-label="Open navigation"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 text-xs text-slate-500 min-w-0 truncate">
-              <span className="font-medium text-slate-700 whitespace-nowrap truncate max-w-[220px]">
+            <div className="flex items-center gap-2 text-xs text-[#627D98] min-w-0 truncate">
+              <span className="font-medium text-[#243B53] whitespace-nowrap truncate max-w-[220px]">
                 {activeCompany.profile.companyName}
               </span>
               <span aria-hidden="true">/</span>
-              <span className="font-semibold text-slate-900 truncate">
+              <span className="font-semibold text-[#102A43] truncate">
                 {moduleTitleMap[activeModule]}
               </span>
             </div>
@@ -3128,9 +3305,9 @@ export default function App() {
               type="button"
               onClick={handleExportFullBackup}
               title="Download full JSON backup of all companies, cheques, batches, and audit logs"
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap shrink-0"
             >
-              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+              <Download className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
               <span>Export Full Backup (JSON)</span>
             </button>
 
@@ -3152,15 +3329,15 @@ export default function App() {
               type="button"
               onClick={() => headerBackupInputRef.current?.click()}
               title="Restore all company data from a saved JSON backup"
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap shrink-0"
             >
-              <Upload className="w-3.5 h-3.5" aria-hidden="true" />
+              <Upload className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
               <span>Restore Backup (JSON)</span>
             </button>
 
             {/* Active User Role Toggle (Admin vs Maker) */}
             <div
-              className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 p-0.5 text-[11px]"
+              className="inline-flex items-center rounded-md border border-[#D9E2EC] bg-[#F4F7FA] p-0.5 text-[11px]"
               role="group"
               aria-label="Session User Role"
             >
@@ -3169,11 +3346,11 @@ export default function App() {
                 onClick={() => setCurrentUserRole('Admin')}
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded font-medium transition-colors ${
                   currentUserRole === 'Admin'
-                    ? 'bg-[#0B192C] text-white'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-[#102A43] text-white shadow-2xs'
+                    : 'text-[#627D98] hover:text-[#102A43]'
                 }`}
               >
-                <ShieldCheck className="w-3 h-3" aria-hidden="true" />
+                <ShieldCheck className={`w-3 h-3 ${currentUserRole === 'Admin' ? 'text-[#14B8A6]' : ''}`} aria-hidden="true" />
                 <span>Admin</span>
               </button>
               <button
@@ -3181,8 +3358,8 @@ export default function App() {
                 onClick={() => setCurrentUserRole('Maker')}
                 className={`px-2.5 py-1 rounded font-medium transition-colors ${
                   currentUserRole === 'Maker'
-                    ? 'bg-[#0B192C] text-white'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-[#102A43] text-white shadow-2xs'
+                    : 'text-[#627D98] hover:text-[#102A43]'
                 }`}
               >
                 Maker
@@ -3196,7 +3373,7 @@ export default function App() {
                   setEditingCheque(null);
                   setActiveModule('entry');
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap shrink-0 shadow-2xs"
               >
                 <FilePlus2 className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Log Cheque</span>
@@ -3205,7 +3382,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveModule('memo')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap shrink-0 shadow-2xs"
               >
                 <Printer className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Print Deposit Memo</span>
@@ -3221,15 +3398,15 @@ export default function App() {
               role="status"
               className={`no-print mb-5 px-4 py-3 rounded-lg border text-xs flex items-center justify-between gap-3 ${
                 backupNotice.type === 'success'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
-                  : 'bg-red-50 border-red-200 text-red-900'
+                  ? 'bg-[#16A34A]/10 border-[#16A34A]/30 text-[#102A43]'
+                  : 'bg-[#DC2626]/10 border-[#DC2626]/30 text-[#DC2626]'
               }`}
             >
               <div className="flex items-center gap-2">
                 {backupNotice.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                 ) : (
-                  <AlertTriangle className="w-4 h-4 text-red-700 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-[#DC2626] shrink-0" />
                 )}
                 <span>{backupNotice.message}</span>
               </div>
@@ -3422,6 +3599,8 @@ export default function App() {
               companies={state.companies}
               activeCompany={activeCompany}
               auditLogs={state.auditLogs || []}
+              checklistFocusTarget={checklistFocusTarget}
+              onClearChecklistFocusTarget={() => setChecklistFocusTarget(null)}
               onUpdateChequeRecovery={handleUpdateChequeRecovery}
               onExecuteRecoveryAction={handleExecuteRecoveryAction}
               onNavigateReturnAck={() => {
@@ -3489,25 +3668,25 @@ export default function App() {
 
       {pendingRestore && (
         <div
-          className="no-print fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
+          className="no-print fixed inset-0 z-50 bg-[#102A43]/60 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="restore-backup-title"
         >
-          <div className="bg-white border border-slate-200 rounded-lg max-w-md w-full p-5 space-y-4 shadow-lg">
+          <div className="bg-white border border-[#D9E2EC] rounded-lg max-w-md w-full p-5 space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-2.5">
-                <div className="w-8 h-8 rounded-md bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
-                  <Upload className="w-4 h-4" aria-hidden="true" />
+                <div className="w-8 h-8 rounded-md bg-[#F59E0B]/10 border border-[#F59E0B]/35 text-[#B45309] flex items-center justify-center shrink-0">
+                  <Upload className="w-4 h-4 text-[#F59E0B]" aria-hidden="true" />
                 </div>
                 <div>
                   <h3
                     id="restore-backup-title"
-                    className="text-sm font-semibold text-slate-900"
+                    className="text-sm font-semibold text-[#102A43]"
                   >
                     Confirm Full Backup Restore
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-[#627D98] mt-0.5">
                     Review the backup summary before replacing current workspace data.
                   </p>
                 </div>
@@ -3515,49 +3694,49 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setPendingRestore(null)}
-                className="p-1 text-slate-400 hover:text-slate-700"
+                className="p-1 text-[#627D98] hover:text-[#102A43]"
                 aria-label="Close restore confirmation"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-md p-3.5 text-xs space-y-1.5">
+            <div className="bg-[#F4F7FA] border border-[#D9E2EC] rounded-md p-3.5 text-xs space-y-1.5">
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">Backup File:</span>
-                <strong className="font-mono-num text-slate-900 truncate max-w-[230px]">
+                <span className="text-[#627D98]">Backup File:</span>
+                <strong className="font-mono-num text-[#102A43] truncate max-w-[230px]">
                   {pendingRestore.fileName}
                 </strong>
               </div>
               {pendingRestore.exportedAt && (
                 <div className="flex justify-between gap-2">
-                  <span className="text-slate-500">Exported At:</span>
-                  <strong className="font-mono-num text-slate-900">
+                  <span className="text-[#627D98]">Exported At:</span>
+                  <strong className="font-mono-num text-[#102A43]">
                     {new Date(pendingRestore.exportedAt).toLocaleString('en-IN')}
                   </strong>
                 </div>
               )}
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">Companies:</span>
-                <strong className="font-mono-num text-slate-900">
+                <span className="text-[#627D98]">Companies:</span>
+                <strong className="font-mono-num text-[#102A43]">
                   {pendingRestore.companyCount}
                 </strong>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">Clearing Batches:</span>
-                <strong className="font-mono-num text-slate-900">
+                <span className="text-[#627D98]">Clearing Batches:</span>
+                <strong className="font-mono-num text-[#102A43]">
                   {pendingRestore.batchCount}
                 </strong>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">Cheque Entries:</span>
-                <strong className="font-mono-num text-slate-900">
+                <span className="text-[#627D98]">Cheque Entries:</span>
+                <strong className="font-mono-num text-[#102A43]">
                   {pendingRestore.chequeCount}
                 </strong>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">Day Book Entries:</span>
-                <strong className="font-mono-num text-slate-900">
+                <span className="text-[#627D98]">Day Book Entries:</span>
+                <strong className="font-mono-num text-[#102A43]">
                   {pendingRestore.dayBookCount}
                 </strong>
               </div>
@@ -3567,20 +3746,32 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setPendingRestore(null)}
-                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmRestoreBackup}
-                className="px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800"
+                className="px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488]"
               >
                 Restore Backup Now
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {overdueEvaluation.dueAlertItems.length > 0 && (
+        <OverdueReturnedChequeModal
+          items={overdueEvaluation.dueAlertItems}
+          showCompanyBadge={state.companies.length > 1}
+          onMarkCollected={handleMarkOverdueChequeCollected}
+          onSnoozeTenMinutes={() =>
+            snoozeDueOverdueAlerts(overdueEvaluation.dueAlertItems)
+          }
+          onViewInFieldChecklist={handleViewOverdueInChecklist}
+        />
       )}
     </div>
   );

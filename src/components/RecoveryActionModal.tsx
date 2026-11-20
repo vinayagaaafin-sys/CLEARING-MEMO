@@ -256,24 +256,24 @@ export function RecoveryActionModal({
 
   return (
     <div
-      className="no-print fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"
+      className="no-print fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="recovery-action-modal-title"
     >
-      <div className="w-full max-w-2xl max-h-[92vh] bg-white border border-slate-200 rounded-lg shadow-xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-2xl max-h-[92vh] bg-white border border-[#D9E2EC] rounded-lg shadow-xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] shrink-0">
           <div className="flex items-center gap-2.5">
-            <Wallet className="w-4 h-4 text-slate-900" aria-hidden="true" />
+            <Wallet className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
             <div>
               <h3
                 id="recovery-action-modal-title"
-                className="text-base font-semibold text-slate-900"
+                className="text-base font-semibold text-[#102A43]"
               >
                 Record Recovery / Re-Deposit Action
               </h3>
-              <p className="text-xs text-slate-500 font-mono-num">
+              <p className="text-xs text-[#627D98] font-mono-num">
                 Cheque #{cheque.chequeNumber} · {cheque.partyName}
               </p>
             </div>
@@ -281,7 +281,7 @@ export function RecoveryActionModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-800 rounded hover:bg-slate-200/60"
+            className="p-1.5 text-[#627D98] hover:text-[#102A43] rounded hover:bg-[#D9E2EC]/50 transition-colors"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -290,41 +290,41 @@ export function RecoveryActionModal({
 
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
           {/* Cheque & Partial Balance Snapshot */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-md text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs">
             <div>
-              <div className="text-slate-500">Cheque Amount</div>
-              <div className="font-mono-num font-bold text-slate-950 mt-0.5">
+              <div className="text-[#627D98]">Cheque Amount</div>
+              <div className="font-mono-num font-bold text-[#102A43] mt-0.5">
                 {formatINR(cheque.amount)}
               </div>
             </div>
             <div>
-              <div className="text-slate-500">Paid / Recovered</div>
-              <div className="font-mono-num font-bold text-emerald-700 mt-0.5">
+              <div className="text-[#627D98]">Paid / Recovered</div>
+              <div className="font-mono-num font-bold text-[#16A34A] mt-0.5">
                 {formatINR(alreadyPaid)}
               </div>
             </div>
             <div>
-              <div className="text-slate-500">Remaining Balance</div>
-              <div className="font-mono-num font-bold text-red-700 mt-0.5">
+              <div className="text-[#627D98]">Remaining Balance</div>
+              <div className="font-mono-num font-bold text-[#DC2626] mt-0.5">
                 {formatINR(remainingBalance)}
               </div>
             </div>
             <div>
-              <div className="text-slate-500">Charges Collected</div>
-              <div className="font-mono-num font-semibold text-slate-900 mt-0.5">
+              <div className="text-[#627D98]">Charges Collected</div>
+              <div className="font-mono-num font-semibold text-[#102A43] mt-0.5">
                 {formatINR(alreadyCharges)}
               </div>
             </div>
-            <div className="col-span-2 sm:col-span-4 pt-2 border-t border-slate-200 flex flex-wrap justify-between gap-2 text-[11px] text-slate-600">
+            <div className="col-span-2 sm:col-span-4 pt-2 border-t border-[#D9E2EC] flex flex-wrap justify-between gap-2 text-[11px] text-[#627D98]">
               <span>
                 Return Reason:{' '}
-                <strong className="text-red-800">
+                <strong className="text-[#DC2626]">
                   {cheque.bounceReason || 'Not Specified'}
                 </strong>
               </span>
               {cheque.penaltyAmount ? (
                 <span className="font-mono-num">
-                  Bank Penalty: <strong>{formatINR(cheque.penaltyAmount)}</strong>
+                  Bank Penalty: <strong className="text-[#102A43]">{formatINR(cheque.penaltyAmount)}</strong>
                 </span>
               ) : null}
             </div>
@@ -332,13 +332,13 @@ export function RecoveryActionModal({
 
           {/* Prior Installment History (if any partial payments exist) */}
           {cheque.recoveryPayments && cheque.recoveryPayments.length > 0 && (
-            <div className="border border-slate-200 rounded-md overflow-hidden">
-              <div className="px-3.5 py-2 bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-700">
+            <div className="border border-[#D9E2EC] rounded-md overflow-hidden">
+              <div className="px-3.5 py-2 bg-[#F4F7FA] border-b border-[#D9E2EC] text-[11px] font-semibold text-[#102A43]">
                 Recorded Installments / Recovery Parts ({cheque.recoveryPayments.length})
               </div>
               <table className="w-full text-left text-[11px] border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
+                  <tr className="border-b border-[#D9E2EC] text-[#627D98]">
                     <th className="py-1.5 px-3">Date</th>
                     <th className="py-1.5 px-3">Mode</th>
                     <th className="py-1.5 px-3">Ref / Receipt</th>
@@ -346,18 +346,18 @@ export function RecoveryActionModal({
                     <th className="py-1.5 px-3 text-right">Charges (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono-num">
+                <tbody className="divide-y divide-[#D9E2EC] font-mono-num">
                   {cheque.recoveryPayments.map((p) => (
                     <tr key={p.id}>
-                      <td className="py-1.5 px-3">
+                      <td className="py-1.5 px-3 text-[#243B53]">
                         {formatIndianDate(p.paymentDate)}
                       </td>
-                      <td className="py-1.5 px-3 font-sans">{p.mode}</td>
-                      <td className="py-1.5 px-3">{p.refNumber}</td>
-                      <td className="py-1.5 px-3 text-right font-semibold text-emerald-700">
+                      <td className="py-1.5 px-3 font-sans text-[#243B53]">{p.mode}</td>
+                      <td className="py-1.5 px-3 text-[#243B53]">{p.refNumber}</td>
+                      <td className="py-1.5 px-3 text-right font-semibold text-[#16A34A]">
                         {formatINR(p.amount)}
                       </td>
-                      <td className="py-1.5 px-3 text-right text-slate-600">
+                      <td className="py-1.5 px-3 text-right text-[#627D98]">
                         {p.bounceChargesCollected
                           ? formatINR(p.bounceChargesCollected)
                           : '—'}
@@ -371,7 +371,7 @@ export function RecoveryActionModal({
 
           {/* 4 Settlement / Action Choices */}
           <div>
-            <label className="block text-xs font-semibold text-slate-800 mb-2">
+            <label className="block text-xs font-semibold text-[#102A43] mb-2">
               Choose Recovery / Action Method
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -383,18 +383,18 @@ export function RecoveryActionModal({
                 }}
                 className={`p-3 text-left rounded-md border transition-colors flex items-start gap-2.5 ${
                   choice === 'NEFT_RTGS_UPI'
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                    ? 'border-[#102A43] bg-[#102A43] text-white'
+                    : 'border-[#D9E2EC] bg-white text-[#243B53] hover:bg-[#F4F7FA]'
                 }`}
               >
-                <Building2 className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                <Building2 className={`w-4 h-4 shrink-0 mt-0.5 ${choice === 'NEFT_RTGS_UPI' ? 'text-[#14B8A6]' : 'text-[#176B87]'}`} aria-hidden="true" />
                 <div>
                   <div className="text-xs font-semibold">
                     Settled via NEFT / RTGS / UPI
                   </div>
                   <div
                     className={`text-[11px] mt-0.5 ${
-                      choice === 'NEFT_RTGS_UPI' ? 'text-slate-300' : 'text-slate-500'
+                      choice === 'NEFT_RTGS_UPI' ? 'text-white/75' : 'text-[#627D98]'
                     }`}
                   >
                     UTR / Txn Ref, Payment Date &amp; Amount
@@ -410,16 +410,16 @@ export function RecoveryActionModal({
                 }}
                 className={`p-3 text-left rounded-md border transition-colors flex items-start gap-2.5 ${
                   choice === 'CASH'
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                    ? 'border-[#102A43] bg-[#102A43] text-white'
+                    : 'border-[#D9E2EC] bg-white text-[#243B53] hover:bg-[#F4F7FA]'
                 }`}
               >
-                <Banknote className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                <Banknote className={`w-4 h-4 shrink-0 mt-0.5 ${choice === 'CASH' ? 'text-[#14B8A6]' : 'text-[#176B87]'}`} aria-hidden="true" />
                 <div>
                   <div className="text-xs font-semibold">Settled via Cash</div>
                   <div
                     className={`text-[11px] mt-0.5 ${
-                      choice === 'CASH' ? 'text-slate-300' : 'text-slate-500'
+                      choice === 'CASH' ? 'text-white/75' : 'text-[#627D98]'
                     }`}
                   >
                     Receipt No., Payment Date &amp; Amount
@@ -435,12 +435,12 @@ export function RecoveryActionModal({
                 }}
                 className={`p-3 text-left rounded-md border transition-colors flex items-start gap-2.5 ${
                   choice === 'REPLACEMENT_CHEQUE'
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                    ? 'border-[#102A43] bg-[#102A43] text-white'
+                    : 'border-[#D9E2EC] bg-white text-[#243B53] hover:bg-[#F4F7FA]'
                 }`}
               >
                 <FileSpreadsheet
-                  className="w-4 h-4 shrink-0 mt-0.5"
+                  className={`w-4 h-4 shrink-0 mt-0.5 ${choice === 'REPLACEMENT_CHEQUE' ? 'text-[#14B8A6]' : 'text-[#176B87]'}`}
                   aria-hidden="true"
                 />
                 <div>
@@ -450,8 +450,8 @@ export function RecoveryActionModal({
                   <div
                     className={`text-[11px] mt-0.5 ${
                       choice === 'REPLACEMENT_CHEQUE'
-                        ? 'text-slate-300'
-                        : 'text-slate-500'
+                        ? 'text-white/75'
+                        : 'text-[#627D98]'
                     }`}
                   >
                     New Chq No., Date, Bank &amp; Batch Link
@@ -467,18 +467,18 @@ export function RecoveryActionModal({
                 }}
                 className={`p-3 text-left rounded-md border transition-colors flex items-start gap-2.5 ${
                   choice === 'RE_PRESENT'
-                    ? 'border-[#0B192C] bg-[#0B192C] text-white'
-                    : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                    ? 'border-[#102A43] bg-[#102A43] text-white'
+                    : 'border-[#D9E2EC] bg-white text-[#243B53] hover:bg-[#F4F7FA]'
                 }`}
               >
-                <RefreshCw className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                <RefreshCw className={`w-4 h-4 shrink-0 mt-0.5 ${choice === 'RE_PRESENT' ? 'text-[#14B8A6]' : 'text-[#176B87]'}`} aria-hidden="true" />
                 <div>
                   <div className="text-xs font-semibold">
                     Re-Present Same Cheque
                   </div>
                   <div
                     className={`text-[11px] mt-0.5 ${
-                      choice === 'RE_PRESENT' ? 'text-slate-300' : 'text-slate-500'
+                      choice === 'RE_PRESENT' ? 'text-white/75' : 'text-[#627D98]'
                     }`}
                   >
                     1-Click Move to Re-Deposit ({nextPresentationNo}
@@ -493,7 +493,7 @@ export function RecoveryActionModal({
           {errorMsg && (
             <div
               role="alert"
-              className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-800"
+              className="p-3 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md text-xs text-[#DC2626]"
             >
               {errorMsg}
             </div>
@@ -504,11 +504,11 @@ export function RecoveryActionModal({
             <div className="space-y-4 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     {choice === 'CASH'
                       ? 'Receipt Number'
                       : 'Transaction Reference Number (UTR / UPI)'}{' '}
-                    <span className="text-red-600">*</span>
+                    <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -519,19 +519,19 @@ export function RecoveryActionModal({
                         ? 'e.g. RCPT/2026-27/0148'
                         : 'e.g. HDFCR520261118004912'
                     }
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Payment Date <span className="text-red-600">*</span>
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
+                    Payment Date <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="date"
                     value={paymentDate}
                     onChange={(e) => setPaymentDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
@@ -540,8 +540,8 @@ export function RecoveryActionModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-slate-700">
-                      Received Amount (₹) <span className="text-red-600">*</span>
+                    <label className="text-xs font-medium text-[#243B53]">
+                      Received Amount (₹) <span className="text-[#DC2626]">*</span>
                     </label>
                     {remainingBalance > 0 && (
                       <button
@@ -549,7 +549,7 @@ export function RecoveryActionModal({
                         onClick={() =>
                           setReceivedAmount(String(remainingBalance))
                         }
-                        className="text-[11px] font-medium text-emerald-700 hover:text-emerald-900 underline"
+                        className="text-[11px] font-medium text-[#176B87] hover:text-[#102A43] underline"
                       >
                         Full Balance ({formatINR(remainingBalance)})
                       </button>
@@ -563,15 +563,15 @@ export function RecoveryActionModal({
                     value={receivedAmount}
                     onChange={(e) => setReceivedAmount(e.target.value)}
                     placeholder="Enter full or partial payment"
-                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Bounce Charges Collected (₹){' '}
-                    <span className="text-slate-400 font-normal">(Optional)</span>
+                    <span className="text-[#627D98] font-normal">(Optional)</span>
                   </label>
                   <input
                     type="number"
@@ -580,14 +580,14 @@ export function RecoveryActionModal({
                     value={bounceChargesCollected}
                     onChange={(e) => setBounceChargesCollected(e.target.value)}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Physical Cheque Status
                   </label>
                   <select
@@ -597,7 +597,7 @@ export function RecoveryActionModal({
                         e.target.value as BankCollectionStatus
                       )
                     }
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     <option value="Collected from Bank">
                       Collected from Bank
@@ -608,7 +608,7 @@ export function RecoveryActionModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Remarks / Notes
                   </label>
                   <input
@@ -616,14 +616,14 @@ export function RecoveryActionModal({
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
                     placeholder="e.g. Part 1 of 2 received"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               {/* Partial Payment Preview Bar */}
-              <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-md text-xs flex flex-wrap items-center justify-between gap-2">
-                <span className="text-emerald-950">
+              <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[#102A43]">
                   After saving:{' '}
                   <strong className="font-mono-num">
                     Paid {formatINR(previewNewPaidTotal)}
@@ -639,7 +639,7 @@ export function RecoveryActionModal({
                     </span>
                   )}
                 </span>
-                <span className="font-semibold text-emerald-800">
+                <span className="font-semibold text-[#16A34A]">
                   {previewRemaining === 0
                     ? 'Full Settlement → Settled / Recovered'
                     : 'Partial Payment Recorded → Settled / Recovered (Partial)'}
@@ -653,9 +653,9 @@ export function RecoveryActionModal({
             <div className="space-y-4 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     New Cheque Number (6 digits){' '}
-                    <span className="text-red-600">*</span>
+                    <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -665,19 +665,19 @@ export function RecoveryActionModal({
                       setNewChequeNumber(e.target.value.replace(/\D/g, ''))
                     }
                     placeholder="e.g. 512890"
-                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    New Cheque Date <span className="text-red-600">*</span>
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
+                    New Cheque Date <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="date"
                     value={newChequeDate}
                     onChange={(e) => setNewChequeDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
@@ -685,20 +685,20 @@ export function RecoveryActionModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Bank Name <span className="text-red-600">*</span>
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
+                    Bank Name <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
                     value={newBankName}
                     onChange={(e) => setNewBankName(e.target.value)}
                     placeholder="e.g. HDFC Bank Ltd."
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Branch Name
                   </label>
                   <input
@@ -706,16 +706,16 @@ export function RecoveryActionModal({
                     value={newBranchName}
                     onChange={(e) => setNewBranchName(e.target.value)}
                     placeholder="e.g. Lower Parel, Mumbai"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Replacement Cheque Amount (₹){' '}
-                    <span className="text-red-600">*</span>
+                    <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="number"
@@ -723,14 +723,14 @@ export function RecoveryActionModal({
                     step="0.01"
                     value={replacementAmount}
                     onChange={(e) => setReplacementAmount(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Bounce Charges Collected (₹){' '}
-                    <span className="text-slate-400 font-normal">(Optional)</span>
+                    <span className="text-[#627D98] font-normal">(Optional)</span>
                   </label>
                   <input
                     type="number"
@@ -739,17 +739,17 @@ export function RecoveryActionModal({
                     value={bounceChargesCollected}
                     onChange={(e) => setBounceChargesCollected(e.target.value)}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               {/* Optional Link to Deposit Batch */}
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-md space-y-3">
-                <label className="block text-xs font-semibold text-slate-800">
+              <div className="p-3.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md space-y-3">
+                <label className="block text-xs font-semibold text-[#102A43]">
                   Link Replacement Cheque to Deposit Batch
                 </label>
-                <div className="flex flex-wrap gap-3 text-xs">
+                <div className="flex flex-wrap gap-3 text-xs text-[#243B53]">
                   {unlockedBatches.length > 0 && (
                     <label className="inline-flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -788,7 +788,7 @@ export function RecoveryActionModal({
                       onChange={(e) =>
                         setReplacementTargetBatchId(e.target.value)
                       }
-                      className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                      className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     >
                       {unlockedBatches.map((b) => (
                         <option key={b.id} value={b.id}>
@@ -801,24 +801,24 @@ export function RecoveryActionModal({
                 {replacementBatchMode === 'new' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                         New Batch Deposit Date
                       </label>
                       <input
                         type="date"
                         value={newBatchDate}
                         onChange={(e) => setNewBatchDate(e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                        className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43]"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                         Deposit Bank Account
                       </label>
                       <select
                         value={newBatchBankId}
                         onChange={(e) => setNewBatchBankId(e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                        className="w-full px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43]"
                       >
                         {bankAccounts.map((acc) => (
                           <option key={acc.id} value={acc.id}>
@@ -836,7 +836,7 @@ export function RecoveryActionModal({
           {/* CHOICE 4: RE-PRESENT SAME CHEQUE */}
           {choice === 'RE_PRESENT' && (
             <div className="space-y-4 pt-1">
-              <div className="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-md text-xs text-indigo-950 space-y-1">
+              <div className="p-3.5 bg-[#176B87]/10 border border-[#176B87]/30 rounded-md text-xs text-[#102A43] space-y-1">
                 <div className="font-semibold">
                   Move Cheque #{cheque.chequeNumber} to Re-Deposit (
                   {nextPresentationNo}
@@ -847,7 +847,7 @@ export function RecoveryActionModal({
                     : 'th'}
                   -Time Presentation)
                 </div>
-                <p className="text-[11px] text-indigo-900">
+                <p className="text-[11px] text-[#243B53]">
                   Clones this instrument into the selected deposit batch marked as{' '}
                   <strong>{nextPresentationNo}nd Presentation</strong> and
                   updates this returned record&apos;s status to{' '}
@@ -855,11 +855,11 @@ export function RecoveryActionModal({
                 </p>
               </div>
 
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-md space-y-3">
-                <label className="block text-xs font-semibold text-slate-800">
+              <div className="p-3.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md space-y-3">
+                <label className="block text-xs font-semibold text-[#102A43]">
                   Target Deposit Batch for Re-Presentation
                 </label>
-                <div className="flex flex-wrap gap-4 text-xs">
+                <div className="flex flex-wrap gap-4 text-xs text-[#243B53]">
                   {unlockedBatches.length > 0 && (
                     <label className="inline-flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -889,7 +889,7 @@ export function RecoveryActionModal({
                       onChange={(e) =>
                         setRedepositTargetBatchId(e.target.value)
                       }
-                      className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                      className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43]"
                     >
                       {unlockedBatches.map((b) => (
                         <option key={b.id} value={b.id}>
@@ -903,24 +903,24 @@ export function RecoveryActionModal({
                 {redepositBatchMode === 'new' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                         New Batch Deposit Date
                       </label>
                       <input
                         type="date"
                         value={newBatchDate}
                         onChange={(e) => setNewBatchDate(e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                        className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43]"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                         Deposit Bank Account
                       </label>
                       <select
                         value={newBatchBankId}
                         onChange={(e) => setNewBatchBankId(e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                        className="w-full px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43]"
                       >
                         {bankAccounts.map((acc) => (
                           <option key={acc.id} value={acc.id}>
@@ -934,7 +934,7 @@ export function RecoveryActionModal({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Re-Presentation Remarks (Optional)
                 </label>
                 <input
@@ -942,18 +942,18 @@ export function RecoveryActionModal({
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                   placeholder="e.g. Customer confirmed funds available for 2nd presentation"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98]"
                 />
               </div>
             </div>
           )}
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#D9E2EC]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+              className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors"
             >
               Cancel
             </button>
@@ -961,7 +961,7 @@ export function RecoveryActionModal({
             {choice === 'RE_PRESENT' ? (
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#176B87] rounded-md hover:bg-[#102A43] transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Move to Re-Deposit</span>
@@ -969,7 +969,7 @@ export function RecoveryActionModal({
             ) : (
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>

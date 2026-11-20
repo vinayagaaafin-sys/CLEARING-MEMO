@@ -201,27 +201,27 @@ export function DailyDepositScheduleWidget({
   return (
     <section
       aria-label="Today's Deposit Schedule"
-      className="bg-white border border-slate-200 rounded-lg overflow-hidden"
+      className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden shadow-xs"
     >
-      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/80 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="px-5 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-md bg-[#0B192C] text-white flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-md bg-[#102A43] border border-[#D4AF37]/50 text-[#14B8A6] flex items-center justify-center shrink-0">
             <CalendarClock className="w-4 h-4" aria-hidden="true" />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-[#102A43]">
                 Today&apos;s Cheques to Deposit (Scheduled PDC / EMI Queue)
               </h2>
               {counts.overdue > 0 && (
-                <span className="text-[11px] font-semibold text-red-700 font-mono-num">
+                <span className="text-[11px] font-semibold text-[#DC2626] font-mono-num">
                   · {counts.overdue} Overdue
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#627D98] mt-0.5">
               Auto-filtered by working bank deposit date ({filteredRows.length} due ·{' '}
-              <strong className="font-mono-num text-slate-800">
+              <strong className="font-mono-num text-[#102A43]">
                 {formatINR(filteredTotalAmount)}
               </strong>
               ). Send due cheques straight into a Clearing Batch.
@@ -231,7 +231,7 @@ export function DailyDepositScheduleWidget({
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           {/* Quick Tabs */}
-          <div className="inline-flex p-0.5 bg-slate-100 border border-slate-200 rounded-md">
+          <div className="inline-flex p-0.5 bg-white border border-[#D9E2EC] rounded-md">
             {(
               [
                 { id: 'today', label: `Today (${counts.today})` },
@@ -249,12 +249,12 @@ export function DailyDepositScheduleWidget({
                   if (tab.id === 'tomorrow') setSelectedDate(tomorrowIso);
                   setSelectedKeys([]);
                 }}
-                className={`px-2.5 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap shrink-0 ${
+                className={`px-2.5 py-1.5 text-xs rounded transition-colors whitespace-nowrap shrink-0 ${
                   filterTab === tab.id
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-[#102A43] text-white font-semibold shadow-2xs'
                     : tab.id === 'overdue' && counts.overdue > 0
-                    ? 'text-red-700 hover:text-red-900'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'font-medium text-[#DC2626] hover:bg-[#DC2626]/5'
+                    : 'font-medium text-[#627D98] hover:text-[#102A43]'
                 }`}
               >
                 {tab.label}
@@ -275,17 +275,17 @@ export function DailyDepositScheduleWidget({
               else setFilterTab('custom');
               setSelectedKeys([]);
             }}
-            className="px-2.5 py-1.5 text-xs font-mono-num border border-slate-300 rounded-md bg-white text-slate-900"
+            className="px-2.5 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
           />
 
           {onNavigateSchedules && (
             <button
               type="button"
               onClick={onNavigateSchedules}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] whitespace-nowrap shrink-0 transition-colors"
             >
               <span>Manage Schedules</span>
-              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+              <ArrowRight className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -294,16 +294,16 @@ export function DailyDepositScheduleWidget({
       {sentNotice && (
         <div
           role="status"
-          className="px-5 py-2.5 bg-emerald-50 border-b border-emerald-200 text-xs text-emerald-950 flex items-center justify-between gap-2"
+          className="px-5 py-2.5 bg-[#16A34A]/10 border-b border-[#16A34A]/30 text-xs text-[#102A43] flex items-center justify-between gap-2"
         >
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
             <span>{sentNotice}</span>
           </div>
           <button
             type="button"
             onClick={() => setSentNotice(null)}
-            className="p-0.5 text-emerald-700 hover:text-emerald-950"
+            className="p-0.5 text-[#16A34A] hover:text-[#102A43]"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -312,16 +312,16 @@ export function DailyDepositScheduleWidget({
 
       {/* Bulk Action Strip when items exist */}
       {filteredRows.length > 0 && (
-        <div className="px-5 py-2.5 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="px-5 py-2.5 border-b border-[#D9E2EC] bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-slate-600">
+            <span className="text-[#627D98]">
               Deposit Bank Account:
             </span>
             {bankAccounts.length > 0 ? (
               <select
                 value={targetBankId}
                 onChange={(e) => setTargetBankId(e.target.value)}
-                className="px-2.5 py-1 text-xs border border-slate-300 rounded-md bg-white text-slate-800"
+                className="px-2.5 py-1 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 {bankAccounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
@@ -330,7 +330,7 @@ export function DailyDepositScheduleWidget({
                 ))}
               </select>
             ) : (
-              <span className="text-amber-700 font-medium">
+              <span className="text-[#B45309] font-medium">
                 No company bank account configured yet (will create batch with default placeholder)
               </span>
             )}
@@ -340,7 +340,7 @@ export function DailyDepositScheduleWidget({
             type="button"
             disabled={selectedRows.length === 0}
             onClick={() => handleSendRows(selectedRows)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 disabled:opacity-45 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] disabled:opacity-45 transition-colors whitespace-nowrap shrink-0"
           >
             <Send className="w-3.5 h-3.5" aria-hidden="true" />
             <span>
@@ -354,10 +354,10 @@ export function DailyDepositScheduleWidget({
       {/* Due Cheques Table */}
       {filteredRows.length === 0 ? (
         <div className="py-8 px-5 text-center space-y-1">
-          <p className="text-xs font-medium text-slate-700">
+          <p className="text-xs font-medium text-[#243B53]">
             No scheduled PDC/EMI cheques due for deposit in this date view.
           </p>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-[#627D98]">
             {allScheduledRows.length > 0
               ? `You have ${allScheduledRows.length} upcoming scheduled cheque(s). Switch to Next 7 Days or pick a date above.`
               : 'Add a Customer Cheque Schedule with auto-generated or manual PDC dates to see daily deposit queues here.'}
@@ -367,14 +367,14 @@ export function DailyDepositScheduleWidget({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+              <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98]">
                 <th className="py-2.5 pl-5 pr-2 w-9">
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleSelectAll}
                     aria-label="Select all due cheques"
-                    className="rounded border-slate-300 text-slate-900"
+                    className="rounded border-[#D9E2EC] text-[#14B8A6] accent-[#14B8A6] focus:ring-[#14B8A6]"
                   />
                 </th>
                 <th className="py-2.5 px-3">Deposit Date</th>
@@ -387,7 +387,7 @@ export function DailyDepositScheduleWidget({
                 <th className="py-2.5 pl-3 pr-5 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-xs">
+            <tbody className="divide-y divide-[#D9E2EC] text-xs">
               {filteredRows.map((row) => {
                 const key = rowKey(row);
                 const checked = selectedKeys.includes(key);
@@ -396,7 +396,7 @@ export function DailyDepositScheduleWidget({
                 return (
                   <tr
                     key={key}
-                    className="hover:bg-slate-50/80 transition-colors"
+                    className="hover:bg-[#F4F7FA]/80 transition-colors"
                   >
                     <td className="py-2.5 pl-5 pr-2">
                       <input
@@ -404,43 +404,43 @@ export function DailyDepositScheduleWidget({
                         checked={checked}
                         onChange={() => toggleOne(key)}
                         aria-label={`Select cheque ${row.cheque.chequeNumber}`}
-                        className="rounded border-slate-300 text-slate-900"
+                        className="rounded border-[#D9E2EC] text-[#14B8A6] accent-[#14B8A6] focus:ring-[#14B8A6]"
                       />
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap">
-                      <div className="font-mono-num font-semibold text-slate-900">
+                      <div className="font-mono-num font-semibold text-[#102A43]">
                         {formatIndianDate(row.cheque.effectiveDate)}
                       </div>
                       {wasShifted && row.cheque.shiftReason && (
-                        <div className="text-[10px] font-medium text-amber-800">
+                        <div className="text-[10px] font-medium text-[#B45309]">
                           {row.cheque.shiftReason}
                         </div>
                       )}
                       {row.holidayWarning && (
-                        <div className="text-[10px] font-medium text-red-700 inline-flex items-center gap-1">
+                        <div className="text-[10px] font-medium text-[#DC2626] inline-flex items-center gap-1">
                           <AlertTriangle className="w-3 h-3" />
                           <span>{row.holidayWarning}</span>
                         </div>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 font-medium text-slate-900">
+                    <td className="py-2.5 px-3 font-medium text-[#102A43]">
                       {row.schedule.customerName}
                     </td>
-                    <td className="py-2.5 px-3 font-mono-num text-slate-700">
+                    <td className="py-2.5 px-3 font-mono-num text-[#243B53]">
                       {row.schedule.loanRefNo || '—'}
                     </td>
-                    <td className="py-2.5 px-3 font-mono-num font-bold text-slate-950">
+                    <td className="py-2.5 px-3 font-mono-num font-bold text-[#102A43]">
                       {row.cheque.chequeNumber}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-700">
+                    <td className="py-2.5 px-3 text-[#243B53]">
                       <div>{row.schedule.draweeBank || '—'}</div>
                       {row.schedule.draweeBranch && (
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-[#627D98]">
                           {row.schedule.draweeBranch}
                         </div>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono-num font-semibold text-slate-950 whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-right font-mono-num font-semibold text-[#102A43] whitespace-nowrap">
                       {formatINR(row.cheque.amount)}
                     </td>
                     <td className="py-2.5 px-3 text-center">
@@ -451,7 +451,7 @@ export function DailyDepositScheduleWidget({
                             void handlePreviewThumbnail(row.primaryScan!)
                           }
                           title={`View attached scan: ${row.primaryScan.fileName}`}
-                          className="inline-block border border-slate-300 rounded overflow-hidden hover:border-slate-900 transition-colors"
+                          className="inline-block border border-[#D9E2EC] rounded overflow-hidden hover:border-[#14B8A6] transition-colors"
                         >
                           <img
                             src={row.primaryScan.thumbnailDataUrl}
@@ -465,20 +465,20 @@ export function DailyDepositScheduleWidget({
                           onClick={() =>
                             void handlePreviewThumbnail(row.primaryScan!)
                           }
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 hover:text-slate-950"
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-[#176B87] hover:text-[#102A43]"
                         >
                           <FileImage className="w-3.5 h-3.5" />
                           <span>PDF</span>
                         </button>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-[#627D98]">—</span>
                       )}
                     </td>
                     <td className="py-2.5 pl-3 pr-5 text-right whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => handleSendRows([row])}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-white bg-slate-900 rounded hover:bg-slate-800 transition-colors whitespace-nowrap"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#102A43] bg-[#14B8A6] rounded hover:bg-[#0D9488] transition-colors whitespace-nowrap"
                       >
                         <Send className="w-3 h-3" aria-hidden="true" />
                         <span>Send to Clearing Batch</span>
@@ -495,28 +495,28 @@ export function DailyDepositScheduleWidget({
       {/* Read-only Scan Lightbox */}
       {lightboxScan && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#102A43]/75 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white border border-slate-200 rounded-lg max-w-2xl w-full overflow-hidden shadow-xl">
-            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
-              <div className="text-xs font-semibold text-slate-900 truncate">
+          <div className="bg-white border border-[#D9E2EC] rounded-lg max-w-2xl w-full overflow-hidden shadow-xl">
+            <div className="px-4 py-3 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between gap-3">
+              <div className="text-xs font-semibold text-[#102A43] truncate">
                 {lightboxScan.doc.label || 'Attached Scan'} —{' '}
-                <span className="font-mono-num text-slate-600">
+                <span className="font-mono-num text-[#627D98]">
                   {lightboxScan.doc.fileName}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setLightboxScan(null)}
-                className="p-1 text-slate-500 hover:text-slate-900"
+                className="p-1 text-[#627D98] hover:text-[#102A43]"
                 aria-label="Close preview"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="bg-slate-900 p-4 flex items-center justify-center max-h-[75vh] overflow-auto">
+            <div className="bg-[#102A43] p-4 flex items-center justify-center max-h-[75vh] overflow-auto">
               {lightboxScan.doc.mimeType === 'application/pdf' ? (
                 <iframe
                   title={lightboxScan.doc.fileName}

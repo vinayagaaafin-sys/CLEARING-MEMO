@@ -542,27 +542,27 @@ export function BankStatementReconcileModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="reconcile-modal-title"
     >
-      <div className="w-full max-w-6xl max-h-[92vh] flex flex-col bg-white border border-slate-200 rounded-lg shadow-2xl overflow-hidden">
+      <div className="w-full max-w-6xl max-h-[92vh] flex flex-col bg-white border border-[#D9E2EC] rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] shrink-0">
           <div className="flex items-center gap-2.5">
             <FileSpreadsheet
-              className="w-5 h-5 text-slate-900"
+              className="w-5 h-5 text-[#176B87]"
               aria-hidden="true"
             />
             <div>
               <h3
                 id="reconcile-modal-title"
-                className="text-base font-semibold text-slate-900"
+                className="text-base font-semibold text-[#102A43]"
               >
                 Bank Statement Auto-Reconciliation &amp; Day Book Posting
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#627D98]">
                 Match Cleared &amp; Returned Cheques, categorize remaining bank statement transactions, and verify Bank Closing Balance
               </p>
             </div>
@@ -570,7 +570,7 @@ export function BankStatementReconcileModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-800 rounded hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 text-[#627D98] hover:text-[#102A43] rounded hover:bg-[#D9E2EC]/50 transition-colors"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -594,18 +594,18 @@ export function BankStatementReconcileModal({
           </datalist>
 
           {/* Bank Account Selector Bar */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+          <div className="p-4 bg-[#F4F7FA] border border-[#D9E2EC] rounded-lg space-y-3">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs">
                 <Landmark
-                  className="w-4 h-4 text-slate-800 shrink-0"
+                  className="w-4 h-4 text-[#176B87] shrink-0"
                   aria-hidden="true"
                 />
                 <div>
-                  <div className="font-semibold text-slate-900">
+                  <div className="font-semibold text-[#102A43]">
                     Target Bank Account for Statement &amp; Day Book Posting
                   </div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[11px] text-[#627D98]">
                     All reconciled cheques and categorized transactions post directly into this Bank Account ledger
                   </div>
                 </div>
@@ -616,7 +616,7 @@ export function BankStatementReconcileModal({
                   aria-label="Select Bank Account for Reconciliation"
                   value={selectedBankAccountId}
                   onChange={(e) => setSelectedBankAccountId(e.target.value)}
-                  className="min-w-[260px] px-3 py-1.5 text-xs font-medium text-slate-900 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="min-w-[260px] px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 >
                   {bankAccounts.length === 0 && (
                     <option value="">No bank accounts configured — add one</option>
@@ -631,9 +631,9 @@ export function BankStatementReconcileModal({
                   <button
                     type="button"
                     onClick={() => setShowQuickAddBank((v) => !v)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-100 whitespace-nowrap"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] whitespace-nowrap"
                   >
-                    <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                    <Plus className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                     <span>Quick Add Bank</span>
                   </button>
                 )}
@@ -641,18 +641,18 @@ export function BankStatementReconcileModal({
             </div>
 
             {selectedBank && (
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200/80 text-[11px] text-slate-600">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#D9E2EC] text-[11px] text-[#627D98]">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   <span>
                     Opening Balance:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#102A43]">
                       {formatINR(selectedBank.openingBalance ?? 0)}
                     </strong>
                   </span>
                   {selectedBank.statementClosingBalance !== undefined && (
                     <span>
                       Last Statement Closing:{' '}
-                      <strong className="font-mono-num text-slate-900">
+                      <strong className="font-mono-num text-[#102A43]">
                         {formatINR(selectedBank.statementClosingBalance)}
                       </strong>
                       {selectedBank.statementClosingDate
@@ -663,16 +663,16 @@ export function BankStatementReconcileModal({
                 </div>
 
                 {result?.statementOpeningBalance !== undefined && (
-                  <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-800 cursor-pointer">
+                  <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#243B53] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={syncOpeningBalance}
                       onChange={(e) => setSyncOpeningBalance(e.target.checked)}
-                      className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                      className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                     />
                     <span>
                       Apply detected Statement Opening Balance (
-                      <span className="font-mono-num font-semibold">
+                      <span className="font-mono-num font-semibold text-[#102A43]">
                         {formatINR(result.statementOpeningBalance)}
                       </span>
                       ) to this bank account
@@ -686,10 +686,10 @@ export function BankStatementReconcileModal({
             {showQuickAddBank && onQuickAddBankAccount && (
               <form
                 onSubmit={handleQuickAddBankSubmit}
-                className="pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 items-end"
+                className="pt-3 border-t border-[#D9E2EC] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 items-end"
               >
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                     Bank Name *
                   </label>
                   <input
@@ -698,11 +698,11 @@ export function BankStatementReconcileModal({
                     value={quickBankName}
                     onChange={(e) => setQuickBankName(e.target.value)}
                     placeholder="e.g. HDFC Bank Ltd."
-                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded bg-white"
+                    className="w-full px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                     Account Type
                   </label>
                   <select
@@ -712,7 +712,7 @@ export function BankStatementReconcileModal({
                         e.target.value as CompanyBankAccount['accountType']
                       )
                     }
-                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded bg-white"
+                    className="w-full px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     <option value="Current A/c">Current A/c</option>
                     <option value="Cash Credit A/c">Cash Credit A/c</option>
@@ -721,7 +721,7 @@ export function BankStatementReconcileModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                     Account Number *
                   </label>
                   <input
@@ -730,11 +730,11 @@ export function BankStatementReconcileModal({
                     value={quickAccountNumber}
                     onChange={(e) => setQuickAccountNumber(e.target.value)}
                     placeholder="50200018273645"
-                    className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-slate-300 rounded bg-white"
+                    className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                     IFSC Code
                   </label>
                   <input
@@ -743,11 +743,11 @@ export function BankStatementReconcileModal({
                     value={quickIfsc}
                     onChange={(e) => setQuickIfsc(e.target.value.toUpperCase())}
                     placeholder="HDFC0000240"
-                    className="w-full px-2.5 py-1.5 text-xs font-mono-num uppercase border border-slate-300 rounded bg-white"
+                    className="w-full px-2.5 py-1.5 text-xs font-mono-num uppercase border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                  <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                     Opening Balance (₹)
                   </label>
                   <input
@@ -756,20 +756,20 @@ export function BankStatementReconcileModal({
                     value={quickOpeningBalance}
                     onChange={(e) => setQuickOpeningBalance(e.target.value)}
                     placeholder="500000"
-                    className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-slate-300 rounded bg-white"
+                    className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
                     type="submit"
-                    className="flex-1 px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded hover:bg-slate-800 whitespace-nowrap"
+                    className="flex-1 px-3 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded hover:bg-[#0D9488] whitespace-nowrap"
                   >
                     Save Bank
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowQuickAddBank(false)}
-                    className="px-2.5 py-1.5 text-xs text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50"
+                    className="px-2.5 py-1.5 text-xs text-[#243B53] bg-white border border-[#D9E2EC] rounded hover:bg-[#F4F7FA]"
                   >
                     Cancel
                   </button>
@@ -788,24 +788,24 @@ export function BankStatementReconcileModal({
             onDrop={handleDrop}
             className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors ${
               isDragging
-                ? 'border-slate-900 bg-slate-100'
-                : 'border-slate-300 bg-slate-50/70'
+                ? 'border-[#14B8A6] bg-[#14B8A6]/10'
+                : 'border-[#D9E2EC] bg-[#F4F7FA]'
             }`}
           >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-slate-900 text-white flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-md bg-[#102A43] text-[#14B8A6] flex items-center justify-center shrink-0">
                   <Upload className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-slate-900">
+                  <div className="text-xs font-semibold text-[#102A43]">
                     {isParsing
                       ? 'Scanning bank statement transactions & balances...'
                       : result
                       ? `Loaded: ${result.fileName}`
                       : 'Drag & drop your bank statement file here, or click Select Statement File'}
                   </div>
-                  <div className="text-[11px] text-slate-500 mt-0.5">
+                  <div className="text-[11px] text-[#627D98] mt-0.5">
                     Supports .xlsx, .xls, .csv, and .pdf · Auto-matches Cleared &amp; Returned cheques and captures all remaining UPI, NEFT, RTGS, Cash &amp; Bank Charge rows for Day Book
                   </div>
                 </div>
@@ -815,16 +815,16 @@ export function BankStatementReconcileModal({
                 <button
                   type="button"
                   onClick={() => downloadSampleBankStatementCSV(cheques)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] whitespace-nowrap"
                 >
-                  <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                  <Download className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                   <span>Sample CSV</span>
                 </button>
                 <button
                   type="button"
                   disabled={isParsing}
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] disabled:opacity-50 whitespace-nowrap"
                 >
                   <Upload className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>
@@ -836,8 +836,8 @@ export function BankStatementReconcileModal({
           </div>
 
           {parseError && (
-            <div className="p-3.5 bg-red-50 border border-red-200 rounded-md text-xs text-red-900 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-700 shrink-0" />
+            <div className="p-3.5 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md text-xs text-[#DC2626] flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-[#DC2626] shrink-0" />
               <span>{parseError}</span>
             </div>
           )}
@@ -846,37 +846,37 @@ export function BankStatementReconcileModal({
             <>
               {/* Parse Summary Metrics & Closing Balance Strip */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <div className="text-slate-500">Statement Rows</div>
-                  <div className="mt-1 text-base font-bold font-mono-num text-slate-900">
+                <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
+                  <div className="text-[#627D98]">Statement Rows</div>
+                  <div className="mt-1 text-base font-bold font-mono-num text-[#102A43]">
                     {result.totalRowsParsed}{' '}
-                    <span className="text-[11px] font-medium text-slate-500">
+                    <span className="text-[11px] font-medium text-[#627D98]">
                       ({result.fileType})
                     </span>
                   </div>
                 </div>
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md">
-                  <div className="text-emerald-800">Cleared Cheques</div>
-                  <div className="mt-1 text-base font-bold font-mono-num text-emerald-900">
+                <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md">
+                  <div className="text-[#16A34A] font-medium">Cleared Cheques</div>
+                  <div className="mt-1 text-base font-bold font-mono-num text-[#16A34A]">
                     {result.clearedMatches.length}
                   </div>
                 </div>
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                  <div className="text-red-800">Returned Cheques</div>
-                  <div className="mt-1 text-base font-bold font-mono-num text-red-900">
+                <div className="p-3 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md">
+                  <div className="text-[#DC2626] font-medium">Returned Cheques</div>
+                  <div className="mt-1 text-base font-bold font-mono-num text-[#DC2626]">
                     {result.returnedMatches.length}
                   </div>
                 </div>
-                <div className="p-3 bg-sky-50 border border-sky-200 rounded-md">
-                  <div className="text-sky-900">Other Bank Txns</div>
-                  <div className="mt-1 text-base font-bold font-mono-num text-sky-950">
+                <div className="p-3 bg-[#2563EB]/10 border border-[#2563EB]/30 rounded-md">
+                  <div className="text-[#2563EB] font-medium">Other Bank Txns</div>
+                  <div className="mt-1 text-base font-bold font-mono-num text-[#102A43]">
                     {selectedOtherTransactions.length} /{' '}
                     {result.otherTransactions.length}
                   </div>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-                  <div className="text-slate-500">Statement Closing Bal.</div>
-                  <div className="mt-1 text-sm font-bold font-mono-num text-slate-900 truncate">
+                <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
+                  <div className="text-[#627D98]">Statement Closing Bal.</div>
+                  <div className="mt-1 text-sm font-bold font-mono-num text-[#102A43] truncate">
                     {result.statementClosingBalance !== undefined
                       ? formatINR(result.statementClosingBalance)
                       : 'Not Detected'}
@@ -890,12 +890,12 @@ export function BankStatementReconcileModal({
                   <div
                     className={`px-4 py-2.5 rounded-md border text-xs flex flex-wrap items-center justify-between gap-2 ${
                       Math.abs(projectedBalanceSummary.diff ?? 0) < 0.01
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
-                        : 'bg-amber-50 border-amber-200 text-amber-950'
+                        ? 'bg-[#16A34A]/10 border-[#16A34A]/30 text-[#243B53]'
+                        : 'bg-[#F59E0B]/10 border-[#F59E0B]/40 text-[#243B53]'
                     }`}
                   >
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                      <span className="font-semibold">
+                      <span className="font-semibold text-[#102A43]">
                         Projected Book Closing ({selectedBank?.bankName}):{' '}
                         <span className="font-mono-num">
                           {formatINR(projectedBalanceSummary.projectedBookClosing)}
@@ -903,7 +903,7 @@ export function BankStatementReconcileModal({
                       </span>
                       <span>
                         Statement Closing:{' '}
-                        <strong className="font-mono-num">
+                        <strong className="font-mono-num text-[#102A43]">
                           {formatINR(projectedBalanceSummary.stmtClosing)}
                         </strong>
                       </span>
@@ -912,18 +912,18 @@ export function BankStatementReconcileModal({
                       {Math.abs(projectedBalanceSummary.diff ?? 0) < 0.01 ? (
                         <>
                           <CheckCircle2
-                            className="w-4 h-4 text-emerald-700 shrink-0"
+                            className="w-4 h-4 text-[#16A34A] shrink-0"
                             aria-hidden="true"
                           />
-                          <span>Matched / Reconciled (₹0.00 Diff)</span>
+                          <span className="text-[#16A34A]">Matched / Reconciled (₹0.00 Diff)</span>
                         </>
                       ) : (
                         <>
                           <AlertTriangle
-                            className="w-4 h-4 text-amber-700 shrink-0"
+                            className="w-4 h-4 text-[#F59E0B] shrink-0"
                             aria-hidden="true"
                           />
-                          <span>
+                          <span className="text-[#B45309]">
                             Projected Diff:{' '}
                             {formatINR(Math.abs(projectedBalanceSummary.diff ?? 0))}
                           </span>
@@ -935,7 +935,7 @@ export function BankStatementReconcileModal({
 
               {/* 3-Tab Segmented Navigation */}
               <div
-                className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-lg border border-slate-200"
+                className="flex flex-wrap items-center gap-1.5 p-1 bg-[#F4F7FA] rounded-lg border border-[#D9E2EC]"
                 role="tablist"
                 aria-label="Reconciliation Sections"
               >
@@ -946,12 +946,12 @@ export function BankStatementReconcileModal({
                   onClick={() => setActiveTab('cleared')}
                   className={`flex-1 min-w-[170px] px-3.5 py-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap flex items-center justify-center gap-2 ${
                     activeTab === 'cleared'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white text-[#102A43] shadow-sm'
+                      : 'text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   <span>1. Cleared Cheques</span>
-                  <span className="font-mono-num text-[11px] text-emerald-700">
+                  <span className="font-mono-num text-[11px] text-[#16A34A]">
                     ({selectedClearedCandidates.length}/{result.clearedMatches.length})
                   </span>
                 </button>
@@ -962,12 +962,12 @@ export function BankStatementReconcileModal({
                   onClick={() => setActiveTab('returned')}
                   className={`flex-1 min-w-[170px] px-3.5 py-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap flex items-center justify-center gap-2 ${
                     activeTab === 'returned'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white text-[#102A43] shadow-sm'
+                      : 'text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   <span>2. Returned Cheques</span>
-                  <span className="font-mono-num text-[11px] text-red-700">
+                  <span className="font-mono-num text-[11px] text-[#DC2626]">
                     ({selectedReturnedCandidates.length}/{result.returnedMatches.length})
                   </span>
                 </button>
@@ -978,13 +978,13 @@ export function BankStatementReconcileModal({
                   onClick={() => setActiveTab('other')}
                   className={`flex-1 min-w-[230px] px-3.5 py-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap flex items-center justify-center gap-2 ${
                     activeTab === 'other'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white text-[#102A43] shadow-sm'
+                      : 'text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
-                  <BookOpen className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  <BookOpen className="w-3.5 h-3.5 shrink-0 text-[#176B87]" aria-hidden="true" />
                   <span>3. Other Bank Transactions → Day Book</span>
-                  <span className="font-mono-num text-[11px] text-sky-700">
+                  <span className="font-mono-num text-[11px] text-[#176B87]">
                     ({selectedOtherTransactions.length}/{result.otherTransactions.length})
                   </span>
                 </button>
@@ -994,27 +994,27 @@ export function BankStatementReconcileModal({
               {activeTab === 'cleared' && (
                 <div className="space-y-4">
                   {result.clearedMatches.length === 0 ? (
-                    <div className="p-8 border border-slate-200 rounded-md text-center space-y-1.5">
-                      <p className="text-sm font-medium text-slate-900">
+                    <div className="p-8 border border-[#D9E2EC] rounded-md text-center space-y-1.5">
+                      <p className="text-sm font-medium text-[#102A43]">
                         No cleared cheques matched in this statement
                       </p>
-                      <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                      <p className="text-xs text-[#627D98] max-w-lg mx-auto">
                         Check Tab 2 (Returned Cheques) or Tab 3 (Other Bank Transactions → Day Book) to review remaining statement rows.
                       </p>
                     </div>
                   ) : (
-                    <div className="border border-emerald-200 rounded-md overflow-hidden">
-                      <div className="px-4 py-2.5 bg-emerald-50/70 border-b border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="border border-[#16A34A]/30 rounded-md overflow-hidden">
+                      <div className="px-4 py-2.5 bg-[#16A34A]/10 border-b border-[#16A34A]/30 flex flex-wrap items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-emerald-950">
+                          <span className="font-semibold text-[#16A34A]">
                             Cleared / Passed Cheques ({selectedClearedCandidates.length}{' '}
                             of {result.clearedMatches.length} selected)
                           </span>
-                          <span className="text-[11px] text-emerald-800">
+                          <span className="text-[11px] text-[#243B53]">
                             · Posts automatically to Day Book
                           </span>
                         </div>
-                        <span className="text-[11px] text-emerald-800">
+                        <span className="text-[11px] text-[#243B53]">
                           Returned entries always override cleared rows · Existing Returned/Settled cheques protected
                         </span>
                       </div>
@@ -1022,7 +1022,7 @@ export function BankStatementReconcileModal({
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+                            <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98]">
                               <th className="py-2.5 pl-4 pr-2 w-9">
                                 <input
                                   type="checkbox"
@@ -1041,7 +1041,7 @@ export function BankStatementReconcileModal({
                                     });
                                     setClearedSelectedMap(next);
                                   }}
-                                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-700"
+                                  className="rounded border-[#D9E2EC] text-[#16A34A] focus:ring-[#16A34A]"
                                 />
                               </th>
                               <th className="py-2.5 px-3">Cheque Number</th>
@@ -1051,7 +1051,7 @@ export function BankStatementReconcileModal({
                               <th className="py-2.5 px-3">Day Book Posting</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-200">
+                          <tbody className="divide-y divide-[#D9E2EC]">
                             {result.clearedMatches.map((item) => {
                               const isSelected = Boolean(
                                 clearedSelectedMap[item.id]
@@ -1061,7 +1061,7 @@ export function BankStatementReconcileModal({
                                   key={item.id}
                                   className={
                                     !isSelected
-                                      ? 'opacity-50 bg-slate-50/50'
+                                      ? 'opacity-50 bg-[#F4F7FA]/60'
                                       : 'bg-white'
                                   }
                                 >
@@ -1076,69 +1076,69 @@ export function BankStatementReconcileModal({
                                           [item.id]: e.target.checked,
                                         }))
                                       }
-                                      className="mt-1 rounded border-slate-300 text-emerald-700 focus:ring-emerald-700"
+                                      className="mt-1 rounded border-[#D9E2EC] text-[#16A34A] focus:ring-[#16A34A]"
                                     />
                                   </td>
                                   <td className="py-3 px-3 align-top">
-                                    <div className="font-mono-num font-bold text-slate-900">
+                                    <div className="font-mono-num font-bold text-[#102A43]">
                                       #{item.cheque.chequeNumber}
                                     </div>
-                                    <div className="text-[11px] text-slate-600 truncate max-w-[175px]">
+                                    <div className="text-[11px] text-[#627D98] truncate max-w-[175px]">
                                       {item.cheque.partyName}
                                     </div>
-                                    <div className="text-[10px] text-slate-400">
+                                    <div className="text-[10px] text-[#627D98]">
                                       Chq Date:{' '}
                                       {formatIndianDate(item.cheque.chequeDate)}
                                     </div>
                                     {item.matchMethod === 'LAST_4' && (
-                                      <div className="text-[10px] text-slate-500 font-mono-num mt-0.5">
+                                      <div className="text-[10px] text-[#627D98] font-mono-num mt-0.5">
                                         Last-4 match ({item.matchedStatementNumber})
                                       </div>
                                     )}
                                     {item.matchMethod === 'AMOUNT_UNIQUE' && (
-                                      <div className="text-[10px] text-sky-700 font-medium mt-0.5">
+                                      <div className="text-[10px] text-[#176B87] font-medium mt-0.5">
                                         Unique pending amount match
                                       </div>
                                     )}
                                   </td>
                                   <td className="py-3 px-3 align-top max-w-[320px]">
-                                    <div className="font-mono-num font-medium text-slate-900 flex items-center gap-1.5">
+                                    <div className="font-mono-num font-medium text-[#102A43] flex items-center gap-1.5">
                                       <span>{item.batchName}</span>
                                       {item.isBatchLocked && (
                                         <span
                                           title="Batch is locked — Status updates cleanly without unlocking"
-                                          className="inline-flex items-center gap-0.5 text-[10px] font-sans font-semibold text-amber-700"
+                                          className="inline-flex items-center gap-0.5 text-[10px] font-sans font-semibold text-[#B45309]"
                                         >
                                           <Lock
-                                            className="w-3 h-3"
+                                            className="w-3 h-3 text-[#D4AF37]"
                                             aria-hidden="true"
                                           />
                                           <span>Locked</span>
                                         </span>
                                       )}
                                     </div>
-                                    <div className="mt-1.5 flex items-start gap-1.5 bg-slate-50 border border-slate-200 rounded px-2 py-1">
+                                    <div className="mt-1.5 flex items-start gap-1.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded px-2 py-1">
                                       <span
                                         className={`inline-flex items-center shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono-num font-bold border ${
                                           item.txnDirection === 'CR' ||
                                           item.isCredit
-                                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                                            : 'bg-amber-100 text-amber-900 border-amber-300'
+                                            ? 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/30'
+                                            : 'bg-[#F59E0B]/10 text-[#B45309] border-[#F59E0B]/30'
                                         }`}
                                       >
                                         {item.txnDirection ||
                                           (item.isCredit ? 'CR' : 'DR')}
                                       </span>
-                                      <span className="text-[10px] font-mono-num text-slate-700 whitespace-normal break-words leading-snug">
+                                      <span className="text-[10px] font-mono-num text-[#243B53] whitespace-normal break-words leading-snug">
                                         {item.statementNarration}
                                       </span>
                                     </div>
                                   </td>
                                   <td className="py-3 px-3 align-top text-right whitespace-nowrap">
-                                    <div className="font-mono-num font-semibold text-slate-900">
+                                    <div className="font-mono-num font-semibold text-[#102A43]">
                                       {formatINR(item.cheque.amount)}
                                     </div>
-                                    <div className="text-[10px] font-mono-num text-emerald-700">
+                                    <div className="text-[10px] font-mono-num text-[#16A34A]">
                                       Amount matched
                                     </div>
                                   </td>
@@ -1156,20 +1156,20 @@ export function BankStatementReconcileModal({
                                           [item.id]: e.target.value,
                                         }))
                                       }
-                                      className="px-2 py-1 text-[11px] font-mono-num border border-slate-300 rounded bg-white"
+                                      className="px-2 py-1 text-[11px] font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53]"
                                     />
                                   </td>
                                   <td className="py-3 px-3 align-top space-y-1">
-                                    <div className="text-[11px] font-semibold text-emerald-800">
+                                    <div className="text-[11px] font-semibold text-[#16A34A]">
                                       {item.isCredit !== false
                                         ? 'Receipt (CR)'
                                         : 'Payment (DR)'}
                                     </div>
-                                    <div className="text-[10px] text-slate-500">
+                                    <div className="text-[10px] text-[#627D98]">
                                       {item.cheque.status} → Cleared
                                     </div>
                                     {item.alreadyCleared && (
-                                      <div className="text-[10px] text-slate-500">
+                                      <div className="text-[10px] text-[#627D98]">
                                         Already Cleared in ledger
                                       </div>
                                     )}
@@ -1189,30 +1189,30 @@ export function BankStatementReconcileModal({
               {activeTab === 'returned' && (
                 <div className="space-y-4">
                   {result.returnedMatches.length === 0 ? (
-                    <div className="p-8 border border-slate-200 rounded-md text-center space-y-1.5">
-                      <p className="text-sm font-medium text-slate-900">
+                    <div className="p-8 border border-[#D9E2EC] rounded-md text-center space-y-1.5">
+                      <p className="text-sm font-medium text-[#102A43]">
                         No returned or bounced cheques matched in this statement
                       </p>
-                      <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                      <p className="text-xs text-[#627D98] max-w-lg mx-auto">
                         {result.unmatchedReturnRows.length > 0
                           ? 'Unmatched return lines were detected below — assign them to a stored cheque or review them in Tab 3.'
                           : 'No cheque return entries were detected in this statement.'}
                       </p>
                     </div>
                   ) : (
-                    <div className="border border-red-200 rounded-md overflow-hidden">
-                      <div className="px-4 py-2.5 bg-red-50/70 border-b border-red-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="border border-[#DC2626]/30 rounded-md overflow-hidden">
+                      <div className="px-4 py-2.5 bg-[#DC2626]/10 border-b border-[#DC2626]/30 flex flex-wrap items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-red-950">
+                          <span className="font-semibold text-[#DC2626]">
                             Returned / Bounced Cheques (
                             {selectedReturnedCandidates.length} of{' '}
                             {result.returnedMatches.length} selected)
                           </span>
-                          <span className="text-[11px] text-red-800">
+                          <span className="text-[11px] text-[#243B53]">
                             · Posts reversal &amp; return charges to Day Book
                           </span>
                         </div>
-                        <span className="text-[11px] text-red-800">
+                        <span className="text-[11px] text-[#243B53]">
                           Locked batches also allow Status &amp; Return Reason updates
                         </span>
                       </div>
@@ -1220,7 +1220,7 @@ export function BankStatementReconcileModal({
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+                            <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98]">
                               <th className="py-2.5 pl-4 pr-2 w-9">
                                 <input
                                   type="checkbox"
@@ -1239,7 +1239,7 @@ export function BankStatementReconcileModal({
                                     });
                                     setSelectedMap(next);
                                   }}
-                                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                  className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                                 />
                               </th>
                               <th className="py-2.5 px-3">Cheque Number</th>
@@ -1251,7 +1251,7 @@ export function BankStatementReconcileModal({
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-200">
+                          <tbody className="divide-y divide-[#D9E2EC]">
                             {result.returnedMatches.map((item) => {
                               const currentReason = reasonMap[item.id] ?? '';
                               const isPreset =
@@ -1263,7 +1263,7 @@ export function BankStatementReconcileModal({
                                   key={item.id}
                                   className={
                                     !isSelected
-                                      ? 'opacity-50 bg-slate-50/50'
+                                      ? 'opacity-50 bg-[#F4F7FA]/60'
                                       : 'bg-white'
                                   }
                                 >
@@ -1278,61 +1278,61 @@ export function BankStatementReconcileModal({
                                           [item.id]: e.target.checked,
                                         }))
                                       }
-                                      className="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                      className="mt-1 rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                                     />
                                   </td>
                                   <td className="py-3 px-3 align-top">
-                                    <div className="font-mono-num font-bold text-slate-900">
+                                    <div className="font-mono-num font-bold text-[#102A43]">
                                       #{item.cheque.chequeNumber}
                                     </div>
-                                    <div className="text-[11px] text-slate-600 truncate max-w-[175px]">
+                                    <div className="text-[11px] text-[#627D98] truncate max-w-[175px]">
                                       {item.cheque.partyName}
                                     </div>
-                                    <div className="text-[10px] text-slate-400">
+                                    <div className="text-[10px] text-[#627D98]">
                                       Chq Date:{' '}
                                       {formatIndianDate(item.cheque.chequeDate)}
                                     </div>
                                     {item.matchMethod === 'LAST_4' && (
-                                      <div className="text-[10px] text-slate-500 font-mono-num mt-0.5">
+                                      <div className="text-[10px] text-[#627D98] font-mono-num mt-0.5">
                                         Last-4 match ({item.matchedStatementNumber})
                                       </div>
                                     )}
                                     {item.hasPassedAndReturnedPair && (
-                                      <div className="text-[10px] text-red-700 font-medium mt-0.5">
+                                      <div className="text-[10px] text-[#DC2626] font-medium mt-0.5">
                                         Passed + Returned pair → Posts both legs
                                       </div>
                                     )}
                                   </td>
                                   <td className="py-3 px-3 align-top max-w-[280px]">
-                                    <div className="font-mono-num font-medium text-slate-900 flex items-center gap-1.5">
+                                    <div className="font-mono-num font-medium text-[#102A43] flex items-center gap-1.5">
                                       <span>{item.batchName}</span>
                                       {item.isBatchLocked && (
-                                        <span className="inline-flex items-center gap-0.5 text-[10px] font-sans font-semibold text-amber-700">
+                                        <span className="inline-flex items-center gap-0.5 text-[10px] font-sans font-semibold text-[#B45309]">
                                           <Lock
-                                            className="w-3 h-3"
+                                            className="w-3 h-3 text-[#D4AF37]"
                                             aria-hidden="true"
                                           />
                                           <span>Locked</span>
                                         </span>
                                       )}
                                     </div>
-                                    <div className="mt-1.5 flex items-start gap-1.5 bg-red-50/50 border border-red-200/80 rounded px-2 py-1">
-                                      <span className="inline-flex items-center shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono-num font-bold border bg-red-100 text-red-900 border-red-300">
+                                    <div className="mt-1.5 flex items-start gap-1.5 bg-[#DC2626]/5 border border-[#DC2626]/20 rounded px-2 py-1">
+                                      <span className="inline-flex items-center shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono-num font-bold border bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/30">
                                         {item.txnDirection ||
                                           (item.isCredit ? 'CR' : 'DR')}
                                       </span>
-                                      <span className="text-[10px] font-mono-num text-slate-700 whitespace-normal break-words leading-snug">
+                                      <span className="text-[10px] font-mono-num text-[#243B53] whitespace-normal break-words leading-snug">
                                         {item.statementNarration}
                                       </span>
                                     </div>
                                   </td>
                                   <td className="py-3 px-3 align-top text-right whitespace-nowrap">
-                                    <div className="font-mono-num font-semibold text-slate-900">
+                                    <div className="font-mono-num font-semibold text-[#102A43]">
                                       {formatINR(item.cheque.amount)}
                                     </div>
                                     {item.associatedChargeAmount &&
                                       item.associatedChargeAmount > 0 && (
-                                        <div className="text-[10px] font-mono-num text-red-700 font-medium mt-0.5">
+                                        <div className="text-[10px] font-mono-num text-[#DC2626] font-medium mt-0.5">
                                           + Return Chg:{' '}
                                           {formatINR(item.associatedChargeAmount)}
                                         </div>
@@ -1350,7 +1350,7 @@ export function BankStatementReconcileModal({
                                           [item.id]: e.target.value,
                                         }))
                                       }
-                                      className="px-2 py-1 text-[11px] font-mono-num border border-slate-300 rounded bg-white"
+                                      className="px-2 py-1 text-[11px] font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53]"
                                     />
                                   </td>
                                   <td className="py-3 px-3 align-top space-y-1.5">
@@ -1373,7 +1373,7 @@ export function BankStatementReconcileModal({
                                           }));
                                         }
                                       }}
-                                      className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded bg-white text-slate-900"
+                                      className="w-full px-2 py-1 text-[11px] border border-[#D9E2EC] rounded bg-white text-[#243B53]"
                                     >
                                       {BOUNCE_REASONS.map((r) => (
                                         <option key={r} value={r}>
@@ -1394,7 +1394,7 @@ export function BankStatementReconcileModal({
                                         }))
                                       }
                                       placeholder="Enter or refine reason of return..."
-                                      className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded bg-white text-slate-900"
+                                      className="w-full px-2 py-1 text-[11px] border border-[#D9E2EC] rounded bg-white text-[#243B53]"
                                     />
                                   </td>
                                 </tr>
@@ -1409,15 +1409,15 @@ export function BankStatementReconcileModal({
                   {/* Bank Return Charges & Deduplicated Entries Log */}
                   {(result.ignoredChargeRows.length > 0 ||
                     result.ignoredDuplicateRows.length > 0) && (
-                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-700 space-y-1.5">
-                      <div className="font-semibold text-slate-900">
+                    <div className="p-3.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs text-[#243B53] space-y-1.5">
+                      <div className="font-semibold text-[#102A43]">
                         Captured Bank Return Charges &amp; Deduplicated Lines (
                         {result.ignoredChargeRows.length} charge
                         {result.ignoredChargeRows.length === 1 ? '' : 's'},{' '}
                         {result.ignoredDuplicateRows.length} duplicate
                         {result.ignoredDuplicateRows.length === 1 ? '' : 's'})
                       </div>
-                      <ul className="list-disc pl-5 text-[11px] text-slate-600 space-y-0.5">
+                      <ul className="list-disc pl-5 text-[11px] text-[#627D98] space-y-0.5">
                         {result.ignoredChargeRows.slice(0, 5).map((chg) => (
                           <li key={`chg-${chg.rowIndex}`}>
                             Row {chg.rowIndex} (Bank Return Charge):{' '}
@@ -1443,14 +1443,14 @@ export function BankStatementReconcileModal({
 
                   {/* Unmatched return rows summary */}
                   {result.unmatchedReturnRows.length > 0 && (
-                    <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-950 space-y-1.5">
-                      <div className="font-semibold flex items-center gap-1.5">
-                        <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+                    <div className="p-3.5 bg-[#F59E0B]/10 border border-[#F59E0B]/40 rounded-md text-xs text-[#243B53] space-y-1.5">
+                      <div className="font-semibold flex items-center gap-1.5 text-[#102A43]">
+                        <AlertTriangle className="w-4 h-4 text-[#F59E0B] shrink-0" />
                         <span>
                           {result.unmatchedReturnRows.length} return statement line(s) did not match a cheque in this company (also available in Tab 3 for Day Book posting)
                         </span>
                       </div>
-                      <ul className="list-disc pl-5 text-[11px] text-amber-900 space-y-2">
+                      <ul className="list-disc pl-5 text-[11px] text-[#243B53] space-y-2">
                         {result.unmatchedReturnRows.slice(0, 5).map((u) => (
                           <li key={u.rowIndex} className="space-y-0.5">
                             <div>
@@ -1468,7 +1468,7 @@ export function BankStatementReconcileModal({
                               u.debugInfo.ambiguousCheques &&
                               u.debugInfo.ambiguousCheques.length > 1 && (
                                 <div className="font-sans flex flex-wrap items-center gap-2 py-1">
-                                  <span className="font-semibold text-red-800">
+                                  <span className="font-semibold text-[#DC2626]">
                                     Manual Review: select returned cheque:
                                   </span>
                                   <select
@@ -1482,7 +1482,7 @@ export function BankStatementReconcileModal({
                                         );
                                       }
                                     }}
-                                    className="px-2 py-1 text-[11px] font-mono-num border border-amber-400 rounded bg-white text-slate-900"
+                                    className="px-2 py-1 text-[11px] font-mono-num border border-[#F59E0B] rounded bg-white text-[#102A43]"
                                   >
                                     <option value="">
                                       Select matching cheque...
@@ -1509,28 +1509,28 @@ export function BankStatementReconcileModal({
               {activeTab === 'other' && (
                 <div className="space-y-3">
                   {result.otherTransactions.length === 0 ? (
-                    <div className="p-8 border border-slate-200 rounded-md text-center space-y-1.5">
-                      <p className="text-sm font-medium text-slate-900">
+                    <div className="p-8 border border-[#D9E2EC] rounded-md text-center space-y-1.5">
+                      <p className="text-sm font-medium text-[#102A43]">
                         All transactions in this bank statement matched cheques
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[#627D98]">
                         No remaining unmatched non-cheque transactions (UPI, NEFT, RTGS, Cash, Charges, Interest) were found.
                       </p>
                     </div>
                   ) : (
-                    <div className="border border-slate-200 rounded-md overflow-hidden">
-                      <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="border border-[#D9E2EC] rounded-md overflow-hidden">
+                      <div className="px-4 py-2.5 bg-[#F4F7FA] border-b border-[#D9E2EC] flex flex-wrap items-center justify-between gap-2 text-xs">
                         <div>
-                          <span className="font-semibold text-slate-900">
+                          <span className="font-semibold text-[#102A43]">
                             Other Bank Transactions → Post to Day Book (
                             {selectedOtherTransactions.length} of{' '}
                             {result.otherTransactions.length} selected)
                           </span>
-                          <span className="ml-2 text-[11px] text-slate-500">
+                          <span className="ml-2 text-[11px] text-[#627D98]">
                             Smart auto-categorized — edit any Voucher Type, Party/Account Head, or Remarks before posting
                           </span>
                         </div>
-                        <div className="inline-flex items-center gap-1 p-0.5 bg-white border border-slate-200 rounded-md text-[11px]">
+                        <div className="inline-flex items-center gap-1 p-0.5 bg-white border border-[#D9E2EC] rounded-md text-[11px]">
                           {(['ALL', 'CR', 'DR'] as const).map((dir) => (
                             <button
                               key={dir}
@@ -1538,8 +1538,8 @@ export function BankStatementReconcileModal({
                               onClick={() => setOtherDirectionFilter(dir)}
                               className={`px-2.5 py-1 rounded font-medium transition-colors ${
                                 otherDirectionFilter === dir
-                                  ? 'bg-slate-900 text-white'
-                                  : 'text-slate-600 hover:text-slate-900'
+                                  ? 'bg-[#102A43] text-white'
+                                  : 'text-[#627D98] hover:text-[#102A43]'
                               }`}
                             >
                               {dir === 'ALL'
@@ -1555,7 +1555,7 @@ export function BankStatementReconcileModal({
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold text-slate-600">
+                            <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98]">
                               <th className="py-2.5 pl-4 pr-2 w-9">
                                 <input
                                   type="checkbox"
@@ -1596,7 +1596,7 @@ export function BankStatementReconcileModal({
                                       return next;
                                     });
                                   }}
-                                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                  className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                                 />
                               </th>
                               <th className="py-2.5 px-3 whitespace-nowrap">
@@ -1616,7 +1616,7 @@ export function BankStatementReconcileModal({
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-200">
+                          <tbody className="divide-y divide-[#D9E2EC]">
                             {filteredOtherTransactions.map((tx) => {
                               const edit = otherEditMap[tx.id] || {
                                 included: true,
@@ -1635,7 +1635,7 @@ export function BankStatementReconcileModal({
                                   key={tx.id}
                                   className={
                                     !isActive
-                                      ? 'opacity-50 bg-slate-50/60'
+                                      ? 'opacity-50 bg-[#F4F7FA]/70'
                                       : 'bg-white'
                                   }
                                 >
@@ -1659,19 +1659,19 @@ export function BankStatementReconcileModal({
                                           },
                                         }));
                                       }}
-                                      className="mt-1.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                      className="mt-1.5 rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                                     />
                                   </td>
                                   <td className="py-2.5 px-3 align-top whitespace-nowrap">
-                                    <div className="font-mono-num font-medium text-slate-900">
+                                    <div className="font-mono-num font-medium text-[#102A43]">
                                       {formatIndianDate(edit.txDate)}
                                     </div>
                                     {tx.refNo && (
-                                      <div className="text-[10px] font-mono-num text-slate-500 mt-0.5 truncate max-w-[125px]">
+                                      <div className="text-[10px] font-mono-num text-[#627D98] mt-0.5 truncate max-w-[125px]">
                                         Ref: {tx.refNo}
                                       </div>
                                     )}
-                                    <div className="text-[10px] text-slate-400">
+                                    <div className="text-[10px] text-[#627D98]">
                                       Row {tx.rowIndex}
                                     </div>
                                   </td>
@@ -1679,8 +1679,8 @@ export function BankStatementReconcileModal({
                                     <div
                                       className={`font-mono-num font-bold ${
                                         tx.direction === 'CR'
-                                          ? 'text-emerald-700'
-                                          : 'text-red-700'
+                                          ? 'text-[#16A34A]'
+                                          : 'text-[#DC2626]'
                                       }`}
                                     >
                                       {tx.direction === 'CR' ? '+' : '-'}
@@ -1689,8 +1689,8 @@ export function BankStatementReconcileModal({
                                     <div
                                       className={`text-[10px] font-mono-num font-semibold mt-0.5 ${
                                         tx.direction === 'CR'
-                                          ? 'text-emerald-700'
-                                          : 'text-red-700'
+                                          ? 'text-[#16A34A]'
+                                          : 'text-[#DC2626]'
                                       }`}
                                     >
                                       {tx.direction === 'CR'
@@ -1698,7 +1698,7 @@ export function BankStatementReconcileModal({
                                         : 'DR (Debit)'}
                                     </div>
                                     {tx.statementRunningBalance !== undefined && (
-                                      <div className="text-[10px] font-mono-num text-slate-400 mt-0.5">
+                                      <div className="text-[10px] font-mono-num text-[#627D98] mt-0.5">
                                         Bal: {formatINR(tx.statementRunningBalance)}
                                       </div>
                                     )}
@@ -1719,7 +1719,7 @@ export function BankStatementReconcileModal({
                                           },
                                         }));
                                       }}
-                                      className="w-full px-2 py-1.5 text-[11px] font-medium border border-slate-300 rounded bg-white text-slate-900"
+                                      className="w-full px-2 py-1.5 text-[11px] font-medium border border-[#D9E2EC] rounded bg-white text-[#243B53]"
                                     >
                                       <option value="Receipt">
                                         Receipt (CR)
@@ -1754,7 +1754,7 @@ export function BankStatementReconcileModal({
                                         }))
                                       }
                                       placeholder="Customer, Vendor, or Ledger Head..."
-                                      className="w-full px-2.5 py-1.5 text-[11px] border border-slate-300 rounded bg-white text-slate-900"
+                                      className="w-full px-2.5 py-1.5 text-[11px] border border-[#D9E2EC] rounded bg-white text-[#243B53]"
                                     />
                                   </td>
                                   <td className="py-2.5 px-3 align-top">
@@ -1772,7 +1772,7 @@ export function BankStatementReconcileModal({
                                         }))
                                       }
                                       placeholder="Statement narration / remarks..."
-                                      className="w-full px-2.5 py-1.5 text-[11px] font-mono-num border border-slate-300 rounded bg-white text-slate-800"
+                                      className="w-full px-2.5 py-1.5 text-[11px] font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53]"
                                     />
                                   </td>
                                 </tr>
@@ -1790,24 +1790,24 @@ export function BankStatementReconcileModal({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 shrink-0">
-          <div className="text-xs text-slate-600">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-[#D9E2EC] bg-[#F4F7FA] shrink-0">
+          <div className="text-xs text-[#627D98]">
             {!selectedBankAccountId ? (
-              <span className="text-amber-700 font-medium">
+              <span className="text-[#B45309] font-medium">
                 Select or Quick-Add a Bank Account above before posting.
               </span>
             ) : result ? (
               <span>
                 Ready to post:{' '}
-                <strong className="font-mono-num text-emerald-700">
+                <strong className="font-mono-num text-[#16A34A]">
                   {selectedClearedCandidates.length} Cleared
                 </strong>
                 {' · '}
-                <strong className="font-mono-num text-red-700">
+                <strong className="font-mono-num text-[#DC2626]">
                   {selectedReturnedCandidates.length} Returned
                 </strong>
                 {' · '}
-                <strong className="font-mono-num text-sky-800">
+                <strong className="font-mono-num text-[#176B87]">
                   {selectedOtherTransactions.length} Other Day Book Txn
                   {selectedOtherTransactions.length === 1 ? '' : 's'}
                 </strong>
@@ -1821,7 +1821,7 @@ export function BankStatementReconcileModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+              className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
             >
               Cancel
             </button>
@@ -1834,7 +1834,7 @@ export function BankStatementReconcileModal({
                   result.statementClosingBalance === undefined)
               }
               onClick={handleConfirm}
-              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
               <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
               <span>

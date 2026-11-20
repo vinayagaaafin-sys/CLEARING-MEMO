@@ -308,7 +308,21 @@ function normalizeCompanyWorkspace(
       }))
     : [];
   const batches = Array.isArray(comp.batches) ? comp.batches : [];
-  const cheques = Array.isArray(comp.cheques) ? comp.cheques : [];
+  const cheques: ChequeEntry[] = Array.isArray(comp.cheques)
+    ? comp.cheques.map((chq) => {
+        if (chq.status === 'Returned / Bounced' && !chq.returnUpdatedTimestamp) {
+          return {
+            ...chq,
+            returnUpdatedTimestamp:
+              chq.updatedAt ||
+              (chq.bouncedDate
+                ? toIsoTimestamp(chq.bouncedDate, '09:00:00.000Z')
+                : chq.createdAt || new Date().toISOString()),
+          };
+        }
+        return chq;
+      })
+    : [];
   const hasCustomers = Array.isArray(comp.customers);
   const customers = hasCustomers
     ? comp.customers

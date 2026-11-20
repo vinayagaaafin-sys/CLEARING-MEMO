@@ -196,23 +196,23 @@ export function ReturnAckView({
   return (
     <div className="space-y-6">
       {/* Control Toolbar (Hidden on Print) */}
-      <section className="no-print bg-white border border-slate-200 rounded-lg p-5 space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <section className="no-print bg-white border border-[#D9E2EC] rounded-lg p-5 space-y-5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#D9E2EC]">
           <div className="flex items-start gap-3">
             <button
               type="button"
               onClick={onBackToDashboard}
-              className="mt-0.5 p-1.5 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
+              className="mt-0.5 p-1.5 text-[#243B53] hover:text-[#102A43] bg-[#F4F7FA] hover:bg-[#D9E2EC]/60 border border-[#D9E2EC] rounded-md transition-colors"
               title="Back to Clearing Dashboard"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                <FileCheck2 className="w-4 h-4 text-red-700" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-[#102A43] flex items-center gap-2">
+                <FileCheck2 className="w-4 h-4 text-[#DC2626]" aria-hidden="true" />
                 <span>Returned Cheque Bank Acknowledgement &amp; Authorization</span>
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#627D98] mt-0.5">
                 Automatically filters only Returned / Bounced cheques (excludes cleared, pending, and deposited instruments) and generates A4 bank collection letters.
               </p>
             </div>
@@ -223,7 +223,7 @@ export function ReturnAckView({
               type="button"
               onClick={handleDownloadPdf}
               disabled={ackDocuments.length === 0}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
             >
               <Download className="w-4 h-4" aria-hidden="true" />
               <span>Download A4 PDF</span>
@@ -233,18 +233,18 @@ export function ReturnAckView({
               type="button"
               onClick={handleBrowserPrint}
               disabled={ackDocuments.length === 0}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] disabled:opacity-50 transition-colors whitespace-nowrap shrink-0"
             >
-              <Printer className="w-4 h-4" aria-hidden="true" />
+              <Printer className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
               <span>Print Letter</span>
             </button>
           </div>
         </div>
 
         {pdfDownloadNotice && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950 flex flex-wrap items-center justify-between gap-2">
+          <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#102A43] flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
               <span>
                 A4 Return Acknowledgement PDF generated:{' '}
                 <strong className="font-mono-num">{pdfDownloadNotice.filename}</strong>
@@ -253,7 +253,7 @@ export function ReturnAckView({
             <a
               href={pdfDownloadNotice.blobUrl}
               download={pdfDownloadNotice.filename}
-              className="font-semibold text-emerald-800 underline hover:text-emerald-950"
+              className="font-semibold text-[#16A34A] underline hover:text-[#102A43]"
             >
               Click here if download didn&apos;t start
             </a>
@@ -261,7 +261,7 @@ export function ReturnAckView({
         )}
 
         {printFallbackHint && (
-          <div className="p-3 bg-slate-100 border border-slate-300 rounded-md text-xs text-slate-800">
+          <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs text-[#243B53]">
             Embedded preview frames may block browser print dialogs. Use{' '}
             <strong>Download A4 PDF</strong> above to save the formatted A4 letter directly.
           </div>
@@ -270,17 +270,17 @@ export function ReturnAckView({
         {/* Filter & Letter Settings */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-[#243B53] mb-1">
               Returned Cheques Scope
             </label>
-            <div className="flex p-0.5 bg-slate-100 border border-slate-200 rounded-md">
+            <div className="flex p-0.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
               <button
                 type="button"
                 onClick={() => setScopeMode('active')}
                 className={`flex-1 px-2.5 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
                   scopeMode === 'active'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                    : 'text-[#627D98] hover:text-[#102A43]'
                 }`}
               >
                 Selected Batch
@@ -290,8 +290,8 @@ export function ReturnAckView({
                 onClick={() => setScopeMode('all')}
                 className={`flex-1 px-2.5 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
                   scopeMode === 'all'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                    : 'text-[#627D98] hover:text-[#102A43]'
                 }`}
               >
                 All Batches
@@ -300,14 +300,14 @@ export function ReturnAckView({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-[#243B53] mb-1">
               Clearing Batch
             </label>
             <select
               disabled={scopeMode === 'all'}
               value={selectedBatch?.id || ''}
               onChange={(e) => setSelectedBatchId(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-mono-num font-medium border border-slate-300 rounded-md bg-white disabled:bg-slate-100 disabled:text-slate-400"
+              className="w-full px-3 py-2 text-xs font-mono-num font-medium border border-[#D9E2EC] rounded-md bg-white text-[#243B53] disabled:bg-[#F4F7FA] disabled:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
             >
               {batches.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -318,25 +318,25 @@ export function ReturnAckView({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-[#243B53] mb-1">
               Acknowledgement Letter Date
             </label>
             <input
               type="date"
               value={letterDate}
               onChange={(e) => setLetterDate(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+              className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-[#243B53] mb-1">
               Company Authorized Signatory
             </label>
             <select
               value={signatoryChoice}
               onChange={(e) => setSignatoryChoice(e.target.value as 'sig1' | 'sig2')}
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+              className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
             >
               <option value="sig1">
                 {profile.signatory1Name} ({profile.signatory1Designation})
@@ -349,14 +349,14 @@ export function ReturnAckView({
         </div>
 
         {/* Bearer / Employee Authorization Inputs */}
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-md space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-900">
-            <UserCheck className="w-3.5 h-3.5 text-slate-700" aria-hidden="true" />
+        <div className="p-4 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md space-y-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#102A43]">
+            <UserCheck className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
             <span>Bearer / Employee Authorization Details (Included on Letter)</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">
+              <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                 Bearer / Employee Name
               </label>
               <input
@@ -364,11 +364,11 @@ export function ReturnAckView({
                 value={bearer.bearerName}
                 onChange={(e) => setBearer({ ...bearer, bearerName: e.target.value })}
                 placeholder="e.g. Rajesh Deshmukh"
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">
+              <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                 Designation / Emp ID
               </label>
               <input
@@ -378,17 +378,17 @@ export function ReturnAckView({
                   setBearer({ ...bearer, bearerDesignation: e.target.value })
                 }
                 placeholder="e.g. Sr. Treasury Officer · EMP-208"
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">
+              <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                 ID Proof Type
               </label>
               <select
                 value={bearer.idProofType}
                 onChange={(e) => setBearer({ ...bearer, idProofType: e.target.value })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 <option value="Employee ID / PAN">Employee ID / PAN</option>
                 <option value="Aadhaar Card">Aadhaar Card</option>
@@ -398,7 +398,7 @@ export function ReturnAckView({
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">
+              <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                 ID Proof Number
               </label>
               <input
@@ -408,7 +408,7 @@ export function ReturnAckView({
                   setBearer({ ...bearer, idProofNumber: e.target.value.toUpperCase() })
                 }
                 placeholder="e.g. ABCDE1234F / EMP-208"
-                className="w-full px-3 py-1.5 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                className="w-full px-3 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
           </div>
@@ -416,16 +416,16 @@ export function ReturnAckView({
 
         {/* Inline Returned Cheques & Reason of Return Editor */}
         {returnedCheques.length > 0 && (
-          <div className="border border-slate-200 rounded-md overflow-hidden">
-            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-900">
+          <div className="border border-[#D9E2EC] rounded-md overflow-hidden">
+            <div className="px-4 py-2.5 bg-[#F4F7FA] border-b border-[#D9E2EC] flex items-center justify-between text-xs">
+              <span className="font-semibold text-[#102A43]">
                 Returned Cheques Included ({returnedCheques.length}) — Verify or Customize Reason of Return
               </span>
-              <span className="text-slate-500">
+              <span className="text-[#627D98]">
                 Generating {ackDocuments.length} Bank Branch Letter{ackDocuments.length === 1 ? '' : 's'}
               </span>
             </div>
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-[#D9E2EC]">
               {returnedCheques.map((chq) => {
                 const currentReason = chq.bounceReason || '';
                 const isPreset = BOUNCE_REASONS.includes(currentReason);
@@ -435,16 +435,16 @@ export function ReturnAckView({
                     className="px-4 py-2.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs bg-white"
                   >
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-mono-num font-bold text-slate-900">
+                      <span className="font-mono-num font-bold text-[#176B87]">
                         #{chq.chequeNumber}
                       </span>
-                      <span className="font-mono-num text-slate-500">
+                      <span className="font-mono-num text-[#627D98]">
                         {formatIndianDate(chq.chequeDate)}
                       </span>
-                      <span className="font-medium text-slate-800">
+                      <span className="font-medium text-[#243B53]">
                         {chq.draweeBank} ({chq.draweeBranch})
                       </span>
-                      <span className="font-mono-num font-semibold text-slate-900">
+                      <span className="font-mono-num font-semibold text-[#102A43]">
                         {formatINR(chq.amount)}
                       </span>
                     </div>
@@ -463,7 +463,7 @@ export function ReturnAckView({
                             onUpdateReturnReason(chq.id, val);
                           }
                         }}
-                        className="flex-1 px-2.5 py-1.5 text-xs border border-slate-300 rounded bg-white"
+                        className="flex-1 px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                       >
                         {BOUNCE_REASONS.map((r) => (
                           <option key={r} value={r}>
@@ -479,7 +479,7 @@ export function ReturnAckView({
                         value={currentReason}
                         onChange={(e) => onUpdateReturnReason(chq.id, e.target.value)}
                         placeholder="Enter reason of return..."
-                        className="flex-1 px-2.5 py-1.5 text-xs border border-slate-300 rounded bg-white"
+                        className="flex-1 px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                       />
                     </div>
                   </div>
@@ -493,12 +493,12 @@ export function ReturnAckView({
       {/* A4 Print & Preview Sheets */}
       <div className="print-only-root">
         {ackDocuments.length === 0 ? (
-          <div className="no-print bg-white border border-slate-200 rounded-lg p-12 text-center space-y-2">
-            <AlertOctagon className="w-8 h-8 text-slate-400 mx-auto" />
-            <p className="text-sm font-medium text-slate-900">
+          <div className="no-print bg-white border border-[#D9E2EC] rounded-lg p-12 text-center space-y-2 shadow-xs">
+            <AlertOctagon className="w-8 h-8 text-[#627D98] mx-auto" />
+            <p className="text-sm font-medium text-[#102A43]">
               No Returned / Bounced cheques found in the selected scope
             </p>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
+            <p className="text-xs text-[#627D98] max-w-md mx-auto">
               Cleared, pending, and deposited cheques are excluded automatically. Mark at least one instrument as Returned / Bounced in the Dashboard or switch scope to All Batches.
             </p>
           </div>

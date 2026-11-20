@@ -123,18 +123,18 @@ export function SettingsView({
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Full Data Backup & Restore (JSON) */}
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-start gap-2.5">
             <HardDriveDownload
-              className="w-4 h-4 text-slate-800 mt-0.5 shrink-0"
+              className="w-4 h-4 text-[#176B87] mt-0.5 shrink-0"
               aria-hidden="true"
             />
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-[#102A43]">
                 Full Data Backup &amp; Restore (JSON)
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#627D98] mt-0.5">
                 Download a complete snapshot of all {companies.length}{' '}
                 {companies.length === 1 ? 'company' : 'companies'},{' '}
                 <span className="font-mono-num">{totalBatches}</span> batches,{' '}
@@ -149,7 +149,7 @@ export function SettingsView({
             <button
               type="button"
               onClick={onExportFullBackup}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#176B87] rounded-md hover:bg-[#102A43] transition-colors whitespace-nowrap shrink-0"
             >
               <Download className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Export Full Backup (JSON)</span>
@@ -172,7 +172,7 @@ export function SettingsView({
             <button
               type="button"
               onClick={() => restoreInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap shrink-0"
             >
               <Upload className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Restore Backup (JSON)</span>
@@ -183,17 +183,17 @@ export function SettingsView({
 
       {/* Bank Holiday Calendar & Auto-Shift Rules */}
       {onOpenBankHolidays && (
-        <section className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <section className="bg-white border border-[#D9E2EC] rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-2.5">
             <CalendarDays
-              className="w-4 h-4 text-slate-800 mt-0.5 shrink-0"
+              className="w-4 h-4 text-[#176B87] mt-0.5 shrink-0"
               aria-hidden="true"
             />
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-[#102A43]">
                 Bank Holiday Calendar ({bankHolidaysCount} Configured)
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#627D98] mt-0.5">
                 All Sundays, 2nd &amp; 4th Saturdays, and configured Indian / Tamil Nadu bank holidays automatically shift scheduled PDC/EMI deposit dates to the next working bank day.
               </p>
             </div>
@@ -201,24 +201,24 @@ export function SettingsView({
           <button
             type="button"
             onClick={onOpenBankHolidays}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap shrink-0"
           >
-            <CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />
+            <CalendarDays className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
             <span>Bank Holidays</span>
           </button>
         </section>
       )}
 
       {/* Multi-Company Directory */}
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <Layers className="w-4 h-4 text-slate-700" aria-hidden="true" />
+            <Layers className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-[#102A43]">
                 Corporate Entities ({companies.length})
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#627D98]">
                 Each company maintains its own isolated bank accounts, batches, cheque schedules, and A4 memo letterhead
               </p>
             </div>
@@ -226,14 +226,14 @@ export function SettingsView({
           <button
             type="button"
             onClick={onOpenAddCompany}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Add New Company</span>
           </button>
         </div>
 
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-[#D9E2EC]">
           {companies.map((comp) => {
             const isActive = comp.id === activeCompanyId;
             const totalValue = comp.cheques.reduce((s, c) => s + c.amount, 0);
@@ -241,27 +241,27 @@ export function SettingsView({
               <div
                 key={comp.id}
                 className={`p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                  isActive ? 'bg-slate-50/70' : ''
+                  isActive ? 'bg-[#14B8A6]/5' : ''
                 }`}
               >
                 <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
+                  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#102A43]">
                     <span>{comp.profile.companyName}</span>
                     {isActive && (
                       <>
-                        <span className="text-slate-300" aria-hidden="true">·</span>
-                        <span className="text-xs font-semibold text-emerald-700">
+                        <span className="text-[#D9E2EC]" aria-hidden="true">·</span>
+                        <span className="text-xs font-semibold text-[#16A34A]">
                           Active Workspace
                         </span>
                       </>
                     )}
                   </div>
-                  <div className="text-xs text-slate-600 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <div className="text-xs text-[#627D98] flex flex-wrap items-center gap-x-3 gap-y-1">
                     <span>
-                      PAN: <strong className="font-mono-num">{comp.profile.pan}</strong>
+                      PAN: <strong className="font-mono-num text-[#243B53]">{comp.profile.pan}</strong>
                     </span>
                     <span>
-                      GSTIN: <strong className="font-mono-num">{comp.profile.gstin}</strong>
+                      GSTIN: <strong className="font-mono-num text-[#243B53]">{comp.profile.gstin}</strong>
                     </span>
                     <span>{comp.bankAccounts.length} Bank Accounts</span>
                     <span>{comp.batches.length} Batches</span>
@@ -276,7 +276,7 @@ export function SettingsView({
                     <button
                       type="button"
                       onClick={() => onSwitchCompany(comp.id)}
-                      className="px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                      className="px-3 py-1.5 text-xs font-semibold text-white bg-[#102A43] rounded-md hover:bg-[#176B87] transition-colors"
                     >
                       Switch Active
                     </button>
@@ -286,7 +286,7 @@ export function SettingsView({
                       type="button"
                       onClick={() => onDeleteCompany(comp.id)}
                       title="Remove Company Workspace"
-                      className="p-2 text-slate-400 hover:text-red-700 rounded hover:bg-red-50 transition-colors"
+                      className="p-2 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -299,21 +299,21 @@ export function SettingsView({
       </section>
 
       {/* Corporate Profile & Signatory Configuration */}
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <Building2 className="w-4 h-4 text-slate-700" aria-hidden="true" />
+            <Building2 className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-[#102A43]">
                 Corporate Entity &amp; Letterhead Profile
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#627D98]">
                 Appears on all official A4 Bank Deposit Memos and Tally/SAP exports
               </p>
             </div>
           </div>
           {savedNotice && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#16A34A]">
               <Check className="w-3.5 h-3.5" />
               <span>Corporate profile saved</span>
             </span>
@@ -323,7 +323,7 @@ export function SettingsView({
         <form onSubmit={handleProfileSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
                 Registered Corporate Name
               </label>
               <input
@@ -332,14 +332,14 @@ export function SettingsView({
                 onChange={(e) =>
                   setDraftProfile({ ...draftProfile, companyName: e.target.value })
                 }
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Company PAN
                 </label>
                 <input
@@ -352,12 +352,12 @@ export function SettingsView({
                       pan: e.target.value.toUpperCase(),
                     })
                   }
-                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   GSTIN
                 </label>
                 <input
@@ -370,7 +370,7 @@ export function SettingsView({
                       gstin: e.target.value.toUpperCase(),
                     })
                   }
-                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
@@ -378,7 +378,7 @@ export function SettingsView({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-[#243B53] mb-1">
               Registered Office Address
             </label>
             <input
@@ -390,14 +390,14 @@ export function SettingsView({
                   registeredAddress: e.target.value,
                 })
               }
-              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+              className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
                 CIN (Optional)
               </label>
               <input
@@ -409,11 +409,11 @@ export function SettingsView({
                     cin: e.target.value.toUpperCase(),
                   })
                 }
-                className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md"
+                className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
                 Treasury Contact Phone
               </label>
               <input
@@ -422,11 +422,11 @@ export function SettingsView({
                 onChange={(e) =>
                   setDraftProfile({ ...draftProfile, contactPhone: e.target.value })
                 }
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
                 Treasury Desk Email
               </label>
               <input
@@ -435,18 +435,18 @@ export function SettingsView({
                 onChange={(e) =>
                   setDraftProfile({ ...draftProfile, treasuryEmail: e.target.value })
                 }
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-200">
-            <h3 className="text-xs font-semibold text-slate-900 mb-3">
+          <div className="pt-3 border-t border-[#D9E2EC]">
+            <h3 className="text-xs font-semibold text-[#102A43] mb-3">
               Default Maker-Checker &amp; Bank Memo Authorized Signatories
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorized Signatory 1 (Name)
                 </label>
                 <input
@@ -458,11 +458,11 @@ export function SettingsView({
                       signatory1Name: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorized Signatory 1 (Designation)
                 </label>
                 <input
@@ -474,11 +474,11 @@ export function SettingsView({
                       signatory1Designation: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorized Signatory 2 (Name)
                 </label>
                 <input
@@ -490,11 +490,11 @@ export function SettingsView({
                       signatory2Name: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorized Signatory 2 (Designation)
                 </label>
                 <input
@@ -506,11 +506,11 @@ export function SettingsView({
                       signatory2Designation: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Maker / Checker Batch Bypass Password
                 </label>
                 <input
@@ -523,15 +523,15 @@ export function SettingsView({
                     })
                   }
                   placeholder="Default: TREASURY2026"
-                  className="w-full max-w-sm px-3 py-2 text-sm font-mono-num border border-slate-300 rounded-md"
+                  className="w-full max-w-sm px-3 py-2 text-sm font-mono-num border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-[#627D98] mt-1">
                   Required to unlock a locked clearing batch from read-only mode on the Dashboard.
                 </p>
               </div>
 
-              <div className="md:col-span-2 pt-2 border-t border-slate-100">
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              <div className="md:col-span-2 pt-2 border-t border-[#D9E2EC]/70">
+                <label className="block text-xs font-medium text-[#243B53] mb-1.5">
                   Official Letterhead Logo (Optional PNG / JPG)
                 </label>
                 <div className="flex flex-wrap items-center gap-3">
@@ -539,7 +539,7 @@ export function SettingsView({
                     <img
                       src={draftProfile.logoDataUrl}
                       alt="Company logo preview"
-                      className="w-10 h-10 object-contain border border-slate-200 rounded bg-white p-0.5"
+                      className="w-10 h-10 object-contain border border-[#D9E2EC] rounded bg-white p-0.5"
                     />
                   )}
                   <input
@@ -559,7 +559,7 @@ export function SettingsView({
                       };
                       reader.readAsDataURL(file);
                     }}
-                    className="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-slate-300 file:text-xs file:font-medium file:bg-white file:text-slate-700 hover:file:bg-slate-50"
+                    className="text-xs text-[#627D98] file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-[#D9E2EC] file:text-xs file:font-medium file:bg-white file:text-[#243B53] hover:file:bg-[#F4F7FA]"
                   />
                   {draftProfile.logoDataUrl && (
                     <button
@@ -567,13 +567,13 @@ export function SettingsView({
                       onClick={() =>
                         setDraftProfile({ ...draftProfile, logoDataUrl: undefined })
                       }
-                      className="text-xs font-medium text-red-700 hover:text-red-900"
+                      className="text-xs font-medium text-[#DC2626] hover:text-[#B91C1C]"
                     >
                       Remove Logo
                     </button>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-[#627D98] mt-1">
                   Appears on Official Returned Cheque Acknowledgement letters (uses corporate monogram if omitted).
                 </p>
               </div>
@@ -583,7 +583,7 @@ export function SettingsView({
           <div className="flex justify-end pt-2">
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+              className="px-5 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
             >
               Save Corporate Profile
             </button>
@@ -592,15 +592,15 @@ export function SettingsView({
       </section>
 
       {/* Multi-Bank Treasury Accounts Manager */}
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <Landmark className="w-4 h-4 text-slate-700" aria-hidden="true" />
+            <Landmark className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-[#102A43]">
                 Company Bank Accounts ({bankAccounts.length})
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#627D98]">
                 Collection, Cash Credit &amp; Current Accounts configured for clearing deposits
               </p>
             </div>
@@ -608,7 +608,7 @@ export function SettingsView({
           <button
             type="button"
             onClick={() => setShowAddBank((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Bank Account</span>
@@ -618,24 +618,24 @@ export function SettingsView({
         {showAddBank && (
           <form
             onSubmit={handleBankSubmit}
-            className="p-6 bg-slate-50 border-b border-slate-200 space-y-4"
+            className="p-6 bg-[#F4F7FA] border-b border-[#D9E2EC] space-y-4"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Bank Name <span className="text-red-600">*</span>
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
+                  Bank Name <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
                   type="text"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                   placeholder="e.g. Axis Bank Ltd."
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Account Type
                 </label>
                 <select
@@ -645,7 +645,7 @@ export function SettingsView({
                       e.target.value as CompanyBankAccount['accountType']
                     )
                   }
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 >
                   <option value="Cash Credit A/c">Cash Credit A/c</option>
                   <option value="Current A/c">Current A/c</option>
@@ -654,15 +654,15 @@ export function SettingsView({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Account Number <span className="text-red-600">*</span>
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
+                  Account Number <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
                   type="text"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
                   placeholder="e.g. 91802004561823"
-                  className="w-full px-3 py-2 text-sm font-mono-num border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
@@ -670,8 +670,8 @@ export function SettingsView({
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  IFSC Code <span className="text-red-600">*</span>
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
+                  IFSC Code <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
                   type="text"
@@ -679,12 +679,12 @@ export function SettingsView({
                   value={ifscCode}
                   onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
                   placeholder="e.g. UTIB0000004"
-                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Branch Name
                 </label>
                 <input
@@ -692,11 +692,11 @@ export function SettingsView({
                   value={branchName}
                   onChange={(e) => setBranchName(e.target.value)}
                   placeholder="e.g. Worli Corporate Branch"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Branch Address
                 </label>
                 <input
@@ -704,11 +704,11 @@ export function SettingsView({
                   value={branchAddress}
                   onChange={(e) => setBranchAddress(e.target.value)}
                   placeholder="Full branch address for deposit memo"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Opening Balance (₹)
                 </label>
                 <input
@@ -717,7 +717,7 @@ export function SettingsView({
                   value={openingBalance}
                   onChange={(e) => setOpeningBalance(e.target.value)}
                   placeholder="0.00"
-                  className="w-full px-3 py-2 text-sm font-mono-num border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
             </div>
@@ -726,13 +726,13 @@ export function SettingsView({
               <button
                 type="button"
                 onClick={() => setShowAddBank(false)}
-                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800"
+                className="px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488]"
               >
                 Save Account
               </button>
@@ -740,58 +740,58 @@ export function SettingsView({
           </form>
         )}
 
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-[#D9E2EC]">
           {bankAccounts.map((acc) => (
             <div
               key={acc.id}
               className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
               <div className="space-y-1">
-                <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900">
+                <div className="flex items-center gap-2.5 text-sm font-semibold text-[#102A43]">
                   <span>{acc.bankName}</span>
-                  <span className="text-slate-300" aria-hidden="true">·</span>
-                  <span className="text-xs font-medium text-slate-600">
+                  <span className="text-[#D9E2EC]" aria-hidden="true">·</span>
+                  <span className="text-xs font-medium text-[#627D98]">
                     {acc.accountType}
                   </span>
                   {acc.isDefault && (
                     <>
-                      <span className="text-slate-300" aria-hidden="true">·</span>
-                      <span className="text-xs font-semibold text-emerald-700">
+                      <span className="text-[#D9E2EC]" aria-hidden="true">·</span>
+                      <span className="text-xs font-semibold text-[#16A34A]">
                         Primary Default
                       </span>
                     </>
                   )}
                 </div>
-                <div className="text-xs text-slate-600 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="text-xs text-[#627D98] flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span>
                     A/c No:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#102A43]">
                       {acc.accountNumber}
                     </strong>
                   </span>
                   <span>
                     IFSC:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#102A43]">
                       {acc.ifscCode}
                     </strong>
                   </span>
                   <span>Branch: {acc.branchName}</span>
                   <span>
                     Opening Bal:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#102A43]">
                       {formatINR(acc.openingBalance ?? 0)}
                     </strong>
                   </span>
                   {acc.statementClosingBalance !== undefined && (
                     <span>
                       Last Stmt Closing:{' '}
-                      <strong className="font-mono-num text-slate-900">
+                      <strong className="font-mono-num text-[#102A43]">
                         {formatINR(acc.statementClosingBalance)}
                       </strong>
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-500">{acc.branchAddress}</div>
+                <div className="text-[11px] text-[#627D98]">{acc.branchAddress}</div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -799,7 +799,7 @@ export function SettingsView({
                   <button
                     type="button"
                     onClick={() => onUpdateBankAccount(acc.id, { isDefault: true })}
-                    className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                    className="px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
                   >
                     Set Default
                   </button>
@@ -809,7 +809,7 @@ export function SettingsView({
                     type="button"
                     onClick={() => onDeleteBankAccount(acc.id)}
                     title="Remove Bank Account"
-                    className="p-2 text-slate-400 hover:text-red-700 rounded hover:bg-red-50 transition-colors"
+                    className="p-2 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -821,12 +821,12 @@ export function SettingsView({
       </section>
 
       {/* Workspace Data Reset */}
-      <section className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">
+          <h3 className="text-sm font-semibold text-[#102A43]">
             Restore Sample Corporate Dataset
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#627D98] mt-0.5">
             Resets all workspace data and synced database records back to the initial 15 corporate cheques (~₹3.45 Cr) and 3 company bank accounts.
           </p>
         </div>
@@ -838,14 +838,14 @@ export function SettingsView({
                 onResetDemoData();
                 setConfirmReset(false);
               }}
-              className="px-3.5 py-2 text-xs font-semibold text-white bg-red-700 rounded-md hover:bg-red-800"
+              className="px-3.5 py-2 text-xs font-semibold text-white bg-[#DC2626] rounded-md hover:bg-[#B91C1C]"
             >
               Confirm Restore
             </button>
             <button
               type="button"
               onClick={() => setConfirmReset(false)}
-              className="px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+              className="px-3.5 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
             >
               Cancel
             </button>
@@ -854,7 +854,7 @@ export function SettingsView({
           <button
             type="button"
             onClick={() => setConfirmReset(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Demo Data</span>

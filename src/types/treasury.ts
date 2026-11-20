@@ -155,6 +155,8 @@ export interface ChequeEntry {
   penaltyAmount?: number;
   bounceChargesCollected?: number;
   bouncedDate?: string;
+  returnUpdatedTimestamp?: string;
+  lastAlertShownTime?: string;
   clearedDate?: string;
   bankCollectionStatus?: BankCollectionStatus;
   collectedFromBankDate?: string;

@@ -772,23 +772,23 @@ export function CustomerScheduleView({
     return (
       <div className="space-y-5">
         {/* Top Editor Header */}
-        <div className="bg-white border border-slate-200 rounded-lg px-5 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-white border border-[#D9E2EC] rounded-lg px-5 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setViewMode('overview')}
-              className="p-1.5 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
+              className="p-1.5 text-[#243B53] hover:text-[#102A43] bg-[#F4F7FA] hover:bg-[#D9E2EC]/60 border border-[#D9E2EC] rounded-md transition-colors"
               title="Back to Customer Schedules"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <h2 className="text-base font-semibold text-slate-900">
+              <h2 className="text-base font-semibold text-[#102A43]">
                 {editingScheduleId
                   ? 'Edit Customer PDC / Loan Scheme Schedule'
                   : 'New Customer PDC / Loan Scheme Schedule'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#627D98]">
                 Compute EMI &amp; repayment dates on the left while inspecting scanned PDC leaves on the right.
               </p>
             </div>
@@ -798,9 +798,9 @@ export function CustomerScheduleView({
             <button
               type="button"
               onClick={onOpenBankHolidays}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] whitespace-nowrap transition-colors"
             >
-              <CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />
+              <CalendarDays className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
               <span>Bank Holidays ({holidays.length})</span>
             </button>
           </div>
@@ -811,10 +811,10 @@ export function CustomerScheduleView({
           {/* Left Panel: Customer, Loan Scheme Calculator & Auto-Generated Table */}
           <form
             onSubmit={handleSubmitSchedule}
-            className="xl:col-span-7 bg-white border border-slate-200 rounded-lg p-5 space-y-5"
+            className="xl:col-span-7 bg-white border border-[#D9E2EC] rounded-lg p-5 space-y-5 shadow-xs"
           >
             {formError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-800 flex items-center gap-2">
+              <div className="p-3 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md text-xs text-[#DC2626] flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{formError}</span>
               </div>
@@ -822,18 +822,18 @@ export function CustomerScheduleView({
 
             {/* 1. Customer & Loan Particulars */}
             <div className="space-y-3.5">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
-                <h3 className="text-sm font-semibold text-slate-900">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9E2EC] pb-2.5">
+                <h3 className="text-sm font-semibold text-[#102A43]">
                   1. Customer &amp; Loan Particulars
                 </h3>
-                <span className="text-[11px] font-mono-num text-slate-500">
+                <span className="text-[11px] font-mono-num text-[#627D98]">
                   {rows.length} Dues · {formatINR(editorTotalAmount)}
                 </span>
               </div>
 
               {partyDirectory.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Quick-Select Existing Customer
                   </label>
                   <select
@@ -849,7 +849,7 @@ export function CustomerScheduleView({
                         if (found.code) setCustomerCode(found.code);
                       }
                     }}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-800"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     <option value="">
                       -- Pick from {partyDirectory.length} saved customers or type below --
@@ -866,8 +866,8 @@ export function CustomerScheduleView({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Customer / Party Name <span className="text-red-600">*</span>
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
+                    Customer / Party Name <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -878,12 +878,12 @@ export function CustomerScheduleView({
                       setCustomerSearchPick('');
                     }}
                     placeholder="e.g., M/s. Sri Murugan Traders"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Loan / Scheme Ref No
                   </label>
                   <input
@@ -891,14 +891,14 @@ export function CustomerScheduleView({
                     value={loanRefNo}
                     onChange={(e) => setLoanRefNo(e.target.value)}
                     placeholder="e.g., LN/2026/EMI-409"
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Drawee Bank Name
                   </label>
                   <input
@@ -907,7 +907,7 @@ export function CustomerScheduleView({
                     value={draweeBank}
                     onChange={(e) => setDraweeBank(e.target.value)}
                     placeholder="e.g., Indian Overseas Bank"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                   <datalist id="pdc-bank-presets">
                     {MAJOR_INDIAN_BANKS.map((b) => (
@@ -917,7 +917,7 @@ export function CustomerScheduleView({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Drawee Branch Name
                   </label>
                   <input
@@ -925,18 +925,18 @@ export function CustomerScheduleView({
                     value={draweeBranch}
                     onChange={(e) => setDraweeBranch(e.target.value)}
                     placeholder="e.g., Ashok Nagar, Chennai"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Deposit Account (Company)
                   </label>
                   <select
                     value={companyBankAccountId}
                     onChange={(e) => setCompanyBankAccountId(e.target.value)}
-                    className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                    className="w-full px-2.5 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     {bankAccounts.length === 0 ? (
                       <option value="">Default Bank</option>
@@ -954,14 +954,14 @@ export function CustomerScheduleView({
 
             {/* 2. Loan / Installment Scheme Calculator */}
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#D9E2EC] pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Calculator className="w-4 h-4 text-slate-700" aria-hidden="true" />
-                  <h3 className="text-sm font-semibold text-slate-900">
+                  <Calculator className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-[#102A43]">
                     2. Loan / Installment Scheme Calculator
                   </h3>
                 </div>
-                <div className="inline-flex p-0.5 bg-slate-100 border border-slate-200 rounded-md">
+                <div className="inline-flex p-0.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md">
                   <button
                     type="button"
                     onClick={() => {
@@ -972,8 +972,8 @@ export function CustomerScheduleView({
                     }}
                     className={`px-3 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap ${
                       scheduleMode === 'auto'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                        : 'text-[#627D98] hover:text-[#102A43]'
                     }`}
                   >
                     Scheme Calculator (Auto)
@@ -983,8 +983,8 @@ export function CustomerScheduleView({
                     onClick={() => setScheduleMode('manual')}
                     className={`px-3 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap ${
                       scheduleMode === 'manual'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                        : 'text-[#627D98] hover:text-[#102A43]'
                     }`}
                   >
                     Manual Multi-Cheque Rows
@@ -995,14 +995,14 @@ export function CustomerScheduleView({
               {scheduleMode === 'auto' && (
                 <div className="space-y-4">
                   {/* Calculator Inputs */}
-                  <div className="p-4 bg-slate-50/70 border border-slate-200 rounded-md space-y-4">
+                  <div className="p-4 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md space-y-4">
                     {/* Frequency Mode Radio Pills */}
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <label className="block text-[11px] font-semibold text-slate-700">
+                        <label className="block text-[11px] font-semibold text-[#243B53]">
                           Schedule Frequency Mode
                         </label>
-                        <span className="text-[11px] font-mono-num text-slate-500">
+                        <span className="text-[11px] font-mono-num text-[#627D98]">
                           {liveSchemeSummary.tenureMonths.toFixed(1)} months ·{' '}
                           {liveSchemeSummary.tenureYears.toFixed(2)} yrs
                         </span>
@@ -1027,8 +1027,8 @@ export function CustomerScheduleView({
                               }
                               className={`px-2.5 py-2 text-left rounded-md border transition-colors ${
                                 isSelected
-                                  ? 'bg-[#0B192C] text-white border-[#0B192C]'
-                                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                                  ? 'bg-[#102A43] text-white border-[#14B8A6] ring-1 ring-[#14B8A6]/30'
+                                  : 'bg-white text-[#243B53] border-[#D9E2EC] hover:bg-[#F4F7FA]'
                               }`}
                             >
                               <div className="text-xs font-semibold truncate">
@@ -1036,7 +1036,7 @@ export function CustomerScheduleView({
                               </div>
                               <div
                                 className={`text-[10px] font-mono-num mt-0.5 ${
-                                  isSelected ? 'text-slate-300' : 'text-slate-500'
+                                  isSelected ? 'text-[#14B8A6]' : 'text-[#627D98]'
                                 }`}
                               >
                                 {opt.intervalHint}
@@ -1050,7 +1050,7 @@ export function CustomerScheduleView({
                     {/* Financial Inputs Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           Loan / Principal Amount (₹)
                         </label>
                         <input
@@ -1064,12 +1064,12 @@ export function CustomerScheduleView({
                             })
                           }
                           placeholder="100000"
-                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-slate-300 rounded bg-white"
+                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           Number of Dues (N)
                         </label>
                         <input
@@ -1083,12 +1083,12 @@ export function CustomerScheduleView({
                             })
                           }
                           placeholder="12"
-                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-slate-300 rounded bg-white"
+                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           Interest Rate (%)
                         </label>
                         <input
@@ -1107,7 +1107,7 @@ export function CustomerScheduleView({
                             })
                           }
                           placeholder="12"
-                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-slate-300 rounded bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                     </div>
@@ -1115,7 +1115,7 @@ export function CustomerScheduleView({
                     {/* Interest Type + First Due Date + Starting Cheque No */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           Interest Type
                         </label>
                         <select
@@ -1125,7 +1125,7 @@ export function CustomerScheduleView({
                               interestType: e.target.value as LoanInterestType,
                             })
                           }
-                          className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded bg-white text-slate-800"
+                          className="w-full px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         >
                           {INTEREST_TYPE_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -1136,7 +1136,7 @@ export function CustomerScheduleView({
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           First Due Date
                         </label>
                         <input
@@ -1147,12 +1147,12 @@ export function CustomerScheduleView({
                               startDate: e.target.value,
                             })
                           }
-                          className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-slate-300 rounded bg-white"
+                          className="w-full px-2.5 py-1.5 text-xs font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           Starting Cheque Number
                         </label>
                         <input
@@ -1164,14 +1164,14 @@ export function CustomerScheduleView({
                             })
                           }
                           placeholder="001001"
-                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-slate-300 rounded bg-white"
+                          className="w-full px-2.5 py-1.5 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                     </div>
 
                     {/* Rounding Option + Apply/Regenerate Action */}
-                    <div className="pt-1 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80">
-                      <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-700">
+                    <div className="pt-1 flex flex-wrap items-center justify-between gap-3 border-t border-[#D9E2EC]">
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-[#243B53]">
                         <input
                           type="checkbox"
                           checked={roundDueToNearestRupee}
@@ -1180,7 +1180,7 @@ export function CustomerScheduleView({
                               roundDueToNearestRupee: e.target.checked,
                             })
                           }
-                          className="rounded border-slate-300 text-slate-900"
+                          className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                         />
                         <span>
                           Round Due Amount to nearest ₹1 (auto-adjust final due to match exact Total Payable)
@@ -1194,7 +1194,7 @@ export function CustomerScheduleView({
                             forceOverwrite: true,
                           })
                         }
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 whitespace-nowrap shrink-0"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#176B87] rounded-md hover:bg-[#102A43] transition-colors whitespace-nowrap shrink-0"
                       >
                         {hasManualRowOverride ? (
                           <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1213,30 +1213,30 @@ export function CustomerScheduleView({
                   {/* Live Scheme Summary Box (Updates Instantly as User Types) */}
                   <div
                     aria-label="Live Scheme Summary"
-                    className="border border-slate-200 rounded-lg overflow-hidden bg-white"
+                    className="border border-[#D9E2EC] rounded-lg overflow-hidden bg-white"
                   >
-                    <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#D9E2EC]">
                       <div className="p-3.5">
-                        <div className="text-[11px] font-medium text-slate-500">
+                        <div className="text-[11px] font-medium text-[#627D98]">
                           Loan Principal
                         </div>
-                        <div className="mt-1 text-base font-bold text-slate-900 font-mono-num">
+                        <div className="mt-1 text-base font-bold text-[#102A43] font-mono-num">
                           {formatINR(liveSchemeSummary.principalAmount)}
                         </div>
-                        <div className="mt-0.5 text-[10px] text-slate-500 font-mono-num">
+                        <div className="mt-0.5 text-[10px] text-[#627D98] font-mono-num">
                           {liveSchemeSummary.numberOfDues} dues ·{' '}
                           {getFrequencyLabel(liveSchemeSummary.frequency)}
                         </div>
                       </div>
 
                       <div className="p-3.5">
-                        <div className="text-[11px] font-medium text-slate-500">
+                        <div className="text-[11px] font-medium text-[#627D98]">
                           Total Interest
                         </div>
-                        <div className="mt-1 text-base font-bold text-slate-900 font-mono-num">
+                        <div className="mt-1 text-base font-bold text-[#102A43] font-mono-num">
                           {formatINR(liveSchemeSummary.totalInterest)}
                         </div>
-                        <div className="mt-0.5 text-[10px] text-slate-500">
+                        <div className="mt-0.5 text-[10px] text-[#627D98]">
                           {getInterestTypeLabel(liveSchemeSummary.interestType)}
                           {liveSchemeSummary.interestType !== 'ZERO_INTEREST'
                             ? ` (${liveSchemeSummary.interestRate}%)`
@@ -1245,25 +1245,25 @@ export function CustomerScheduleView({
                       </div>
 
                       <div className="p-3.5">
-                        <div className="text-[11px] font-medium text-slate-500">
+                        <div className="text-[11px] font-medium text-[#627D98]">
                           Total Payable
                         </div>
-                        <div className="mt-1 text-base font-bold text-slate-900 font-mono-num">
+                        <div className="mt-1 text-base font-bold text-[#102A43] font-mono-num">
                           {formatINR(liveSchemeSummary.totalPayable)}
                         </div>
-                        <div className="mt-0.5 text-[10px] text-slate-500">
+                        <div className="mt-0.5 text-[10px] text-[#627D98]">
                           Principal + Interest
                         </div>
                       </div>
 
-                      <div className="p-3.5 bg-[#0B192C] text-white">
-                        <div className="text-[11px] font-medium text-slate-300">
+                      <div className="p-3.5 bg-[#102A43] text-white">
+                        <div className="text-[11px] font-medium text-[#D9E2EC]">
                           Auto Due Amount (Per Installment)
                         </div>
-                        <div className="mt-1 text-lg font-bold tracking-tight font-mono-num">
+                        <div className="mt-1 text-lg font-bold tracking-tight font-mono-num text-[#14B8A6]">
                           {formatINR(liveSchemeSummary.autoDueAmount)}
                         </div>
-                        <div className="mt-0.5 text-[10px] text-slate-300 font-mono-num">
+                        <div className="mt-0.5 text-[10px] text-[#D9E2EC] font-mono-num">
                           {liveSchemeSummary.hasFinalRoundingAdjustment
                             ? `Final due #${liveSchemeSummary.numberOfDues}: ${formatINR(liveSchemeSummary.finalDueAmount)}`
                             : `Exact ${formatINR(liveSchemeSummary.exactDueAmount)} / due`}
@@ -1275,15 +1275,15 @@ export function CustomerScheduleView({
               )}
 
               {/* Holiday Auto-Shift Toggle */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div>
-                  <div className="text-xs font-semibold text-slate-900">
+                  <div className="text-xs font-semibold text-[#102A43]">
                     Bank Holiday Calendar Auto-Shift
                   </div>
-                  <p className="text-[11px] text-slate-600 mt-0.5">
+                  <p className="text-[11px] text-[#627D98] mt-0.5">
                     Shifts Sundays, 2nd/4th Saturdays &amp; Bank Holidays to the next working bank day.
                     {shiftedRowsCount > 0 && (
-                      <span className="ml-1.5 font-semibold text-amber-800 font-mono-num">
+                      <span className="ml-1.5 font-semibold text-[#B45309] font-mono-num">
                         · {shiftedRowsCount} due{shiftedRowsCount === 1 ? '' : 's'} shifted
                       </span>
                     )}
@@ -1294,16 +1294,16 @@ export function CustomerScheduleView({
                     type="checkbox"
                     checked={holidayAutoShift}
                     onChange={(e) => handleToggleHolidayAutoShift(e.target.checked)}
-                    className="rounded border-slate-300 text-slate-900"
+                    className="rounded border-[#D9E2EC] text-[#14B8A6] focus:ring-[#14B8A6]"
                   />
-                  <span className="text-xs font-semibold text-slate-900 whitespace-nowrap">
+                  <span className="text-xs font-semibold text-[#102A43] whitespace-nowrap">
                     {holidayAutoShift ? 'Auto-Shift ON' : 'Auto-Shift OFF'}
                   </span>
                 </label>
               </div>
 
               {hasManualRowOverride && hasTableCalcDiff && (
-                <div className="px-3.5 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-950 flex flex-wrap items-center justify-between gap-2">
+                <div className="px-3.5 py-2 bg-[#F59E0B]/10 border border-[#F59E0B]/40 rounded-md text-xs text-[#243B53] flex flex-wrap items-center justify-between gap-2">
                   <span>
                     Table rows ({formatINR(editorTotalAmount)}) differ from current Scheme Total Payable ({formatINR(liveSchemeSummary.totalPayable)}).
                   </span>
@@ -1312,7 +1312,7 @@ export function CustomerScheduleView({
                     onClick={() =>
                       rebuildScheduledRowsFromCalculator({ forceOverwrite: true })
                     }
-                    className="text-xs font-semibold text-amber-900 underline hover:text-amber-950 whitespace-nowrap"
+                    className="text-xs font-semibold text-[#B45309] underline hover:text-[#102A43] whitespace-nowrap"
                   >
                     Sync Table to Calculator
                   </button>
@@ -1320,10 +1320,10 @@ export function CustomerScheduleView({
               )}
 
               {/* Auto-Generated Schedule Table (1 to N Dues) */}
-              <div className="border border-slate-200 rounded-md overflow-hidden">
+              <div className="border border-[#D9E2EC] rounded-md overflow-hidden bg-white">
                 <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
                   <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200 text-[11px] font-semibold text-slate-600">
+                    <thead className="sticky top-0 bg-[#F4F7FA] z-10 border-b border-[#D9E2EC] text-[11px] font-semibold text-[#627D98]">
                       <tr>
                         <th className="py-2 px-2 text-center whitespace-nowrap">
                           Inst. #
@@ -1355,7 +1355,7 @@ export function CustomerScheduleView({
                         <th className="py-2 px-1.5 w-8" />
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 text-xs">
+                    <tbody className="divide-y divide-[#D9E2EC] text-xs">
                       {computeScheduleRowsWithBalance(rows).map(
                         ({ item: row, runningBalance }, idx) => {
                           const isLockedRow = row.status !== 'Scheduled';
@@ -1380,9 +1380,9 @@ export function CustomerScheduleView({
                           return (
                             <tr
                               key={row.id}
-                              className="align-top hover:bg-slate-50/70"
+                              className="align-top hover:bg-[#F4F7FA]/80"
                             >
-                              <td className="py-2 px-2 text-center font-mono-num text-slate-500 pt-2.5">
+                              <td className="py-2 px-2 text-center font-mono-num text-[#627D98] pt-2.5">
                                 {row.dueNumber ?? idx + 1}
                               </td>
                               <td className="py-2 px-2">
@@ -1395,27 +1395,27 @@ export function CustomerScheduleView({
                                       originalDate: e.target.value,
                                     })
                                   }
-                                  className="px-2 py-1 text-xs font-mono-num border border-slate-300 rounded bg-white disabled:bg-slate-100"
+                                  className="px-2 py-1 text-xs font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53] disabled:bg-[#F4F7FA] disabled:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                                 />
                               </td>
                               <td className="py-2 px-2 min-w-[140px]">
-                                <div className="font-mono-num font-semibold text-slate-900 pt-0.5 whitespace-nowrap">
+                                <div className="font-mono-num font-semibold text-[#102A43] pt-0.5 whitespace-nowrap">
                                   {formatIndianDate(row.effectiveDate)}
                                 </div>
                                 {wasShifted && (
                                   <div className="mt-0.5 space-y-0.5">
-                                    <span className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
+                                    <span className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#F59E0B]/10 text-[#B45309] border border-[#F59E0B]/30 whitespace-nowrap">
                                       Shifted (Holiday)
                                     </span>
                                     {row.shiftReason && (
-                                      <div className="text-[10px] text-amber-800">
+                                      <div className="text-[10px] text-[#B45309]">
                                         {row.shiftReason}
                                       </div>
                                     )}
                                   </div>
                                 )}
                                 {isLeaveWarning && row.shiftReason && (
-                                  <div className="mt-0.5 inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
+                                  <div className="mt-0.5 inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626]/30">
                                     {row.shiftReason}
                                   </div>
                                 )}
@@ -1430,13 +1430,13 @@ export function CustomerScheduleView({
                                       chequeNumber: e.target.value,
                                     })
                                   }
-                                  className="w-24 px-2 py-1 text-xs font-mono-num font-semibold border border-slate-300 rounded bg-white disabled:bg-slate-100"
+                                  className="w-24 px-2 py-1 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                                 />
                               </td>
-                              <td className="py-2 px-2 text-right font-mono-num text-slate-700 pt-2.5 whitespace-nowrap">
+                              <td className="py-2 px-2 text-right font-mono-num text-[#243B53] pt-2.5 whitespace-nowrap">
                                 {formatINR(rowPrincipal)}
                               </td>
-                              <td className="py-2 px-2 text-right font-mono-num text-slate-600 pt-2.5 whitespace-nowrap">
+                              <td className="py-2 px-2 text-right font-mono-num text-[#627D98] pt-2.5 whitespace-nowrap">
                                 {formatINR(rowInterest)}
                               </td>
                               <td className="py-2 px-2 text-right">
@@ -1451,32 +1451,32 @@ export function CustomerScheduleView({
                                       amount: Number(e.target.value) || 0,
                                     })
                                   }
-                                  className="w-24 px-2 py-1 text-xs font-mono-num font-semibold text-right border border-slate-300 rounded bg-white disabled:bg-slate-100"
+                                  className="w-24 px-2 py-1 text-xs font-mono-num font-semibold text-right border border-[#D9E2EC] rounded bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                                 />
                               </td>
                               <td className="py-2 px-2 pt-2.5 whitespace-nowrap">
                                 <span
                                   className={`text-[11px] font-semibold ${
                                     paidInfo.isPaid
-                                      ? 'text-emerald-700'
+                                      ? 'text-[#16A34A]'
                                       : paidInfo.effectiveStatus ===
                                         'Returned / Bounced'
-                                      ? 'text-red-700'
+                                      ? 'text-[#DC2626]'
                                       : paidInfo.effectiveStatus ===
                                         'In Clearing'
-                                      ? 'text-blue-700'
-                                      : 'text-slate-700'
+                                      ? 'text-[#2563EB]'
+                                      : 'text-[#64748B]'
                                   }`}
                                 >
                                   {paidInfo.paidLabel}
                                 </span>
                                 {row.clearingBatchRef && (
-                                  <div className="text-[10px] font-mono-num text-slate-500">
+                                  <div className="text-[10px] font-mono-num text-[#627D98]">
                                     {row.clearingBatchRef}
                                   </div>
                                 )}
                               </td>
-                              <td className="py-2 px-2 text-right font-mono-num font-semibold text-slate-900 pt-2.5 whitespace-nowrap">
+                              <td className="py-2 px-2 text-right font-mono-num font-semibold text-[#102A43] pt-2.5 whitespace-nowrap">
                                 {formatINR(runningBalance)}
                               </td>
                               <td className="py-2 px-1.5 text-center pt-2">
@@ -1485,7 +1485,7 @@ export function CustomerScheduleView({
                                     type="button"
                                     onClick={() => handleRemoveRow(row.id)}
                                     title="Remove cheque row"
-                                    className="p-1 text-slate-400 hover:text-red-700 rounded hover:bg-red-50"
+                                    className="p-1 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1499,33 +1499,33 @@ export function CustomerScheduleView({
                   </table>
                 </div>
 
-                <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="px-3 py-2.5 bg-[#F4F7FA] border-t border-[#D9E2EC] flex flex-wrap items-center justify-between gap-2 text-xs">
                   <button
                     type="button"
                     onClick={handleAddManualRow}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-slate-800 hover:text-slate-950 whitespace-nowrap"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#176B87] hover:text-[#102A43] whitespace-nowrap"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Cheque Row</span>
                   </button>
-                  <div className="flex flex-wrap items-center gap-3 font-mono-num text-slate-700">
+                  <div className="flex flex-wrap items-center gap-3 font-mono-num text-[#627D98]">
                     <span>
                       Principal:{' '}
-                      <strong className="text-slate-900">
+                      <strong className="text-[#102A43]">
                         {formatINR(editorTotalPrincipal)}
                       </strong>
                     </span>
                     <span aria-hidden="true">·</span>
                     <span>
                       Interest:{' '}
-                      <strong className="text-slate-900">
+                      <strong className="text-[#102A43]">
                         {formatINR(editorTotalInterest)}
                       </strong>
                     </span>
                     <span aria-hidden="true">·</span>
                     <span>
                       Total Payable:{' '}
-                      <strong className="text-slate-950">
+                      <strong className="text-[#102A43]">
                         {formatINR(editorTotalAmount)}
                       </strong>
                     </span>
@@ -1535,7 +1535,7 @@ export function CustomerScheduleView({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
                 Schedule Notes (Optional)
               </label>
               <input
@@ -1543,21 +1543,21 @@ export function CustomerScheduleView({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g., 12-month machinery loan PDC set handed over by borrower"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white"
+                className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#D9E2EC]">
               <button
                 type="button"
                 onClick={() => setViewMode('overview')}
-                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>
@@ -1583,16 +1583,16 @@ export function CustomerScheduleView({
   return (
     <div className="space-y-6">
       {/* Top Action Header */}
-      <section className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-md bg-[#0B192C] text-white flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-md bg-[#102A43] text-[#14B8A6] flex items-center justify-center shrink-0">
             <CalendarCheck2 className="w-4 h-4" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-slate-900">
+            <h2 className="text-base font-semibold text-[#102A43]">
               Customer Cheque Schedule (Loan Scheme &amp; PDC Calculator)
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#627D98] mt-0.5">
               Compute loan EMIs across Weekly, Bi-Weekly, Fortnightly, or Monthly cycles with automatic bank holiday shifting and daily deposit queues.
             </p>
           </div>
@@ -1602,16 +1602,16 @@ export function CustomerScheduleView({
           <button
             type="button"
             onClick={onOpenBankHolidays}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap shrink-0"
           >
-            <CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />
+            <CalendarDays className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
             <span>Bank Holidays ({holidays.length})</span>
           </button>
 
           <button
             type="button"
             onClick={startNewSchedule}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap shrink-0"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Add Customer Schedule</span>
@@ -1628,39 +1628,39 @@ export function CustomerScheduleView({
       />
 
       {/* Saved Customer Schedules Directory */}
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden shadow-xs">
+        <div className="px-5 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-semibold text-[#102A43]">
               Customer PDC / Loan Schedules ({schedules.length})
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#627D98]">
               Click any schedule to inspect loan principal/interest splits, holiday shifts, and clearing batch status.
             </p>
           </div>
 
           <div className="relative w-full sm:w-72">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#627D98] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search customer, loan ref, cheque #..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
             />
           </div>
         </div>
 
         {filteredSchedules.length === 0 ? (
           <div className="py-12 px-5 text-center space-y-3">
-            <CalendarCheck2 className="w-8 h-8 text-slate-300 mx-auto" />
+            <CalendarCheck2 className="w-8 h-8 text-[#D9E2EC] mx-auto" />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-[#102A43]">
                 {schedules.length === 0
                   ? 'No Customer PDC / Loan Schedules Created Yet'
                   : 'No schedules match your search'}
               </p>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
+              <p className="text-xs text-[#627D98] max-w-md mx-auto">
                 Use the built-in Loan / Installment Scheme Calculator to compute EMIs, scan PDC cheque leaves on the right side, and auto-shift bank holidays.
               </p>
             </div>
@@ -1668,7 +1668,7 @@ export function CustomerScheduleView({
               <button
                 type="button"
                 onClick={startNewSchedule}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create First Schedule</span>
@@ -1676,7 +1676,7 @@ export function CustomerScheduleView({
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-200">
+          <div className="divide-y divide-[#D9E2EC]">
             {filteredSchedules.map((sch) => {
               const isExpanded = expandedScheduleId === sch.id;
               const totalVal = (sch.cheques || []).reduce(
@@ -1698,7 +1698,7 @@ export function CustomerScheduleView({
 
               return (
                 <div key={sch.id} className="bg-white">
-                  <div className="px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-slate-50/70 transition-colors">
+                  <div className="px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-[#F4F7FA]/80 transition-colors">
                     <button
                       type="button"
                       onClick={() =>
@@ -1708,9 +1708,9 @@ export function CustomerScheduleView({
                       }
                       className="flex items-start gap-3 text-left flex-1 min-w-0"
                     >
-                      <span className="mt-0.5 text-slate-400 shrink-0">
+                      <span className="mt-0.5 text-[#627D98] shrink-0">
                         {isExpanded ? (
-                          <ChevronDown className="w-4 h-4" />
+                          <ChevronDown className="w-4 h-4 text-[#176B87]" />
                         ) : (
                           <ChevronRight className="w-4 h-4" />
                         )}
@@ -1719,44 +1719,44 @@ export function CustomerScheduleView({
                         <img
                           src={firstThumb.thumbnailDataUrl}
                           alt={firstThumb.fileName}
-                          className="w-12 h-9 object-cover rounded border border-slate-200 shrink-0"
+                          className="w-12 h-9 object-cover rounded border border-[#D9E2EC] shrink-0"
                         />
                       )}
                       <div className="min-w-0 space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-900">
+                          <span className="text-sm font-semibold text-[#102A43]">
                             {sch.customerName}
                           </span>
                           {sch.loanRefNo && (
-                            <span className="text-xs font-mono-num text-slate-600">
+                            <span className="text-xs font-mono-num text-[#176B87]">
                               · Ref: {sch.loanRefNo}
                             </span>
                           )}
                           {sch.frequency && (
-                            <span className="text-[11px] text-slate-600">
+                            <span className="text-[11px] text-[#627D98]">
                               · {getFrequencyLabel(sch.frequency)}
                             </span>
                           )}
                           {sch.holidayAutoShift && (
-                            <span className="text-[10px] font-medium text-emerald-700">
+                            <span className="text-[10px] font-medium text-[#16A34A]">
                               · Holiday Auto-Shift ON
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-600 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                        <div className="text-xs text-[#627D98] flex flex-wrap items-center gap-x-2.5 gap-y-1">
                           <span>
                             {sch.draweeBank || 'Bank N/A'}
                             {sch.draweeBranch ? ` (${sch.draweeBranch})` : ''}
                           </span>
                           <span aria-hidden="true">·</span>
-                          <span className="font-mono-num font-semibold text-slate-900">
+                          <span className="font-mono-num font-semibold text-[#102A43]">
                             {sch.cheques.length} Dues · {formatINR(totalVal)}
                           </span>
                           {sch.principalAmount !== undefined &&
                             sch.principalAmount > 0 && (
                               <>
                                 <span aria-hidden="true">·</span>
-                                <span className="font-mono-num text-slate-600">
+                                <span className="font-mono-num text-[#627D98]">
                                   Principal {formatINR(sch.principalAmount)}
                                   {sch.interestType &&
                                   sch.interestType !== 'ZERO_INTEREST'
@@ -1766,14 +1766,14 @@ export function CustomerScheduleView({
                               </>
                             )}
                           <span aria-hidden="true">·</span>
-                          <span className="font-mono-num text-slate-600">
+                          <span className="font-mono-num text-[#627D98]">
                             {scheduledCnt} Scheduled · {inClearingCnt} In Clearing ·{' '}
                             {clearedCnt} Cleared
                           </span>
                           {sch.scannedDocuments.length > 0 && (
                             <>
                               <span aria-hidden="true">·</span>
-                              <span className="inline-flex items-center gap-1 text-slate-700">
+                              <span className="inline-flex items-center gap-1 text-[#176B87] font-medium">
                                 <FileImage className="w-3 h-3" />
                                 <span>{sch.scannedDocuments.length} Scan(s)</span>
                               </span>
@@ -1787,7 +1787,7 @@ export function CustomerScheduleView({
                       <button
                         type="button"
                         onClick={() => handleDownloadCustomerPdfFromSchedule(sch)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#176B87] rounded-md hover:bg-[#102A43] transition-colors whitespace-nowrap"
                         title={`Download PDF Statement for ${sch.customerName}`}
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -1796,16 +1796,16 @@ export function CustomerScheduleView({
                       <button
                         type="button"
                         onClick={() => startEditSchedule(sch)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap"
                       >
-                        <Edit3 className="w-3.5 h-3.5" />
+                        <Edit3 className="w-3.5 h-3.5 text-[#176B87]" />
                         <span>Edit / Scan</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => onDeleteSchedule(sch.id)}
                         title="Delete Schedule"
-                        className="p-1.5 text-slate-400 hover:text-red-700 rounded hover:bg-red-50 transition-colors"
+                        className="p-1.5 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1825,24 +1825,24 @@ export function CustomerScheduleView({
                     const outstandingBal = Math.max(0, round2(totalVal - paidSum));
 
                     return (
-                      <div className="px-5 pb-4 pt-2 bg-slate-50/50 border-t border-slate-100 space-y-3">
+                      <div className="px-5 pb-4 pt-2 bg-[#F4F7FA] border-t border-[#D9E2EC] space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                          <div className="flex flex-wrap items-center gap-4 font-mono-num text-slate-600">
+                          <div className="flex flex-wrap items-center gap-4 font-mono-num text-[#627D98]">
                             <span>
                               Total Payable:{' '}
-                              <strong className="text-slate-900">
+                              <strong className="text-[#102A43]">
                                 {formatINR(totalVal)}
                               </strong>
                             </span>
                             <span>
                               Paid (Cleared):{' '}
-                              <strong className="text-emerald-700">
+                              <strong className="text-[#16A34A]">
                                 {formatINR(paidSum)}
                               </strong>
                             </span>
                             <span>
                               Outstanding Loan Balance:{' '}
-                              <strong className="text-slate-950">
+                              <strong className="text-[#102A43]">
                                 {formatINR(outstandingBal)}
                               </strong>
                             </span>
@@ -1852,17 +1852,17 @@ export function CustomerScheduleView({
                             onClick={() =>
                               handleDownloadCustomerPdfFromSchedule(sch)
                             }
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-slate-800 bg-white border border-slate-300 rounded hover:bg-slate-100 whitespace-nowrap"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#243B53] bg-white border border-[#D9E2EC] rounded hover:bg-[#F4F7FA] whitespace-nowrap"
                           >
-                            <Download className="w-3 h-3" />
+                            <Download className="w-3 h-3 text-[#176B87]" />
                             <span>Download Customer Statement PDF</span>
                           </button>
                         </div>
 
-                        <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
+                        <div className="overflow-x-auto border border-[#D9E2EC] rounded-md bg-white">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+                              <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98]">
                                 <th className="py-2 px-3">Inst. #</th>
                                 <th className="py-2 px-3">Due Date</th>
                                 <th className="py-2 px-3">
@@ -1884,7 +1884,7 @@ export function CustomerScheduleView({
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-200">
+                            <tbody className="divide-y divide-[#D9E2EC]">
                               {rowsWithBal.map(({ item, runningBalance }, idx) => {
                                 const wasShifted =
                                   item.effectiveDate !== item.originalDate;
@@ -1893,54 +1893,54 @@ export function CustomerScheduleView({
                                   chequeById
                                 );
                                 return (
-                                  <tr key={item.id}>
-                                    <td className="py-2 px-3 font-mono-num text-slate-500">
+                                  <tr key={item.id} className="hover:bg-[#F4F7FA]/70">
+                                    <td className="py-2 px-3 font-mono-num text-[#627D98]">
                                       {item.dueNumber ?? idx + 1}
                                     </td>
-                                    <td className="py-2 px-3 font-mono-num text-slate-600">
+                                    <td className="py-2 px-3 font-mono-num text-[#627D98]">
                                       {formatIndianDate(item.originalDate)}
                                     </td>
                                     <td className="py-2 px-3">
-                                      <span className="font-mono-num font-semibold text-slate-900">
+                                      <span className="font-mono-num font-semibold text-[#102A43]">
                                         {formatIndianDate(item.effectiveDate)}
                                       </span>
                                       {wasShifted && (
-                                        <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                                        <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#F59E0B]/10 text-[#B45309] border border-[#F59E0B]/30">
                                           Shifted (Holiday)
                                         </span>
                                       )}
                                       {item.shiftReason && (
-                                        <span className="ml-1.5 text-[10px] text-amber-800">
+                                        <span className="ml-1.5 text-[10px] text-[#B45309]">
                                           {item.shiftReason}
                                         </span>
                                       )}
                                     </td>
-                                    <td className="py-2 px-3 font-mono-num font-semibold text-slate-950">
+                                    <td className="py-2 px-3 font-mono-num font-semibold text-[#176B87]">
                                       {item.chequeNumber}
                                     </td>
-                                    <td className="py-2 px-3 text-right font-mono-num text-slate-700">
+                                    <td className="py-2 px-3 text-right font-mono-num text-[#243B53]">
                                       {formatINR(
                                         item.principalAmount ?? item.amount
                                       )}
                                     </td>
-                                    <td className="py-2 px-3 text-right font-mono-num text-slate-600">
+                                    <td className="py-2 px-3 text-right font-mono-num text-[#627D98]">
                                       {formatINR(item.interestAmount ?? 0)}
                                     </td>
-                                    <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-950">
+                                    <td className="py-2 px-3 text-right font-mono-num font-semibold text-[#102A43]">
                                       {formatINR(item.amount)}
                                     </td>
                                     <td className="py-2 px-3">
                                       <span
                                         className={`font-semibold ${
                                           paidInfo.isPaid
-                                            ? 'text-emerald-700'
+                                            ? 'text-[#16A34A]'
                                             : paidInfo.effectiveStatus ===
                                               'Returned / Bounced'
-                                            ? 'text-red-700'
+                                            ? 'text-[#DC2626]'
                                             : paidInfo.effectiveStatus ===
                                               'In Clearing'
-                                            ? 'text-blue-700'
-                                            : 'text-slate-700'
+                                            ? 'text-[#2563EB]'
+                                            : 'text-[#64748B]'
                                         }`}
                                       >
                                         {paidInfo.paidLabel}
@@ -1949,7 +1949,7 @@ export function CustomerScheduleView({
                                           : ''}
                                       </span>
                                     </td>
-                                    <td className="py-2 px-3 text-right font-mono-num font-semibold text-slate-900">
+                                    <td className="py-2 px-3 text-right font-mono-num font-semibold text-[#102A43]">
                                       {formatINR(item.balance ?? runningBalance)}
                                     </td>
                                   </tr>

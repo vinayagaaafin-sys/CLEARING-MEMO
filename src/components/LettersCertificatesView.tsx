@@ -379,19 +379,19 @@ export function LettersCertificatesView({
   return (
     <div className="space-y-6">
       {/* Top Module Bar & Selector (Hidden on Print) */}
-      <section className="no-print bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+      <section className="no-print bg-white border border-[#D9E2EC] rounded-lg p-5 space-y-4 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-md bg-[#0B192C] text-white flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-md bg-[#102A43] text-[#14B8A6] flex items-center justify-center shrink-0">
               <ScrollText className="w-4 h-4" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-slate-900">
+              <h2 className="text-base font-semibold text-[#102A43]">
                 Letters &amp; Certificates (NOC &amp; DD Cancellation)
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#627D98] mt-0.5">
                 Draft official No Objection Certificates and Bank Demand Draft Cancellation letters on{' '}
-                <strong className="text-slate-700">{profile.companyName}</strong> letterhead with live A4 preview.
+                <strong className="text-[#243B53]">{profile.companyName}</strong> letterhead with live A4 preview.
               </p>
             </div>
           </div>
@@ -400,16 +400,16 @@ export function LettersCertificatesView({
             <button
               type="button"
               onClick={handleResetActiveForm}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap shrink-0"
             >
-              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+              <RotateCcw className="w-3.5 h-3.5 text-[#627D98]" aria-hidden="true" />
               <span>Reset Fields</span>
             </button>
 
             <button
               type="button"
               onClick={handleDownloadPdf}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#176B87] rounded-md hover:bg-[#102A43] transition-colors whitespace-nowrap shrink-0"
             >
               <Download className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Download A4 PDF</span>
@@ -418,7 +418,7 @@ export function LettersCertificatesView({
             <button
               type="button"
               onClick={handleBrowserPrint}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap shrink-0"
             >
               <Printer className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Print / Save as PDF</span>
@@ -428,7 +428,7 @@ export function LettersCertificatesView({
 
         {/* Two-Tab Selector */}
         <div
-          className="inline-flex p-0.5 bg-slate-100 border border-slate-200 rounded-md"
+          className="inline-flex p-0.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md"
           role="tablist"
           aria-label="Letter Template Selector"
         >
@@ -443,11 +443,11 @@ export function LettersCertificatesView({
             }}
             className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded transition-colors whitespace-nowrap shrink-0 ${
               activeTab === 'noc'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-[#102A43] shadow-xs'
+                : 'text-[#627D98] hover:text-[#102A43]'
             }`}
           >
-            <FileBadge2 className="w-3.5 h-3.5" aria-hidden="true" />
+            <FileBadge2 className={`w-3.5 h-3.5 ${activeTab === 'noc' ? 'text-[#176B87]' : ''}`} aria-hidden="true" />
             <span>NOC Letter (No Objection Certificate)</span>
           </button>
 
@@ -462,19 +462,19 @@ export function LettersCertificatesView({
             }}
             className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded transition-colors whitespace-nowrap shrink-0 ${
               activeTab === 'dd-cancellation'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-[#102A43] shadow-xs'
+                : 'text-[#627D98] hover:text-[#102A43]'
             }`}
           >
-            <Landmark className="w-3.5 h-3.5" aria-hidden="true" />
+            <Landmark className={`w-3.5 h-3.5 ${activeTab === 'dd-cancellation' ? 'text-[#176B87]' : ''}`} aria-hidden="true" />
             <span>Bank DD Cancellation Letter</span>
           </button>
         </div>
 
         {pdfNotice && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950 flex flex-wrap items-center justify-between gap-2">
+          <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#102A43] flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
               <span>
                 A4 PDF generated:{' '}
                 <strong className="font-mono-num">{pdfNotice.filename}</strong>
@@ -483,7 +483,7 @@ export function LettersCertificatesView({
             <a
               href={pdfNotice.blobUrl}
               download={pdfNotice.filename}
-              className="font-semibold text-emerald-800 underline hover:text-emerald-950"
+              className="font-semibold text-[#16A34A] underline hover:text-[#102A43]"
             >
               Click here if download didn&apos;t start
             </a>
@@ -491,7 +491,7 @@ export function LettersCertificatesView({
         )}
 
         {printFallbackHint && (
-          <div className="p-3 bg-slate-100 border border-slate-300 rounded-md text-xs text-slate-800">
+          <div className="p-3 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs text-[#243B53]">
             Embedded preview frames may block the browser print dialog. Use{' '}
             <strong>Download A4 PDF</strong> above to save the formatted A4 letter directly.
           </div>
@@ -501,33 +501,33 @@ export function LettersCertificatesView({
       {/* Split-Screen Workspace: Form (Left) + Live A4 Preview (Right) */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start print:block">
         {/* Left Input Form (Hidden on Print) */}
-        <section className="no-print xl:col-span-5 bg-white border border-slate-200 rounded-lg p-5 space-y-5">
+        <section className="no-print xl:col-span-5 bg-white border border-[#D9E2EC] rounded-lg p-5 space-y-5 shadow-xs">
           {activeTab === 'noc' ? (
             <>
-              <div className="pb-3 border-b border-slate-200">
-                <h3 className="text-sm font-semibold text-slate-900">
+              <div className="pb-3 border-b border-[#D9E2EC]">
+                <h3 className="text-sm font-semibold text-[#102A43]">
                   NOC Certificate Details
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-[#627D98] mt-0.5">
                   All changes reflect immediately in the official A4 letter preview.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Letter Date
                   </label>
                   <input
                     type="date"
                     value={nocDate}
                     onChange={(e) => setNocDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Reference No.
                   </label>
                   <input
@@ -535,20 +535,20 @@ export function LettersCertificatesView({
                     value={nocRefNo}
                     onChange={(e) => setNocRefNo(e.target.value)}
                     placeholder={`NOC/${fyLabel}/001`}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               {partyDirectory.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Quick-Select Existing Party / Customer
                   </label>
                   <select
                     value={nocSelectedPartyKey}
                     onChange={(e) => handleSelectNocParty(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     <option value="">
                       -- Select from {partyDirectory.length} company parties or type below --
@@ -564,7 +564,7 @@ export function LettersCertificatesView({
               )}
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Customer / Party Name
                 </label>
                 <input
@@ -575,13 +575,13 @@ export function LettersCertificatesView({
                     setNocSelectedPartyKey('');
                   }}
                   placeholder="e.g., M/s. Sri Venkateswara Enterprises"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Ref / Loan Account No. (Optional)
                   </label>
                   <input
@@ -589,25 +589,25 @@ export function LettersCertificatesView({
                     value={nocLoanAccountNo}
                     onChange={(e) => setNocLoanAccountNo(e.target.value)}
                     placeholder="e.g., LN-2025-8842"
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Repayment / Closure Date
                   </label>
                   <input
                     type="date"
                     value={nocRepaymentDate}
                     onChange={(e) => setNocRepaymentDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Customer Address / ID (Optional)
                 </label>
                 <textarea
@@ -615,12 +615,12 @@ export function LettersCertificatesView({
                   value={nocCustomerAddress}
                   onChange={(e) => setNocCustomerAddress(e.target.value)}
                   placeholder="Registered office or borrower address..."
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15 resize-none"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87] resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Loan / Facility Amount (₹)
                 </label>
                 <input
@@ -630,16 +630,16 @@ export function LettersCertificatesView({
                   value={nocLoanAmountInput}
                   onChange={(e) => setNocLoanAmountInput(e.target.value)}
                   placeholder="500000"
-                  className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
-                <div className="mt-1.5 text-[11px] text-slate-600 space-y-0.5">
+                <div className="mt-1.5 text-[11px] text-[#627D98] space-y-0.5">
                   <div>
                     Formatted:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#102A43]">
                       {formatINR(nocAmountNum)}
                     </strong>
                   </div>
-                  <div className="text-slate-500">
+                  <div className="text-[#627D98]">
                     {numberToIndianWords(nocAmountNum)}
                   </div>
                 </div>
@@ -647,13 +647,13 @@ export function LettersCertificatesView({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Payment Mode
                   </label>
                   <select
                     value={nocPaymentMode}
                     onChange={(e) => setNocPaymentMode(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     {PAYMENT_MODE_OPTIONS.map((m) => (
                       <option key={m} value={m}>
@@ -664,7 +664,7 @@ export function LettersCertificatesView({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     UTR / Cheque / Receipt Ref (Optional)
                   </label>
                   <input
@@ -672,24 +672,24 @@ export function LettersCertificatesView({
                     value={nocPaymentRef}
                     onChange={(e) => setNocPaymentRef(e.target.value)}
                     placeholder="e.g., UTR99281726 or Chq #004512"
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 space-y-3">
+              <div className="pt-3 border-t border-[#D9E2EC] space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <label className="text-xs font-semibold text-slate-800">
+                  <label className="text-xs font-semibold text-[#102A43]">
                     Authorized Signatory
                   </label>
-                  <div className="inline-flex p-0.5 bg-slate-100 border border-slate-200 rounded text-[11px]">
+                  <div className="inline-flex p-0.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded text-[11px]">
                     <button
                       type="button"
                       onClick={() => handleSignatoryPresetChange('noc', 'sig1')}
                       className={`px-2 py-0.5 rounded font-medium whitespace-nowrap ${
                         nocSignatoryChoice === 'sig1'
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-600'
+                          ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                          : 'text-[#627D98]'
                       }`}
                     >
                       Signatory 1
@@ -699,8 +699,8 @@ export function LettersCertificatesView({
                       onClick={() => handleSignatoryPresetChange('noc', 'sig2')}
                       className={`px-2 py-0.5 rounded font-medium whitespace-nowrap ${
                         nocSignatoryChoice === 'sig2'
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-600'
+                          ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                          : 'text-[#627D98]'
                       }`}
                     >
                       Signatory 2
@@ -710,7 +710,7 @@ export function LettersCertificatesView({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                       Signatory Name
                     </label>
                     <input
@@ -720,11 +720,11 @@ export function LettersCertificatesView({
                         setNocSignatoryName(e.target.value);
                         setNocSignatoryChoice('custom');
                       }}
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                      className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                       Designation
                     </label>
                     <input
@@ -734,7 +734,7 @@ export function LettersCertificatesView({
                         setNocSignatoryDesignation(e.target.value);
                         setNocSignatoryChoice('custom');
                       }}
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                      className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     />
                   </div>
                 </div>
@@ -742,30 +742,30 @@ export function LettersCertificatesView({
             </>
           ) : (
             <>
-              <div className="pb-3 border-b border-slate-200">
-                <h3 className="text-sm font-semibold text-slate-900">
+              <div className="pb-3 border-b border-[#D9E2EC]">
+                <h3 className="text-sm font-semibold text-[#102A43]">
                   Bank Demand Draft Cancellation Details
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-[#627D98] mt-0.5">
                   Select a company bank account or enter custom branch details to address the Branch Manager.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Letter Date
                   </label>
                   <input
                     type="date"
                     value={ddLetterDate}
                     onChange={(e) => setDdLetterDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Reference No.
                   </label>
                   <input
@@ -773,20 +773,20 @@ export function LettersCertificatesView({
                     value={ddRefNo}
                     onChange={(e) => setDdRefNo(e.target.value)}
                     placeholder={`DDC/${fyLabel}/001`}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               {bankAccounts.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Quick-Select Company Bank Account
                   </label>
                   <select
                     value={ddSelectedBankId}
                     onChange={(e) => handleSelectDdBank(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     {bankAccounts.map((acc) => (
                       <option key={acc.id} value={acc.id}>
@@ -800,7 +800,7 @@ export function LettersCertificatesView({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Bank Name
                   </label>
                   <input
@@ -811,12 +811,12 @@ export function LettersCertificatesView({
                       setDdSelectedBankId('CUSTOM');
                     }}
                     placeholder="e.g., State Bank of India"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Branch Name
                   </label>
                   <input
@@ -827,13 +827,13 @@ export function LettersCertificatesView({
                       setDdSelectedBankId('CUSTOM');
                     }}
                     placeholder="e.g., Ashok Nagar Branch, Chennai"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Company Current / OD Account Number
                 </label>
                 <input
@@ -841,13 +841,13 @@ export function LettersCertificatesView({
                   value={ddAccountNumber}
                   onChange={(e) => setDdAccountNumber(e.target.value)}
                   placeholder="e.g., 309281726354"
-                  className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     Demand Draft (DD) Number
                   </label>
                   <input
@@ -855,25 +855,25 @@ export function LettersCertificatesView({
                     value={ddNumber}
                     onChange={(e) => setDdNumber(e.target.value)}
                     placeholder="e.g., 458921"
-                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
                     DD Issue Date
                   </label>
                   <input
                     type="date"
                     value={ddDate}
                     onChange={(e) => setDdDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono-num border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-xs font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   DD Amount (₹)
                 </label>
                 <input
@@ -883,23 +883,23 @@ export function LettersCertificatesView({
                   value={ddAmountInput}
                   onChange={(e) => setDdAmountInput(e.target.value)}
                   placeholder="125000"
-                  className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs font-mono-num font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
-                <div className="mt-1.5 text-[11px] text-slate-600 space-y-0.5">
+                <div className="mt-1.5 text-[11px] text-[#627D98] space-y-0.5">
                   <div>
                     Formatted:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#102A43]">
                       {formatINR(ddAmountNum)}
                     </strong>
                   </div>
-                  <div className="text-slate-500">
+                  <div className="text-[#627D98]">
                     {numberToIndianWords(ddAmountNum)}
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   DD Favouring / Payee Name
                 </label>
                 <input
@@ -907,12 +907,12 @@ export function LettersCertificatesView({
                   value={ddPayeeName}
                   onChange={(e) => setDdPayeeName(e.target.value)}
                   placeholder="e.g., Tamil Nadu Electricity Board / Vendor Name"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-xs font-medium text-slate-700">
+                <label className="block text-xs font-medium text-[#243B53]">
                   Reason for Cancellation
                 </label>
                 <select
@@ -924,7 +924,7 @@ export function LettersCertificatesView({
                       setDdReasonText(val);
                     }
                   }}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 >
                   {DD_CANCELLATION_PRESETS.map((preset) => (
                     <option key={preset} value={preset}>
@@ -941,23 +941,23 @@ export function LettersCertificatesView({
                     setDdReasonPreset('__CUSTOM__');
                   }}
                   placeholder="Enter reason for cancellation..."
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 space-y-3">
+              <div className="pt-3 border-t border-[#D9E2EC] space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <label className="text-xs font-semibold text-slate-800">
+                  <label className="text-xs font-semibold text-[#102A43]">
                     Authorized Signatory
                   </label>
-                  <div className="inline-flex p-0.5 bg-slate-100 border border-slate-200 rounded text-[11px]">
+                  <div className="inline-flex p-0.5 bg-[#F4F7FA] border border-[#D9E2EC] rounded text-[11px]">
                     <button
                       type="button"
                       onClick={() => handleSignatoryPresetChange('dd', 'sig1')}
                       className={`px-2 py-0.5 rounded font-medium whitespace-nowrap ${
                         ddSignatoryChoice === 'sig1'
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-600'
+                          ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                          : 'text-[#627D98]'
                       }`}
                     >
                       Signatory 1
@@ -967,8 +967,8 @@ export function LettersCertificatesView({
                       onClick={() => handleSignatoryPresetChange('dd', 'sig2')}
                       className={`px-2 py-0.5 rounded font-medium whitespace-nowrap ${
                         ddSignatoryChoice === 'sig2'
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-600'
+                          ? 'bg-white text-[#102A43] font-semibold shadow-xs'
+                          : 'text-[#627D98]'
                       }`}
                     >
                       Signatory 2
@@ -978,7 +978,7 @@ export function LettersCertificatesView({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                       Signatory Name
                     </label>
                     <input
@@ -988,11 +988,11 @@ export function LettersCertificatesView({
                         setDdSignatoryName(e.target.value);
                         setDdSignatoryChoice('custom');
                       }}
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                      className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    <label className="block text-[11px] font-medium text-[#627D98] mb-1">
                       Designation
                     </label>
                     <input
@@ -1002,7 +1002,7 @@ export function LettersCertificatesView({
                         setDdSignatoryDesignation(e.target.value);
                         setDdSignatoryChoice('custom');
                       }}
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md bg-white"
+                      className="w-full px-3 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     />
                   </div>
                 </div>

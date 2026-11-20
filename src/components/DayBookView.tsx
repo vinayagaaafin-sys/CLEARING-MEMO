@@ -465,10 +465,10 @@ export function DayBookView({
       {/* Header & Primary Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg font-bold tracking-tight text-slate-900">
+          <h1 className="text-lg font-bold tracking-tight text-[#102A43]">
             Day Book (Bank &amp; Cash Book) &amp; Closing Balance Tally
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#627D98] mt-0.5">
             Chronological ledger of cleared cheques, return reversals, bank statement transactions, and manual entries — verified against Bank Statement Closing Balances
           </p>
         </div>
@@ -477,7 +477,7 @@ export function DayBookView({
           <button
             type="button"
             onClick={() => setShowReconcileModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-[#176B87] rounded-md hover:bg-[#102A43] transition-colors whitespace-nowrap"
           >
             <Upload className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Reconcile Bank Statement</span>
@@ -485,15 +485,15 @@ export function DayBookView({
           <button
             type="button"
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap"
           >
-            <Download className="w-3.5 h-3.5" aria-hidden="true" />
+            <Download className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
             <span>Export Excel</span>
           </button>
           <button
             type="button"
             onClick={handleOpenManualModal}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap shadow-2xs"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Manual Day Book Entry</span>
@@ -504,16 +504,16 @@ export function DayBookView({
       {reconcileBanner && (
         <div
           role="status"
-          className="px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-center justify-between gap-3"
+          className="px-4 py-3 rounded-lg bg-[#16A34A]/10 border border-[#16A34A]/30 text-xs text-[#102A43] flex items-center justify-between gap-3"
         >
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
             <span>{reconcileBanner}</span>
           </div>
           <button
             type="button"
             onClick={() => setReconcileBanner(null)}
-            className="p-1 text-emerald-800 hover:text-emerald-950"
+            className="p-1 text-[#16A34A] hover:text-[#102A43]"
             aria-label="Dismiss notice"
           >
             <X className="w-3.5 h-3.5" />
@@ -524,16 +524,16 @@ export function DayBookView({
       {/* Multi-Bank Closing Balance Verification Cards */}
       <section aria-label="Multi-Bank Closing Balance Verification">
         {bankSummaries.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white border border-[#D9E2EC] rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-md bg-[#102A43] text-[#14B8A6] flex items-center justify-center shrink-0">
                 <Landmark className="w-4 h-4" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-[#102A43]">
                   No Company Bank Accounts Configured Yet
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-[#627D98] mt-0.5">
                   Add a bank account with its Opening Balance to track exact Day Book running balances and verify against bank statements.
                 </p>
               </div>
@@ -541,7 +541,7 @@ export function DayBookView({
             <button
               type="button"
               onClick={() => setShowReconcileModal(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] whitespace-nowrap shrink-0"
             >
               <Plus className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Add Bank &amp; Reconcile Statement</span>
@@ -567,14 +567,14 @@ export function DayBookView({
               return (
                 <div
                   key={account.id}
-                  className={`bg-white rounded-lg border transition-colors ${
+                  className={`bg-white rounded-lg border transition-colors shadow-xs ${
                     isSelectedCard
-                      ? 'border-slate-900 ring-1 ring-slate-900/10'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-[#14B8A6] ring-2 ring-[#14B8A6]/30'
+                      : 'border-[#D9E2EC] hover:border-[#176B87]/50'
                   }`}
                 >
                   {/* Card Header */}
-                  <div className="px-4 py-3 border-b border-slate-100 flex items-start justify-between gap-2">
+                  <div className="px-4 py-3 border-b border-[#D9E2EC] flex items-start justify-between gap-2">
                     <button
                       type="button"
                       onClick={() =>
@@ -584,10 +584,10 @@ export function DayBookView({
                       }
                       className="text-left min-w-0 flex-1 group"
                     >
-                      <div className="text-sm font-semibold text-slate-900 truncate group-hover:underline">
+                      <div className="text-sm font-semibold text-[#102A43] truncate group-hover:underline">
                         {account.bankName}
                       </div>
-                      <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <div className="text-[11px] text-[#627D98] flex flex-wrap items-center gap-1.5 mt-0.5">
                         <span>{account.accountType}</span>
                         <span aria-hidden="true">·</span>
                         <span className="font-mono-num">
@@ -608,7 +608,7 @@ export function DayBookView({
                           : handleStartEditBankBalance(account)
                       }
                       title="Edit Opening / Statement Closing Balance"
-                      className="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100 shrink-0"
+                      className="p-1.5 text-[#627D98] hover:text-[#102A43] rounded hover:bg-[#F4F7FA] shrink-0"
                     >
                       <Edit3 className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
@@ -616,9 +616,9 @@ export function DayBookView({
 
                   {/* Inline Balance Editor */}
                   {isEditing ? (
-                    <div className="p-4 bg-slate-50 space-y-3 text-xs">
+                    <div className="p-4 bg-[#F4F7FA] space-y-3 text-xs">
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           Opening Balance (₹)
                         </label>
                         <input
@@ -626,11 +626,11 @@ export function DayBookView({
                           step="0.01"
                           value={draftOpeningBalance}
                           onChange={(e) => setDraftOpeningBalance(e.target.value)}
-                          className="w-full px-2.5 py-1.5 font-mono-num border border-slate-300 rounded bg-white"
+                          className="w-full px-2.5 py-1.5 font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-[#243B53] mb-1">
                           Last Bank Statement Closing Balance (₹)
                         </label>
                         <input
@@ -641,21 +641,21 @@ export function DayBookView({
                             setDraftStatementClosing(e.target.value)
                           }
                           placeholder="Leave blank if not yet reconciled"
-                          className="w-full px-2.5 py-1.5 font-mono-num border border-slate-300 rounded bg-white"
+                          className="w-full px-2.5 py-1.5 font-mono-num border border-[#D9E2EC] rounded bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                         />
                       </div>
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => setEditingBalanceBankId(null)}
-                          className="px-3 py-1 text-[11px] font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50"
+                          className="px-3 py-1 text-[11px] font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded hover:bg-[#F4F7FA]"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSaveBankBalance(account.id)}
-                          className="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-semibold text-white bg-slate-900 rounded hover:bg-slate-800"
+                          className="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-semibold text-[#102A43] bg-[#14B8A6] rounded hover:bg-[#0D9488]"
                         >
                           <Check className="w-3 h-3" aria-hidden="true" />
                           <span>Save Balances</span>
@@ -666,48 +666,48 @@ export function DayBookView({
                     <div className="p-4 space-y-3">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
                         <div>
-                          <div className="text-[11px] text-slate-500">
+                          <div className="text-[11px] text-[#627D98]">
                             Opening Balance
                           </div>
-                          <div className="font-mono-num font-semibold text-slate-900 mt-0.5">
+                          <div className="font-mono-num font-semibold text-[#102A43] mt-0.5">
                             {formatINR(opening)}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[11px] text-slate-500">
+                          <div className="text-[11px] text-[#627D98]">
                             Book Closing Balance
                           </div>
-                          <div className="font-mono-num font-bold text-slate-900 mt-0.5">
+                          <div className="font-mono-num font-bold text-[#102A43] mt-0.5">
                             {formatINR(bookClosingBalance)}
                           </div>
                         </div>
                         <div>
-                          <div className="text-[11px] text-slate-500">
+                          <div className="text-[11px] text-[#627D98]">
                             Total Receipts (CR)
                           </div>
-                          <div className="font-mono-num font-semibold text-emerald-700 mt-0.5">
+                          <div className="font-mono-num font-semibold text-[#16A34A] mt-0.5">
                             +{formatINR(totalReceipts)}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[11px] text-slate-500">
+                          <div className="text-[11px] text-[#627D98]">
                             Total Payments (DR)
                           </div>
-                          <div className="font-mono-num font-semibold text-red-700 mt-0.5">
+                          <div className="font-mono-num font-semibold text-[#DC2626] mt-0.5">
                             -{formatINR(totalPayments)}
                           </div>
                         </div>
                       </div>
 
-                      <div className="pt-2.5 border-t border-slate-100 space-y-2">
+                      <div className="pt-2.5 border-t border-[#D9E2EC] space-y-2">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-[11px] text-[#627D98]">
                             Last Statement Closing
                             {account.statementClosingDate
                               ? ` (${formatIndianDate(account.statementClosingDate)})`
                               : ''}
                           </span>
-                          <span className="font-mono-num font-semibold text-slate-900">
+                          <span className="font-mono-num font-semibold text-[#102A43]">
                             {stmtClosing !== undefined
                               ? formatINR(stmtClosing)
                               : '—'}
@@ -717,10 +717,10 @@ export function DayBookView({
                         {/* Reconciliation Status Row */}
                         {stmtClosing !== undefined ? (
                           isMatched ? (
-                            <div className="px-2.5 py-1.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold flex items-center justify-between gap-2">
+                            <div className="px-2.5 py-1.5 rounded bg-[#16A34A]/10 border border-[#16A34A]/30 text-[#16A34A] text-[11px] font-semibold flex items-center justify-between gap-2">
                               <span className="inline-flex items-center gap-1.5">
                                 <CheckCircle2
-                                  className="w-3.5 h-3.5 text-emerald-700 shrink-0"
+                                  className="w-3.5 h-3.5 text-[#16A34A] shrink-0"
                                   aria-hidden="true"
                                 />
                                 <span>Matched / Reconciled</span>
@@ -728,23 +728,23 @@ export function DayBookView({
                               <span className="font-mono-num">₹0.00 Diff</span>
                             </div>
                           ) : (
-                            <div className="px-2.5 py-1.5 rounded bg-amber-50 border border-amber-300 text-amber-950 text-[11px] font-semibold flex items-center justify-between gap-2">
+                            <div className="px-2.5 py-1.5 rounded bg-[#F59E0B]/10 border border-[#F59E0B]/40 text-[#102A43] text-[11px] font-semibold flex items-center justify-between gap-2">
                               <span className="inline-flex items-center gap-1.5">
                                 <AlertTriangle
-                                  className="w-3.5 h-3.5 text-amber-700 shrink-0"
+                                  className="w-3.5 h-3.5 text-[#F59E0B] shrink-0"
                                   aria-hidden="true"
                                 />
                                 <span>
                                   Difference: {formatINR(Math.abs(diff ?? 0))}
                                 </span>
                               </span>
-                              <span className="text-[10px] font-medium text-amber-800">
+                              <span className="text-[10px] font-semibold text-[#B45309]">
                                 {(diff ?? 0) > 0 ? 'Book higher' : 'Book lower'}
                               </span>
                             </div>
                           )
                         ) : (
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-[#627D98]">
                             Statement balance pending — reconcile a bank statement to verify
                           </div>
                         )}
@@ -758,13 +758,13 @@ export function DayBookView({
             {/* Cash Book Summary Card (shown if any Cash Book entries exist) */}
             {cashSummary.entryCount > 0 && (
               <div
-                className={`bg-white rounded-lg border transition-colors ${
+                className={`bg-white rounded-lg border transition-colors shadow-xs ${
                   selectedBankId === CASH_ACCOUNT_ID
-                    ? 'border-slate-900 ring-1 ring-slate-900/10'
-                    : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-[#14B8A6] ring-2 ring-[#14B8A6]/30'
+                    : 'border-[#D9E2EC] hover:border-[#176B87]/50'
                 }`}
               >
-                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                <div className="px-4 py-3 border-b border-[#D9E2EC] flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() =>
@@ -774,11 +774,11 @@ export function DayBookView({
                     }
                     className="text-left flex-1 group"
                   >
-                    <div className="text-sm font-semibold text-slate-900 flex items-center gap-1.5 group-hover:underline">
-                      <Wallet className="w-3.5 h-3.5 text-slate-700" aria-hidden="true" />
+                    <div className="text-sm font-semibold text-[#102A43] flex items-center gap-1.5 group-hover:underline">
+                      <Wallet className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
                       <span>Cash Book / Petty Cash</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-0.5 font-mono-num">
+                    <div className="text-[11px] text-[#627D98] mt-0.5 font-mono-num">
                       {cashSummary.entryCount}{' '}
                       {cashSummary.entryCount === 1 ? 'entry' : 'entries'}
                     </div>
@@ -786,26 +786,26 @@ export function DayBookView({
                 </div>
                 <div className="p-4 grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
                   <div>
-                    <div className="text-[11px] text-slate-500">
+                    <div className="text-[11px] text-[#627D98]">
                       Cash Receipts (CR)
                     </div>
-                    <div className="font-mono-num font-semibold text-emerald-700 mt-0.5">
+                    <div className="font-mono-num font-semibold text-[#16A34A] mt-0.5">
                       +{formatINR(cashSummary.totalReceipts)}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[11px] text-slate-500">
+                    <div className="text-[11px] text-[#627D98]">
                       Cash Payments (DR)
                     </div>
-                    <div className="font-mono-num font-semibold text-red-700 mt-0.5">
+                    <div className="font-mono-num font-semibold text-[#DC2626] mt-0.5">
                       -{formatINR(cashSummary.totalPayments)}
                     </div>
                   </div>
-                  <div className="col-span-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-[11px] text-slate-500">
+                  <div className="col-span-2 pt-2 border-t border-[#D9E2EC] flex items-center justify-between">
+                    <span className="text-[11px] text-[#627D98]">
                       Cash Closing Balance
                     </span>
-                    <span className="font-mono-num font-bold text-slate-900">
+                    <span className="font-mono-num font-bold text-[#102A43]">
                       {formatINR(cashSummary.closingBalance)}
                     </span>
                   </div>
@@ -817,14 +817,14 @@ export function DayBookView({
       </section>
 
       {/* Filter Bar & Chronological Day Book Table */}
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+      <section className="bg-white border border-[#D9E2EC] rounded-lg overflow-hidden shadow-xs">
         {/* Filter Toolbar */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50/70 space-y-3">
+        <div className="p-4 border-b border-[#D9E2EC] bg-[#F4F7FA] space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Date Range Presets + Custom Pickers */}
             <div className="flex flex-wrap items-center gap-2">
               <div
-                className="inline-flex items-center p-0.5 bg-white border border-slate-200 rounded-md text-xs"
+                className="inline-flex items-center p-0.5 bg-white border border-[#D9E2EC] rounded-md text-xs"
                 role="group"
                 aria-label="Date range presets"
               >
@@ -833,8 +833,8 @@ export function DayBookView({
                   onClick={() => applyPreset('today')}
                   className={`px-2.5 py-1 rounded font-medium transition-colors whitespace-nowrap ${
                     datePreset === 'today'
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#102A43] text-white'
+                      : 'text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   Today
@@ -844,8 +844,8 @@ export function DayBookView({
                   onClick={() => applyPreset('month')}
                   className={`px-2.5 py-1 rounded font-medium transition-colors whitespace-nowrap ${
                     datePreset === 'month'
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#102A43] text-white'
+                      : 'text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   Current Month
@@ -855,15 +855,15 @@ export function DayBookView({
                   onClick={() => applyPreset('all')}
                   className={`px-2.5 py-1 rounded font-medium transition-colors whitespace-nowrap ${
                     datePreset === 'all'
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#102A43] text-white'
+                      : 'text-[#627D98] hover:text-[#102A43]'
                   }`}
                 >
                   All Dates
                 </button>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs">
+              <div className="flex items-center gap-1.5 text-xs text-[#627D98]">
                 <input
                   type="date"
                   aria-label="From Date"
@@ -872,9 +872,9 @@ export function DayBookView({
                     setDateFrom(e.target.value);
                     setDatePreset('custom');
                   }}
-                  className="px-2.5 py-1.5 text-xs font-mono-num bg-white border border-slate-300 rounded-md"
+                  className="px-2.5 py-1.5 text-xs font-mono-num bg-white border border-[#D9E2EC] rounded-md text-[#243B53]"
                 />
-                <span className="text-slate-400">to</span>
+                <span>to</span>
                 <input
                   type="date"
                   aria-label="To Date"
@@ -883,7 +883,7 @@ export function DayBookView({
                     setDateTo(e.target.value);
                     setDatePreset('custom');
                   }}
-                  className="px-2.5 py-1.5 text-xs font-mono-num bg-white border border-slate-300 rounded-md"
+                  className="px-2.5 py-1.5 text-xs font-mono-num bg-white border border-[#D9E2EC] rounded-md text-[#243B53]"
                 />
               </div>
             </div>
@@ -894,7 +894,7 @@ export function DayBookView({
                 aria-label="Filter by Bank Account"
                 value={selectedBankId}
                 onChange={(e) => setSelectedBankId(e.target.value)}
-                className="px-3 py-1.5 text-xs font-medium bg-white border border-slate-300 rounded-md text-slate-900"
+                className="px-3 py-1.5 text-xs font-medium bg-white border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 <option value="ALL">All Banks ({bankAccounts.length})</option>
                 {bankAccounts.map((acc) => (
@@ -909,7 +909,7 @@ export function DayBookView({
                 aria-label="Filter by Voucher Type"
                 value={voucherFilter}
                 onChange={(e) => setVoucherFilter(e.target.value)}
-                className="px-3 py-1.5 text-xs font-medium bg-white border border-slate-300 rounded-md text-slate-900"
+                className="px-3 py-1.5 text-xs font-medium bg-white border border-[#D9E2EC] rounded-md text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 <option value="ALL">All Vouchers</option>
                 <option value="Receipt">Receipt (CR)</option>
@@ -920,7 +920,7 @@ export function DayBookView({
 
               <div className="relative">
                 <Search
-                  className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                  className="w-3.5 h-3.5 text-[#627D98] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
                   aria-hidden="true"
                 />
                 <input
@@ -928,7 +928,7 @@ export function DayBookView({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search party, ref, narration..."
-                  className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-md w-52 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="pl-8 pr-3 py-1.5 text-xs bg-white border border-[#D9E2EC] rounded-md w-52 text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
             </div>
@@ -937,7 +937,7 @@ export function DayBookView({
           {filteredRows.length === 0 &&
             dayBookEntries.length > 0 &&
             datePreset !== 'all' && (
-              <div className="px-3 py-2 rounded bg-sky-50 border border-sky-200 text-xs text-sky-950 flex flex-wrap items-center justify-between gap-2">
+              <div className="px-3 py-2 rounded bg-[#176B87]/10 border border-[#176B87]/30 text-xs text-[#102A43] flex flex-wrap items-center justify-between gap-2">
                 <span>
                   No entries fall within the selected date range, though{' '}
                   <strong className="font-mono-num">
@@ -950,7 +950,7 @@ export function DayBookView({
                 <button
                   type="button"
                   onClick={() => applyPreset('all')}
-                  className="font-semibold underline text-sky-900 hover:text-slate-900"
+                  className="font-semibold underline text-[#176B87] hover:text-[#102A43]"
                 >
                   Show All Dates
                 </button>
@@ -962,7 +962,7 @@ export function DayBookView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-600">
+              <tr className="border-b border-[#D9E2EC] bg-[#F4F7FA] text-[11px] font-semibold text-[#627D98]">
                 <th className="py-2.5 pl-4 pr-3 whitespace-nowrap">Date</th>
                 <th className="py-2.5 px-3 whitespace-nowrap">Bank Account</th>
                 <th className="py-2.5 px-3 whitespace-nowrap">Voucher Type</th>
@@ -984,10 +984,10 @@ export function DayBookView({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-[#D9E2EC]">
               {/* Opening Balance Brought Forward Row */}
               {(bankAccounts.length > 0 || dayBookEntries.length > 0) && (
-                <tr className="bg-slate-50/70 font-medium text-slate-700">
+                <tr className="bg-[#F4F7FA]/70 font-medium text-[#243B53]">
                   <td className="py-2.5 pl-4 pr-3 font-mono-num whitespace-nowrap">
                     {dateFrom ? formatIndianDate(dateFrom) : 'Opening'}
                   </td>
@@ -998,17 +998,17 @@ export function DayBookView({
                       ? 'Cash Book'
                       : bankMap.get(selectedBankId)?.bankName || 'Bank Account'}
                   </td>
-                  <td className="py-2.5 px-3 text-slate-500">Opening b/f</td>
-                  <td className="py-2.5 px-3 text-slate-600" colSpan={2}>
+                  <td className="py-2.5 px-3 text-[#627D98]">Opening b/f</td>
+                  <td className="py-2.5 px-3 text-[#627D98]" colSpan={2}>
                     Opening Balance Brought Forward
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono-num text-slate-400">
+                  <td className="py-2.5 px-3 text-right font-mono-num text-[#627D98]">
                     —
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono-num text-slate-400">
+                  <td className="py-2.5 px-3 text-right font-mono-num text-[#627D98]">
                     —
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono-num font-semibold text-slate-900 whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-right font-mono-num font-semibold text-[#102A43] whitespace-nowrap">
                     {formatINR(broughtForwardBalance)}
                   </td>
                   <td className="py-2.5 pl-2 pr-4" />
@@ -1020,15 +1020,15 @@ export function DayBookView({
                   <td colSpan={9} className="py-12 px-6 text-center">
                     <div className="max-w-md mx-auto space-y-2">
                       <BookOpen
-                        className="w-7 h-7 text-slate-300 mx-auto"
+                        className="w-7 h-7 text-[#D9E2EC] mx-auto"
                         aria-hidden="true"
                       />
-                      <div className="text-sm font-semibold text-slate-900">
+                      <div className="text-sm font-semibold text-[#102A43]">
                         {dayBookEntries.length === 0
                           ? 'Your Day Book is ready for entries'
                           : 'No entries match your active filters'}
                       </div>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[#627D98]">
                         {dayBookEntries.length === 0
                           ? 'Upload a bank statement to auto-post cleared cheques, returned cheques, and remaining UPI/NEFT/Cash/Charge transactions — or record a manual entry.'
                           : 'Adjust the date range, bank account selector, or search query to inspect other transactions.'}
@@ -1038,7 +1038,7 @@ export function DayBookView({
                           <button
                             type="button"
                             onClick={() => setShowReconcileModal(true)}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#176B87] rounded-md hover:bg-[#102A43] transition-colors"
                           >
                             <Upload className="w-3.5 h-3.5" aria-hidden="true" />
                             <span>Reconcile Bank Statement</span>
@@ -1046,7 +1046,7 @@ export function DayBookView({
                           <button
                             type="button"
                             onClick={handleOpenManualModal}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
                           >
                             <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                             <span>Manual Day Book Entry</span>
@@ -1062,29 +1062,29 @@ export function DayBookView({
                   const isCash = row.companyBankAccountId === CASH_ACCOUNT_ID;
                   const voucherColor =
                     row.voucherType === 'Receipt'
-                      ? 'text-emerald-800'
+                      ? 'text-[#16A34A]'
                       : row.voucherType === 'Bank Charges'
-                      ? 'text-amber-800'
+                      ? 'text-[#B45309]'
                       : row.voucherType === 'Contra'
-                      ? 'text-sky-800'
-                      : 'text-red-800';
+                      ? 'text-[#176B87]'
+                      : 'text-[#DC2626]';
 
                   return (
                     <tr
                       key={row.id}
-                      className="hover:bg-slate-50/80 transition-colors"
+                      className="hover:bg-[#F4F7FA]/80 transition-colors"
                     >
-                      <td className="py-2.5 pl-4 pr-3 align-top font-mono-num text-slate-900 whitespace-nowrap">
+                      <td className="py-2.5 pl-4 pr-3 align-top font-mono-num text-[#102A43] whitespace-nowrap">
                         {formatIndianDate(row.txDate)}
                       </td>
                       <td className="py-2.5 px-3 align-top whitespace-nowrap">
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-[#102A43]">
                           {isCash
                             ? 'Cash Book'
                             : bank?.bankName || 'Unknown Bank'}
                         </div>
                         {bank && (
-                          <div className="text-[10px] font-mono-num text-slate-500">
+                          <div className="text-[10px] font-mono-num text-[#627D98]">
                             A/c ···{bank.accountNumber.slice(-4)}
                           </div>
                         )}
@@ -1093,33 +1093,33 @@ export function DayBookView({
                         <div className={`font-semibold ${voucherColor}`}>
                           {row.voucherType}
                         </div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-[#627D98]">
                           {SOURCE_LABELS[row.source] || row.source}
                         </div>
                       </td>
                       <td className="py-2.5 px-3 align-top max-w-[360px]">
-                        <div className="font-semibold text-slate-900">
+                        <div className="font-semibold text-[#102A43]">
                           {row.partyName}
                         </div>
                         {row.narration && row.narration !== row.partyName && (
-                          <div className="text-[11px] text-slate-600 mt-0.5 break-words leading-snug">
+                          <div className="text-[11px] text-[#627D98] mt-0.5 break-words leading-snug">
                             {row.narration}
                           </div>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 align-top font-mono-num text-slate-700 whitespace-nowrap">
+                      <td className="py-2.5 px-3 align-top font-mono-num text-[#243B53] whitespace-nowrap">
                         {row.refNo ||
                           (row.linkedChequeNumber
                             ? `#${row.linkedChequeNumber}`
                             : '—')}
                       </td>
-                      <td className="py-2.5 px-3 align-top text-right font-mono-num font-semibold text-emerald-700 whitespace-nowrap">
+                      <td className="py-2.5 px-3 align-top text-right font-mono-num font-semibold text-[#16A34A] whitespace-nowrap">
                         {row.direction === 'CR' ? formatINR(row.amount) : '—'}
                       </td>
-                      <td className="py-2.5 px-3 align-top text-right font-mono-num font-semibold text-red-700 whitespace-nowrap">
+                      <td className="py-2.5 px-3 align-top text-right font-mono-num font-semibold text-[#DC2626] whitespace-nowrap">
                         {row.direction === 'DR' ? formatINR(row.amount) : '—'}
                       </td>
-                      <td className="py-2.5 px-3 align-top text-right font-mono-num font-bold text-slate-900 whitespace-nowrap">
+                      <td className="py-2.5 px-3 align-top text-right font-mono-num font-bold text-[#102A43] whitespace-nowrap">
                         {formatINR(row.runningBalance)}
                       </td>
                       <td className="py-2.5 pl-2 pr-4 align-top text-right whitespace-nowrap">
@@ -1131,14 +1131,14 @@ export function DayBookView({
                                 onDeleteEntry(row.id);
                                 setConfirmDeleteId(null);
                               }}
-                              className="px-1.5 py-0.5 text-[10px] font-semibold text-white bg-red-700 rounded hover:bg-red-800"
+                              className="px-1.5 py-0.5 text-[10px] font-semibold text-white bg-[#DC2626] rounded hover:bg-[#B91C1C]"
                             >
                               Delete
                             </button>
                             <button
                               type="button"
                               onClick={() => setConfirmDeleteId(null)}
-                              className="px-1.5 py-0.5 text-[10px] text-slate-600 hover:text-slate-900"
+                              className="px-1.5 py-0.5 text-[10px] text-[#627D98] hover:text-[#102A43]"
                             >
                               No
                             </button>
@@ -1148,7 +1148,7 @@ export function DayBookView({
                             type="button"
                             onClick={() => setConfirmDeleteId(row.id)}
                             title="Remove Day Book entry"
-                            className="p-1 text-slate-400 hover:text-red-700 rounded hover:bg-red-50 transition-colors"
+                            className="p-1 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
@@ -1162,7 +1162,7 @@ export function DayBookView({
 
             {filteredRows.length > 0 && (
               <tfoot>
-                <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold text-slate-900">
+                <tr className="border-t-2 border-[#D9E2EC] bg-[#F4F7FA] font-semibold text-[#102A43]">
                   <td colSpan={5} className="py-3 pl-4 pr-3 text-xs">
                     Period Totals ({filteredRows.length}{' '}
                     {filteredRows.length === 1 ? 'entry' : 'entries'})
@@ -1170,13 +1170,13 @@ export function DayBookView({
                       ? ' — Combined Closing Balance'
                       : ' — Account Closing Balance'}
                   </td>
-                  <td className="py-3 px-3 text-right font-mono-num text-emerald-700 whitespace-nowrap">
+                  <td className="py-3 px-3 text-right font-mono-num text-[#16A34A] whitespace-nowrap">
                     +{formatINR(periodTotals.receipts)}
                   </td>
-                  <td className="py-3 px-3 text-right font-mono-num text-red-700 whitespace-nowrap">
+                  <td className="py-3 px-3 text-right font-mono-num text-[#DC2626] whitespace-nowrap">
                     -{formatINR(periodTotals.payments)}
                   </td>
-                  <td className="py-3 px-3 text-right font-mono-num font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-3 px-3 text-right font-mono-num font-bold text-[#102A43] whitespace-nowrap">
                     {formatINR(periodTotals.closing)}
                   </td>
                   <td className="py-3 pl-2 pr-4" />
@@ -1190,28 +1190,28 @@ export function DayBookView({
       {/* Manual Day Book Entry Modal */}
       {showManualModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="manual-daybook-modal-title"
         >
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div className="w-full max-w-lg bg-white border border-[#D9E2EC] rounded-lg shadow-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between">
               <div>
                 <h3
                   id="manual-daybook-modal-title"
-                  className="text-sm font-semibold text-slate-900"
+                  className="text-sm font-semibold text-[#102A43]"
                 >
                   New Manual Day Book Entry
                 </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[11px] text-[#627D98] mt-0.5">
                   Record manual cash or bank receipts, payments, contra transfers, or bank charges
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowManualModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-700"
+                className="p-1 text-[#627D98] hover:text-[#102A43]"
                 aria-label="Close manual entry modal"
               >
                 <X className="w-4 h-4" />
@@ -1227,7 +1227,7 @@ export function DayBookView({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Transaction Date *
                   </label>
                   <input
@@ -1235,18 +1235,18 @@ export function DayBookView({
                     required
                     value={manualDate}
                     onChange={(e) => setManualDate(e.target.value)}
-                    className="w-full px-3 py-2 font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Bank / Cash Account *
                   </label>
                   <select
                     required
                     value={manualAccountId}
                     onChange={(e) => setManualAccountId(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     {bankAccounts.map((acc) => (
                       <option key={acc.id} value={acc.id}>
@@ -1262,7 +1262,7 @@ export function DayBookView({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Voucher Type *
                   </label>
                   <select
@@ -1272,7 +1272,7 @@ export function DayBookView({
                         e.target.value as DayBookVoucherType
                       )
                     }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   >
                     <option value="Receipt">Receipt (CR)</option>
                     <option value="Payment">Payment (DR)</option>
@@ -1282,7 +1282,7 @@ export function DayBookView({
                 </div>
 
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Amount (₹) *
                   </label>
                   <input
@@ -1293,14 +1293,14 @@ export function DayBookView({
                     value={manualAmount}
                     onChange={(e) => setManualAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               {manualVoucherType === 'Contra' && (
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Contra Flow Direction
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -1309,8 +1309,8 @@ export function DayBookView({
                       onClick={() => setManualDirection('CR')}
                       className={`py-2 px-3 rounded-md border font-medium text-xs transition-colors ${
                         manualDirection === 'CR'
-                          ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
-                          : 'bg-white border-slate-300 text-slate-600'
+                          ? 'bg-[#16A34A]/10 border-[#16A34A] text-[#16A34A]'
+                          : 'bg-white border-[#D9E2EC] text-[#627D98] hover:bg-[#F4F7FA]'
                       }`}
                     >
                       Credit (+CR) · Deposit to Account
@@ -1320,8 +1320,8 @@ export function DayBookView({
                       onClick={() => setManualDirection('DR')}
                       className={`py-2 px-3 rounded-md border font-medium text-xs transition-colors ${
                         manualDirection === 'DR'
-                          ? 'bg-red-50 border-red-500 text-red-900'
-                          : 'bg-white border-slate-300 text-slate-600'
+                          ? 'bg-[#DC2626]/10 border-[#DC2626] text-[#DC2626]'
+                          : 'bg-white border-[#D9E2EC] text-[#627D98] hover:bg-[#F4F7FA]'
                       }`}
                     >
                       Debit (-DR) · Withdrawal from Account
@@ -1332,7 +1332,7 @@ export function DayBookView({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Party / Account Head *
                   </label>
                   <input
@@ -1342,11 +1342,11 @@ export function DayBookView({
                     value={manualParty}
                     onChange={(e) => setManualParty(e.target.value)}
                     placeholder="Customer, Vendor, or Ledger Head"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 border border-[#D9E2EC] rounded-md bg-white text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">
+                  <label className="block font-medium text-[#243B53] mb-1">
                     Ref / UTR / Cheque No.
                   </label>
                   <input
@@ -1354,13 +1354,13 @@ export function DayBookView({
                     value={manualRef}
                     onChange={(e) => setManualRef(e.target.value)}
                     placeholder="Optional reference number"
-                    className="w-full px-3 py-2 font-mono-num border border-slate-300 rounded-md bg-white"
+                    className="w-full px-3 py-2 font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-medium text-slate-700 mb-1">
+                <label className="block font-medium text-[#243B53] mb-1">
                   Narration / Remarks
                 </label>
                 <input
@@ -1368,21 +1368,21 @@ export function DayBookView({
                   value={manualNarration}
                   onChange={(e) => setManualNarration(e.target.value)}
                   placeholder="Enter transaction remarks or narration..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 border border-[#D9E2EC] rounded-md bg-white text-[#243B53] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#D9E2EC]">
                 <button
                   type="button"
                   onClick={() => setShowManualModal(false)}
-                  className="px-4 py-2 font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                  className="px-4 py-2 font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 font-semibold text-white bg-[#0B192C] rounded-md hover:bg-slate-800"
+                  className="px-4 py-2 font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488]"
                 >
                   Post to Day Book
                 </button>

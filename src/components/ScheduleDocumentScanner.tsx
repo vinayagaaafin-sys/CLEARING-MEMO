@@ -244,22 +244,22 @@ export function ScheduleDocumentScanner({
   const isPdf = activeDoc?.mimeType === 'application/pdf';
 
   return (
-    <aside className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
-      <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-200">
+    <aside className="bg-white border border-[#D9E2EC] rounded-lg p-5 space-y-4">
+      <div className="flex items-start justify-between gap-3 pb-3 border-b border-[#D9E2EC]">
         <div className="flex items-start gap-2.5">
-          <div className="w-8 h-8 rounded-md bg-[#0B192C] text-white flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-md bg-[#102A43] text-[#14B8A6] flex items-center justify-center shrink-0">
             <ScanLine className="w-4 h-4" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-semibold text-[#102A43]">
               Document &amp; Cheque Scanner
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#627D98]">
               Scan physical PDC leaves, KYC, or sanction letters beside the form to read numbers &amp; dates easily.
             </p>
           </div>
         </div>
-        <span className="text-[11px] font-mono-num font-semibold text-slate-700 whitespace-nowrap">
+        <span className="text-[11px] font-mono-num font-semibold text-[#243B53] whitespace-nowrap">
           {documents.length} Attached
         </span>
       </div>
@@ -267,13 +267,13 @@ export function ScheduleDocumentScanner({
       {/* Document Label + Upload / Camera Triggers */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
         <div>
-          <label className="block text-[11px] font-medium text-slate-600 mb-1">
+          <label className="block text-[11px] font-medium text-[#627D98] mb-1">
             Scan Document Type
           </label>
           <select
             value={selectedLabel}
             onChange={(e) => setSelectedLabel(e.target.value)}
-            className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-800"
+            className="w-full px-2.5 py-1.5 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#243B53] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
           >
             {SCAN_LABEL_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>
@@ -297,7 +297,7 @@ export function ScheduleDocumentScanner({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors whitespace-nowrap"
         >
           <Upload className="w-3.5 h-3.5" aria-hidden="true" />
           <span>Upload Image / PDF</span>
@@ -317,7 +317,7 @@ export function ScheduleDocumentScanner({
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors whitespace-nowrap"
         >
           <Camera className="w-3.5 h-3.5" aria-hidden="true" />
           <span>Capture via Camera</span>
@@ -343,17 +343,17 @@ export function ScheduleDocumentScanner({
         }}
         className={`border-2 border-dashed rounded-lg transition-colors ${
           isDraggingOver
-            ? 'border-slate-900 bg-slate-100'
-            : 'border-slate-300 bg-slate-50/70'
-        } ${!activeDoc ? 'cursor-pointer hover:border-slate-400' : ''}`}
+            ? 'border-[#14B8A6] bg-[#14B8A6]/10'
+            : 'border-[#D9E2EC] bg-[#F4F7FA]'
+        } ${!activeDoc ? 'cursor-pointer hover:border-[#176B87]' : ''}`}
       >
         {!activeDoc ? (
           <div className="py-10 px-4 text-center space-y-2">
-            <ScanLine className="w-8 h-8 text-slate-400 mx-auto" />
-            <div className="text-xs font-semibold text-slate-800">
+            <ScanLine className="w-8 h-8 text-[#627D98] mx-auto" />
+            <div className="text-xs font-semibold text-[#102A43]">
               Drag &amp; drop cheque scan (JPG, PNG, PDF) or use Camera Capture
             </div>
-            <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+            <p className="text-[11px] text-[#627D98] max-w-xs mx-auto">
               Once uploaded, zoom, rotate, contrast-enhance, or crop right here while typing cheque numbers and EMI dates.
             </p>
           </div>
@@ -361,24 +361,24 @@ export function ScheduleDocumentScanner({
           <div className="p-3 space-y-2.5">
             {/* Image / PDF Inspection Controls */}
             {!isPdf && previewUrl && (
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#D9E2EC]">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}
                     title="Zoom Out"
-                    className="p-1.5 text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50"
+                    className="p-1.5 text-[#243B53] bg-white border border-[#D9E2EC] rounded hover:bg-[#F4F7FA]"
                   >
                     <ZoomOut className="w-3.5 h-3.5" />
                   </button>
-                  <span className="text-[11px] font-mono-num font-semibold text-slate-700 px-1.5">
+                  <span className="text-[11px] font-mono-num font-semibold text-[#243B53] px-1.5">
                     {Math.round(zoom * 100)}%
                   </span>
                   <button
                     type="button"
                     onClick={() => setZoom((z) => Math.min(3, +(z + 0.25).toFixed(2)))}
                     title="Zoom In"
-                    className="p-1.5 text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50"
+                    className="p-1.5 text-[#243B53] bg-white border border-[#D9E2EC] rounded hover:bg-[#F4F7FA]"
                   >
                     <ZoomIn className="w-3.5 h-3.5" />
                   </button>
@@ -386,7 +386,7 @@ export function ScheduleDocumentScanner({
                     type="button"
                     onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
                     title="Rotate Left 90°"
-                    className="p-1.5 text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50"
+                    className="p-1.5 text-[#243B53] bg-white border border-[#D9E2EC] rounded hover:bg-[#F4F7FA]"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                   </button>
@@ -394,7 +394,7 @@ export function ScheduleDocumentScanner({
                     type="button"
                     onClick={() => setRotation((r) => (r + 90) % 360)}
                     title="Rotate Right 90°"
-                    className="p-1.5 text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50"
+                    className="p-1.5 text-[#243B53] bg-white border border-[#D9E2EC] rounded hover:bg-[#F4F7FA]"
                   >
                     <RotateCw className="w-3.5 h-3.5" />
                   </button>
@@ -404,8 +404,8 @@ export function ScheduleDocumentScanner({
                     title="Toggle High-Contrast OCR Readability"
                     className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border transition-colors ${
                       highContrast
-                        ? 'bg-[#0B192C] text-white border-[#0B192C]'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-[#102A43] text-white border-[#102A43]'
+                        : 'bg-white text-[#243B53] border-[#D9E2EC] hover:bg-[#F4F7FA]'
                     }`}
                   >
                     <Contrast className="w-3 h-3" />
@@ -422,8 +422,8 @@ export function ScheduleDocumentScanner({
                     title="Drag a crop rectangle on the cheque image"
                     className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border transition-colors ${
                       isCropMode
-                        ? 'bg-amber-600 text-white border-amber-600'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-[#B45309] text-white border-[#B45309]'
+                        : 'bg-white text-[#243B53] border-[#D9E2EC] hover:bg-[#F4F7FA]'
                     }`}
                   >
                     <Crop className="w-3 h-3" />
@@ -436,7 +436,7 @@ export function ScheduleDocumentScanner({
                     <button
                       type="button"
                       onClick={() => void handleApplyCropToImage()}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-700 rounded hover:bg-emerald-800"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-white bg-[#16A34A] rounded hover:bg-[#15803D]"
                     >
                       <Check className="w-3 h-3" />
                       <span>Apply Crop</span>
@@ -452,7 +452,7 @@ export function ScheduleDocumentScanner({
                       setCropRect(null);
                     }}
                     title="Reset View"
-                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-slate-600 hover:text-slate-900"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-[#627D98] hover:text-[#102A43]"
                   >
                     <Maximize2 className="w-3 h-3" />
                     <span>Reset</span>
@@ -462,9 +462,9 @@ export function ScheduleDocumentScanner({
             )}
 
             {/* Preview Viewport */}
-            <div className="bg-slate-900 rounded-md overflow-auto max-h-[380px] min-h-[240px] flex items-center justify-center p-2 relative select-none">
+            <div className="bg-[#102A43] rounded-md overflow-auto max-h-[380px] min-h-[240px] flex items-center justify-center p-2 relative select-none">
               {!previewUrl ? (
-                <div className="text-xs text-slate-300">Loading preview...</div>
+                <div className="text-xs text-[#D9E2EC]">Loading preview...</div>
               ) : isPdf ? (
                 <iframe
                   title={activeDoc.fileName}
@@ -513,7 +513,7 @@ export function ScheduleDocumentScanner({
                   />
                   {cropRect && cropRect.w > 2 && cropRect.h > 2 && (
                     <div
-                      className="absolute border-2 border-amber-400 bg-amber-400/20 pointer-events-none"
+                      className="absolute border-2 border-[#D4AF37] bg-[#D4AF37]/20 pointer-events-none"
                       style={{
                         left: cropRect.x,
                         top: cropRect.y,
@@ -545,7 +545,7 @@ export function ScheduleDocumentScanner({
       {/* Attached Scanned Files List */}
       {documents.length > 0 && (
         <div className="space-y-2">
-          <div className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+          <div className="text-[11px] font-semibold text-[#627D98] uppercase tracking-wider">
             Attached Scans ({documents.length})
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-0.5">
@@ -557,8 +557,8 @@ export function ScheduleDocumentScanner({
                   onClick={() => setSelectedDocId(doc.id)}
                   className={`flex items-center justify-between gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
                     isSelected
-                      ? 'border-slate-900 bg-slate-50'
-                      : 'border-slate-200 hover:bg-slate-50'
+                      ? 'border-[#14B8A6] bg-[#14B8A6]/10'
+                      : 'border-[#D9E2EC] hover:bg-[#F4F7FA]'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -566,18 +566,18 @@ export function ScheduleDocumentScanner({
                       <img
                         src={doc.thumbnailDataUrl}
                         alt={doc.fileName}
-                        className="w-10 h-8 object-cover rounded border border-slate-200 shrink-0"
+                        className="w-10 h-8 object-cover rounded border border-[#D9E2EC] shrink-0"
                       />
                     ) : (
-                      <div className="w-10 h-8 rounded border border-slate-200 bg-slate-100 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4 text-slate-500" />
+                      <div className="w-10 h-8 rounded border border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-center shrink-0">
+                        <FileText className="w-4 h-4 text-[#627D98]" />
                       </div>
                     )}
                     <div className="min-w-0">
-                      <div className="text-xs font-medium text-slate-900 truncate">
+                      <div className="text-xs font-medium text-[#102A43] truncate">
                         {doc.label || 'Scanned Doc'}
                       </div>
-                      <div className="text-[10px] text-slate-500 truncate font-mono-num">
+                      <div className="text-[10px] text-[#627D98] truncate font-mono-num">
                         {doc.fileName} · {formatFileSize(doc.fileSize)}
                       </div>
                     </div>
@@ -589,7 +589,7 @@ export function ScheduleDocumentScanner({
                       handleRemoveDoc(doc.id);
                     }}
                     title="Remove attached scan"
-                    className="p-1 text-slate-400 hover:text-red-700 rounded hover:bg-red-50 shrink-0"
+                    className="p-1 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10 shrink-0"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

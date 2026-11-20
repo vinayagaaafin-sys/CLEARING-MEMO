@@ -105,23 +105,23 @@ export function AddCompanyModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-company-modal-title"
     >
-      <div className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50 shrink-0">
+      <div className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-white border border-[#D9E2EC] rounded-lg shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] shrink-0">
           <div className="flex items-center gap-2.5">
-            <Building2 className="w-4 h-4 text-slate-900" aria-hidden="true" />
+            <Building2 className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
             <div>
               <h3
                 id="add-company-modal-title"
-                className="text-base font-semibold text-slate-900"
+                className="text-base font-semibold text-[#102A43]"
               >
                 Add New Corporate Entity
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#627D98]">
                 Creates an isolated treasury workspace with its own bank accounts, batches, cheques, and A4 memo letterhead
               </p>
             </div>
@@ -129,7 +129,7 @@ export function AddCompanyModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-800 rounded hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 text-[#627D98] hover:text-[#102A43] rounded hover:bg-[#D9E2EC]/50 transition-colors"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -142,29 +142,29 @@ export function AddCompanyModal({
         >
           {/* Section 1: Corporate Details */}
           <div className="space-y-4">
-            <div className="text-xs font-semibold text-slate-900 border-b border-slate-200 pb-1.5">
+            <div className="text-xs font-semibold text-[#102A43] border-b border-[#D9E2EC] pb-1.5">
               01. Corporate Entity &amp; Letterhead Details
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Registered Company Name <span className="text-red-600">*</span>
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
+                  Registered Company Name <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Apex Industrial Logistics Pvt. Ltd."
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Company PAN <span className="text-red-600">*</span>
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
+                    Company PAN <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -172,13 +172,13 @@ export function AddCompanyModal({
                     value={pan}
                     onChange={(e) => setPan(e.target.value.toUpperCase())}
                     placeholder="AAACA1234B"
-                    className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    GSTIN <span className="text-red-600">*</span>
+                  <label className="block text-xs font-medium text-[#243B53] mb-1">
+                    GSTIN <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -186,7 +186,7 @@ export function AddCompanyModal({
                     value={gstin}
                     onChange={(e) => setGstin(e.target.value.toUpperCase())}
                     placeholder="27AAACA1234B1Z5"
-                    className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                    className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                     required
                   />
                 </div>
@@ -194,22 +194,22 @@ export function AddCompanyModal({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Registered Office Address <span className="text-red-600">*</span>
+              <label className="block text-xs font-medium text-[#243B53] mb-1">
+                Registered Office Address <span className="text-[#DC2626]">*</span>
               </label>
               <input
                 type="text"
                 value={registeredAddress}
                 onChange={(e) => setRegisteredAddress(e.target.value)}
                 placeholder="Plot / Street, Industrial Estate / City, State – PIN Code"
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   CIN (Optional)
                 </label>
                 <input
@@ -217,11 +217,11 @@ export function AddCompanyModal({
                   value={cin}
                   onChange={(e) => setCin(e.target.value.toUpperCase())}
                   placeholder="U63010MH2018PTC..."
-                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Treasury Contact Phone
                 </label>
                 <input
@@ -229,11 +229,11 @@ export function AddCompanyModal({
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
                   placeholder="+91 22 4000 1200"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Treasury Desk Email
                 </label>
                 <input
@@ -241,14 +241,14 @@ export function AddCompanyModal({
                   value={treasuryEmail}
                   onChange={(e) => setTreasuryEmail(e.target.value)}
                   placeholder="treasury@company.co.in"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Default Maker (Prepared By)
                 </label>
                 <input
@@ -256,11 +256,11 @@ export function AddCompanyModal({
                   value={defaultMaker}
                   onChange={(e) => setDefaultMaker(e.target.value)}
                   placeholder="e.g. Suresh Nair (Treasury Exec.)"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Default Checker (Approved By)
                 </label>
                 <input
@@ -268,25 +268,25 @@ export function AddCompanyModal({
                   value={defaultChecker}
                   onChange={(e) => setDefaultChecker(e.target.value)}
                   placeholder="e.g. Meera Iyer (Head Finance)"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Batch Lock Bypass Password
                 </label>
                 <input
                   type="text"
                   value={checkerPassword}
                   onChange={(e) => setCheckerPassword(e.target.value)}
-                  className="w-full px-3 py-2 text-sm font-mono-num border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorized Signatory 1 (Name)
                 </label>
                 <input
@@ -294,11 +294,11 @@ export function AddCompanyModal({
                   value={signatory1Name}
                   onChange={(e) => setSignatory1Name(e.target.value)}
                   placeholder="e.g. Meera Iyer"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Authorized Signatory 2 (Name)
                 </label>
                 <input
@@ -306,7 +306,7 @@ export function AddCompanyModal({
                   value={signatory2Name}
                   onChange={(e) => setSignatory2Name(e.target.value)}
                   placeholder="e.g. Arvind Kapoor"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
             </div>
@@ -314,8 +314,8 @@ export function AddCompanyModal({
 
           {/* Section 2: Primary Deposit Bank Account */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 border-b border-slate-200 pb-1.5">
-              <Landmark className="w-3.5 h-3.5 text-slate-600" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#102A43] border-b border-[#D9E2EC] pb-1.5">
+              <Landmark className="w-3.5 h-3.5 text-[#176B87]" />
               <span>02. Primary Company Bank Account</span>
             </div>
 
@@ -330,8 +330,8 @@ export function AddCompanyModal({
                   }}
                   className={`px-2.5 py-1 text-[11px] font-medium rounded border transition-colors ${
                     bankName === b.name
-                      ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#102A43] text-white border-[#102A43]'
+                      : 'bg-[#F4F7FA] text-[#243B53] border-[#D9E2EC] hover:border-[#176B87] hover:text-[#102A43]'
                   }`}
                 >
                   {b.shortCode}
@@ -341,19 +341,19 @@ export function AddCompanyModal({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Bank Name <span className="text-red-600">*</span>
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
+                  Bank Name <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
                   type="text"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Account Type
                 </label>
                 <select
@@ -363,7 +363,7 @@ export function AddCompanyModal({
                       e.target.value as CompanyBankAccount['accountType']
                     )
                   }
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 >
                   <option value="Current A/c">Current A/c</option>
                   <option value="Cash Credit A/c">Cash Credit A/c</option>
@@ -372,15 +372,15 @@ export function AddCompanyModal({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Account Number <span className="text-red-600">*</span>
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
+                  Account Number <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
                   type="text"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
                   placeholder="e.g. 50200091827450"
-                  className="w-full px-3 py-2 text-sm font-mono-num border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm font-mono-num border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
@@ -388,8 +388,8 @@ export function AddCompanyModal({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  IFSC Code <span className="text-red-600">*</span>
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
+                  IFSC Code <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
                   type="text"
@@ -397,12 +397,12 @@ export function AddCompanyModal({
                   value={ifscCode}
                   onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
                   placeholder="e.g. HDFC0000104"
-                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Branch Name
                 </label>
                 <input
@@ -410,11 +410,11 @@ export function AddCompanyModal({
                   value={branchName}
                   onChange={(e) => setBranchName(e.target.value)}
                   placeholder="e.g. BKC Corporate, Mumbai"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#243B53] mb-1">
                   Branch Address
                 </label>
                 <input
@@ -422,23 +422,23 @@ export function AddCompanyModal({
                   value={branchAddress}
                   onChange={(e) => setBranchAddress(e.target.value)}
                   placeholder="Full bank branch address"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#D9E2EC]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+              className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800"
+              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] transition-colors"
             >
               <Plus className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Create Company Workspace</span>

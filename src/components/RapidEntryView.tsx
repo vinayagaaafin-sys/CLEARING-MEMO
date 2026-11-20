@@ -335,16 +335,16 @@ export function RapidEntryView({
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
       {/* Left: High-Speed Keyboard-First Entry Form */}
-      <section className="xl:col-span-7 bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+      <section className="xl:col-span-7 bg-white border border-[#D9E2EC] rounded-lg shadow-xs overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">
+            <h2 className="text-base font-semibold text-[#102A43]">
               {editingCheque
                 ? `Edit Cheque #${editingCheque.chequeNumber}`
                 : 'High-Speed Cheque Entry'}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
-              <Keyboard className="w-3.5 h-3.5" aria-hidden="true" />
+            <p className="text-xs text-[#627D98] mt-0.5 flex items-center gap-1.5">
+              <Keyboard className="w-3.5 h-3.5 text-[#176B87]" aria-hidden="true" />
               <span>Press Enter to advance fields · Auto-validates 6-digit Chq, PDC &amp; Stale</span>
             </p>
           </div>
@@ -355,7 +355,7 @@ export function RapidEntryView({
                 onCancelEdit();
                 clearInstrumentFields();
               }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] transition-colors"
             >
               <X className="w-3.5 h-3.5" />
               <span>Cancel Edit</span>
@@ -364,8 +364,8 @@ export function RapidEntryView({
         </div>
 
         {isLocked && (
-          <div className="mx-6 mt-5 p-3.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 flex items-center gap-2.5">
-            <Lock className="w-4 h-4 shrink-0" />
+          <div className="mx-6 mt-5 p-3.5 bg-[#F59E0B]/10 border border-[#F59E0B]/35 rounded-md text-xs text-[#102A43] flex items-center gap-2.5">
+            <Lock className="w-4 h-4 text-[#B45309] shrink-0" />
             <span>
               Batch <strong>{selectedBatch?.batchRef}</strong> is currently locked by Checker. Core fields, amounts, and adding new instruments are disabled;{' '}
               {editingCheque
@@ -376,15 +376,15 @@ export function RapidEntryView({
         )}
 
         {lastSavedNotice && (
-          <div className="mx-6 mt-5 p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-900 flex items-center justify-between gap-2">
+          <div className="mx-6 mt-5 p-3 bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-md text-xs text-[#102A43] flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
               <span>{lastSavedNotice}</span>
             </div>
             <button
               type="button"
               onClick={() => setLastSavedNotice(null)}
-              className="text-emerald-700 hover:text-emerald-900"
+              className="text-[#16A34A] hover:text-[#102A43]"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -392,8 +392,8 @@ export function RapidEntryView({
         )}
 
         {formError && (
-          <div className="mx-6 mt-5 p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-900 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-700 shrink-0" />
+          <div className="mx-6 mt-5 p-3 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-md text-xs text-[#DC2626] flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-[#DC2626] shrink-0" />
             <span>{formError}</span>
           </div>
         )}
@@ -402,9 +402,9 @@ export function RapidEntryView({
           {/* Row 1: Batch & Deposit Account */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && editingCheque && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>Clearing Batch</span>
               </label>
@@ -412,7 +412,7 @@ export function RapidEntryView({
                 disabled={isLocked && Boolean(editingCheque)}
                 value={batchId}
                 onChange={(e) => setBatchId(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono-num font-medium border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-xs font-mono-num font-medium border border-[#D9E2EC] rounded-md bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 {batches.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -424,9 +424,9 @@ export function RapidEntryView({
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>Credit To Company Bank Account</span>
               </label>
@@ -436,7 +436,7 @@ export function RapidEntryView({
                 value={companyBankAccountId}
                 onChange={(e) => setCompanyBankAccountId(e.target.value)}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.chequeDate)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 {bankAccounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
@@ -452,12 +452,12 @@ export function RapidEntryView({
           {/* Row 2: Cheque Date & Cheque No (6) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>
-                  Cheque Date <span className="text-red-600">*</span>
+                  Cheque Date <span className="text-[#DC2626]">*</span>
                 </span>
               </label>
               <input
@@ -466,20 +466,20 @@ export function RapidEntryView({
                 value={chequeDate}
                 onChange={(e) => setChequeDate(e.target.value)}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.chequeNumber)}
-                className={`w-full px-3 py-2 text-sm font-mono-num border rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15 ${
+                className={`w-full px-3 py-2 text-sm font-mono-num border rounded-md bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87] ${
                   dateEvaluation.flag !== 'VALID'
-                    ? 'border-amber-500 bg-amber-50/40'
-                    : 'border-slate-300'
+                    ? 'border-[#F59E0B] bg-[#F59E0B]/5'
+                    : 'border-[#D9E2EC]'
                 }`}
                 required
               />
               <div
                 className={`mt-1 text-[11px] font-medium ${
                   dateEvaluation.flag === 'STALE'
-                    ? 'text-red-700'
+                    ? 'text-[#DC2626]'
                     : dateEvaluation.flag === 'PDC'
-                    ? 'text-amber-700'
-                    : 'text-slate-500'
+                    ? 'text-[#B45309]'
+                    : 'text-[#627D98]'
                 }`}
               >
                 {dateEvaluation.message}
@@ -487,12 +487,12 @@ export function RapidEntryView({
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>
-                  Cheque Number (6 Digits) <span className="text-red-600">*</span>
+                  Cheque Number (6 Digits) <span className="text-[#DC2626]">*</span>
                 </span>
               </label>
               <input
@@ -506,21 +506,21 @@ export function RapidEntryView({
                 }
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.draweeBank)}
                 placeholder="e.g. 482910"
-                className={`w-full px-3 py-2 text-sm font-mono-num tracking-wider border rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15 ${
+                className={`w-full px-3 py-2 text-sm font-mono-num tracking-wider border rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87] ${
                   duplicateMatch
-                    ? 'border-red-600 bg-red-50/40'
-                    : 'border-slate-300'
+                    ? 'border-[#DC2626] bg-[#DC2626]/5'
+                    : 'border-[#D9E2EC]'
                 }`}
                 required
               />
               <div className="mt-1 text-[11px]">
                 {duplicateMatch ? (
-                  <span className="font-semibold text-red-700">
+                  <span className="font-semibold text-[#DC2626]">
                     Duplicate Alert: Chq #{duplicateMatch.chequeNumber} already logged for{' '}
                     {duplicateMatch.partyName}
                   </span>
                 ) : (
-                  <span className="text-slate-500">
+                  <span className="text-[#627D98]">
                     {chequeNumber.length}/6 digits
                   </span>
                 )}
@@ -530,8 +530,8 @@ export function RapidEntryView({
 
           {/* Compliance Callout if PDC or Stale or Duplicate */}
           {(dateEvaluation.flag !== 'VALID' || duplicateMatch) && (
-            <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-md text-xs text-amber-950 flex items-start gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+            <div className="p-3.5 bg-[#F59E0B]/10 border border-[#F59E0B]/35 rounded-md text-xs text-[#102A43] flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
               <div className="space-y-1">
                 {dateEvaluation.flag === 'PDC' && (
                   <div>
@@ -546,7 +546,7 @@ export function RapidEntryView({
                   </div>
                 )}
                 {duplicateMatch && (
-                  <div className="text-red-800">
+                  <div className="text-[#DC2626]">
                     <strong>Duplicate Instrument Warning:</strong> Cheque #{duplicateMatch.chequeNumber} drawn on {duplicateMatch.draweeBank} already exists in the ledger ({formatINR(duplicateMatch.amount)}).
                   </div>
                 )}
@@ -556,7 +556,7 @@ export function RapidEntryView({
 
           {/* Quick-Select Major Indian Bank Presets */}
           <div>
-            <div className="text-xs font-medium text-slate-700 mb-1.5">
+            <div className="text-xs font-medium text-[#243B53] mb-1.5">
               Quick-Select Drawee Bank Preset
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -571,8 +571,8 @@ export function RapidEntryView({
                     }
                     className={`px-2.5 py-1 text-[11px] font-medium rounded border transition-colors whitespace-nowrap ${
                       active
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#102A43] text-white border-[#102A43]'
+                        : 'bg-[#F4F7FA] text-[#243B53] border-[#D9E2EC] hover:border-[#176B87] hover:text-[#102A43]'
                     }`}
                   >
                     {bank.shortCode}
@@ -585,12 +585,12 @@ export function RapidEntryView({
           {/* Row 3: Drawee Bank, Branch, Clearing Type */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>
-                  Drawee Bank Name <span className="text-red-600">*</span>
+                  Drawee Bank Name <span className="text-[#DC2626]">*</span>
                 </span>
               </label>
               <input
@@ -603,15 +603,15 @@ export function RapidEntryView({
                 }}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.draweeBranch)}
                 placeholder="e.g. HDFC Bank Ltd."
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 required
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>Drawee Branch</span>
               </label>
@@ -622,14 +622,14 @@ export function RapidEntryView({
                 onChange={(e) => setDraweeBranch(e.target.value)}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.clearingType)}
                 placeholder="e.g. Nariman Point, Mumbai"
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>Clearing Type</span>
               </label>
@@ -641,7 +641,7 @@ export function RapidEntryView({
                   setClearingManuallySet(true);
                 }}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.partyName)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               >
                 {CLEARING_TYPES.map((ct) => (
                   <option key={ct} value={ct}>
@@ -655,12 +655,12 @@ export function RapidEntryView({
           {/* Row 4: Party Name, Customer Code, Invoice Ref */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-6">
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>
-                  Party / Customer Name <span className="text-red-600">*</span>
+                  Party / Customer Name <span className="text-[#DC2626]">*</span>
                 </span>
               </label>
               <input
@@ -670,15 +670,15 @@ export function RapidEntryView({
                 onChange={(e) => setPartyName(e.target.value)}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.customerCode)}
                 placeholder="e.g. Larsen & Toubro Heavy Engg. Ltd."
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                 required
               />
             </div>
 
             <div className="md:col-span-3">
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>Customer Code</span>
               </label>
@@ -689,14 +689,14 @@ export function RapidEntryView({
                 onChange={(e) => setCustomerCode(e.target.value)}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.invoiceRef)}
                 placeholder="CUST-042"
-                className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
 
             <div className="md:col-span-3">
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                  <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                 )}
                 <span>Invoice / Ref No.</span>
               </label>
@@ -707,21 +707,21 @@ export function RapidEntryView({
                 onChange={(e) => setInvoiceRef(e.target.value)}
                 onKeyDown={(e) => handleEnterAdvance(e, fieldRefs.amount)}
                 placeholder="INV/26-27/4450"
-                className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className="w-full px-3 py-2 text-sm font-mono-num uppercase border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
               />
             </div>
           </div>
 
           {/* Row 5: Amount (₹) with live Indian numbering & words */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-md space-y-2.5">
+          <div className="p-4 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md space-y-2.5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
                   {isLocked && (
-                    <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                    <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
                   )}
                   <span>
-                    Cheque Amount (₹ INR) <span className="text-red-600">*</span>
+                    Cheque Amount (₹ INR) <span className="text-[#DC2626]">*</span>
                   </span>
                 </label>
                 <input
@@ -733,33 +733,33 @@ export function RapidEntryView({
                   onChange={(e) => setAmountInput(e.target.value)}
                   onKeyDown={(e) => handleEnterAdvance(e)}
                   placeholder="e.g. 124560000.00"
-                  className="w-full px-3 py-2.5 text-base font-mono-num font-semibold border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/20 focus:border-slate-900"
+                  className="w-full px-3 py-2.5 text-base font-mono-num font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
                   required
                 />
               </div>
 
               <div className="pb-1">
-                <div className="text-[11px] font-medium text-slate-500">
+                <div className="text-[11px] font-medium text-[#627D98]">
                   Formatted Indian Notation
                 </div>
-                <div className="text-xl font-bold font-mono-num text-slate-900">
+                <div className="text-xl font-bold font-mono-num text-[#102A43]">
                   {formatINR(parsedAmount)}
                 </div>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-200 text-xs text-slate-700">
-              <span className="font-medium text-slate-500">In Words: </span>
-              <span className="font-medium text-slate-900">
+            <div className="pt-2 border-t border-[#D9E2EC] text-xs text-[#243B53]">
+              <span className="font-medium text-[#627D98]">In Words: </span>
+              <span className="font-medium text-[#102A43]">
                 {numberToIndianWords(parsedAmount)}
               </span>
             </div>
           </div>
 
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-[#243B53] mb-1">
               {isLocked && (
-                <Lock className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+                <Lock className="w-3 h-3 text-[#627D98] shrink-0" aria-hidden="true" />
               )}
               <span>Treasury Remarks (Optional)</span>
             </label>
@@ -768,29 +768,29 @@ export function RapidEntryView({
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="e.g. Advance against PO #9921 or Hold until PDC maturity"
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+              className="w-full px-3 py-2 text-xs border border-[#D9E2EC] rounded-md bg-white text-[#102A43] placeholder:text-[#627D98] disabled:bg-[#F4F7FA] disabled:text-[#627D98] disabled:border-[#D9E2EC] disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87]"
             />
           </div>
           </fieldset>
 
           {/* Status Field — Always Unlocked & Editable Even When Batch Is Locked */}
-          <div className="p-4 bg-white border border-slate-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 bg-white border border-[#D9E2EC] rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="cheque-entry-status"
-                  className="text-xs font-semibold text-slate-900"
+                  className="text-xs font-semibold text-[#102A43]"
                 >
                   Instrument / Clearing Status
                 </label>
                 {isLocked && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A]">
                     <Unlock className="w-3 h-3" aria-hidden="true" />
                     <span>Editable While Locked</span>
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-[11px] text-[#627D98] mt-0.5">
                 {isLocked && !editingCheque
                   ? 'Select an instrument from the Batch Queue to update its Status.'
                   : 'Update realization lifecycle status at any time without unlocking the batch.'}
@@ -801,7 +801,7 @@ export function RapidEntryView({
               disabled={isLocked && !editingCheque}
               value={chequeStatus}
               onChange={(e) => setChequeStatus(e.target.value as ChequeStatus)}
-              className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-md bg-white text-slate-900 disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/20 min-w-[190px]"
+              className="px-3 py-2 text-xs font-semibold border border-[#D9E2EC] rounded-md bg-white text-[#102A43] disabled:bg-[#F4F7FA] disabled:text-[#627D98] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#176B87] min-w-[190px]"
             >
               <option value="Draft">Draft</option>
               <option value="Submitted to Bank">Submitted to Bank</option>
@@ -812,19 +812,19 @@ export function RapidEntryView({
             </select>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+          <div className="flex items-center justify-between pt-2 border-t border-[#D9E2EC]">
             <button
               type="button"
               disabled={isLocked}
               onClick={clearInstrumentFields}
-              className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-xs font-medium text-[#243B53] bg-white border border-[#D9E2EC] rounded-md hover:bg-[#F4F7FA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Clear Fields
             </button>
             <button
               type="submit"
               disabled={isLocked && !editingCheque}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-[#102A43] bg-[#14B8A6] rounded-md hover:bg-[#0D9488] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-xs"
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
               <span>
@@ -840,24 +840,24 @@ export function RapidEntryView({
       </section>
 
       {/* Right: Live Batch Entry Queue */}
-      <section className="xl:col-span-5 bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+      <section className="xl:col-span-5 bg-white border border-[#D9E2EC] rounded-lg shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-semibold text-[#102A43]">
               Batch Queue · {selectedBatch?.batchRef}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#627D98] mt-0.5">
               {batchCheques.length} instruments ·{' '}
-              <span className="font-mono-num font-semibold text-slate-800">
+              <span className="font-mono-num font-semibold text-[#102A43]">
                 {formatINR(batchTotal)}
               </span>
             </p>
           </div>
         </div>
 
-        <div className="divide-y divide-slate-200 max-h-[680px] overflow-y-auto">
+        <div className="divide-y divide-[#D9E2EC] max-h-[680px] overflow-y-auto">
           {batchCheques.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-500">
+            <div className="p-8 text-center text-xs text-[#627D98]">
               No cheques entered in this batch yet. Use the keyboard-first form on the left to begin.
             </div>
           ) : (
@@ -869,17 +869,17 @@ export function RapidEntryView({
               return (
                 <div
                   key={chq.id}
-                  className={`p-4 hover:bg-slate-50 transition-colors ${
-                    editingCheque?.id === chq.id ? 'bg-slate-100' : ''
+                  className={`p-4 hover:bg-[#F4F7FA] transition-colors ${
+                    editingCheque?.id === chq.id ? 'bg-[#14B8A6]/10 border-l-2 border-l-[#14B8A6]' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold text-slate-900 truncate">
+                      <div className="text-xs font-semibold text-[#102A43] truncate">
                         {chq.partyName}
                       </div>
-                      <div className="mt-0.5 text-[11px] text-slate-500 flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono-num font-medium text-slate-700">
+                      <div className="mt-0.5 text-[11px] text-[#627D98] flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono-num font-medium text-[#243B53]">
                           #{chq.chequeNumber}
                         </span>
                         <span aria-hidden="true">·</span>
@@ -887,14 +887,14 @@ export function RapidEntryView({
                         <span aria-hidden="true">·</span>
                         <span>{chq.draweeBank}</span>
                       </div>
-                      <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
+                      <div className="mt-1 flex items-center gap-2 text-[11px] text-[#627D98]">
                         <span>{chq.clearingType}</span>
                         <span aria-hidden="true">·</span>
                         <StatusTag status={chq.status} />
                         {ev.flag !== 'VALID' && (
                           <>
                             <span aria-hidden="true">·</span>
-                            <span className="font-semibold text-amber-700">
+                            <span className="font-semibold text-[#B45309]">
                               {ev.flag}
                             </span>
                           </>
@@ -903,7 +903,7 @@ export function RapidEntryView({
                     </div>
 
                     <div className="text-right shrink-0">
-                      <div className="text-xs font-mono-num font-bold text-slate-900">
+                      <div className="text-xs font-mono-num font-bold text-[#102A43]">
                         {formatINR(chq.amount)}
                       </div>
                       <div className="mt-1.5 flex items-center justify-end gap-1">
@@ -915,14 +915,14 @@ export function RapidEntryView({
                               ? 'Update Status (Core fields locked)'
                               : 'Edit Cheque'
                           }
-                          className="p-1 text-slate-400 hover:text-slate-900 rounded"
+                          className="p-1 text-[#627D98] hover:text-[#176B87] rounded hover:bg-[#176B87]/10 transition-colors"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         {isLocked ? (
                           <span
                             title="Batch locked: items cannot be deleted"
-                            className="p-1 text-slate-300 cursor-not-allowed inline-flex items-center"
+                            className="p-1 text-[#D9E2EC] cursor-not-allowed inline-flex items-center"
                           >
                             <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                           </span>
@@ -931,7 +931,7 @@ export function RapidEntryView({
                             type="button"
                             onClick={() => onDeleteCheque(chq.id)}
                             title="Delete Cheque"
-                            className="p-1 text-slate-400 hover:text-red-700 rounded"
+                            className="p-1 text-[#627D98] hover:text-[#DC2626] rounded hover:bg-[#DC2626]/10 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -947,15 +947,15 @@ export function RapidEntryView({
       </section>
 
       {editingCheque && (
-        <section className="xl:col-span-12 bg-white border border-slate-200 rounded-lg overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+        <section className="xl:col-span-12 bg-white border border-[#D9E2EC] rounded-lg shadow-xs overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <History className="w-4 h-4 text-slate-700" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-slate-900">
+              <History className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
+              <h3 className="text-sm font-semibold text-[#102A43]">
                 Cheque #{editingCheque.chequeNumber} — Activity History &amp; Audit Log
               </h3>
             </div>
-            <span className="text-xs font-mono-num text-slate-500">
+            <span className="text-xs font-mono-num text-[#627D98]">
               {auditLogs.filter((l) => l.chequeId === editingCheque.id).length} Event(s)
             </span>
           </div>

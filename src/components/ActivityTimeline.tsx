@@ -42,69 +42,69 @@ function getActionTone(action: SystemAuditAction): {
   switch (action) {
     case 'BATCH_LOCKED':
       return {
-        iconBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-        text: 'text-emerald-800',
+        iconBg: 'bg-[#16A34A]/10 border-[#16A34A]/30 text-[#16A34A]',
+        text: 'text-[#16A34A]',
         Icon: Lock,
       };
     case 'BATCH_UNLOCKED':
       return {
-        iconBg: 'bg-amber-50 border-amber-200 text-amber-800',
-        text: 'text-amber-800',
+        iconBg: 'bg-[#F59E0B]/10 border-[#F59E0B]/35 text-[#B45309]',
+        text: 'text-[#B45309]',
         Icon: Unlock,
       };
     case 'BATCH_CREATED':
     case 'CHEQUE_ADDED':
       return {
-        iconBg: 'bg-slate-100 border-slate-300 text-slate-800',
-        text: 'text-slate-900',
+        iconBg: 'bg-[#F4F7FA] border-[#D9E2EC] text-[#102A43]',
+        text: 'text-[#102A43]',
         Icon: Plus,
       };
     case 'CHEQUE_DELETED':
       return {
-        iconBg: 'bg-red-50 border-red-200 text-red-700',
-        text: 'text-red-700',
+        iconBg: 'bg-[#DC2626]/10 border-[#DC2626]/30 text-[#DC2626]',
+        text: 'text-[#DC2626]',
         Icon: Trash2,
       };
     case 'BANK_STATEMENT_UPLOADED':
       return {
-        iconBg: 'bg-blue-50 border-blue-200 text-blue-800',
-        text: 'text-blue-800',
+        iconBg: 'bg-[#2563EB]/10 border-[#2563EB]/30 text-[#2563EB]',
+        text: 'text-[#2563EB]',
         Icon: FileSpreadsheet,
       };
     case 'RETURN_ACK_GENERATED':
       return {
-        iconBg: 'bg-red-50 border-red-200 text-red-800',
-        text: 'text-red-800',
+        iconBg: 'bg-[#DC2626]/10 border-[#DC2626]/30 text-[#DC2626]',
+        text: 'text-[#DC2626]',
         Icon: FileCheck2,
       };
     case 'RECOVERY_UPDATED':
       return {
-        iconBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-        text: 'text-emerald-800',
+        iconBg: 'bg-[#16A34A]/10 border-[#16A34A]/30 text-[#16A34A]',
+        text: 'text-[#16A34A]',
         Icon: Wallet,
       };
     case 'DOCUMENT_UPLOADED':
       return {
-        iconBg: 'bg-indigo-50 border-indigo-200 text-indigo-800',
-        text: 'text-indigo-800',
+        iconBg: 'bg-[#176B87]/10 border-[#176B87]/30 text-[#176B87]',
+        text: 'text-[#176B87]',
         Icon: Paperclip,
       };
     case 'DOCUMENT_SHARED':
       return {
-        iconBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-        text: 'text-emerald-800',
+        iconBg: 'bg-[#14B8A6]/15 border-[#14B8A6]/40 text-[#0F766E]',
+        text: 'text-[#0F766E]',
         Icon: Share2,
       };
     case 'DOCUMENT_DELETED':
       return {
-        iconBg: 'bg-red-50 border-red-200 text-red-700',
-        text: 'text-red-700',
+        iconBg: 'bg-[#DC2626]/10 border-[#DC2626]/30 text-[#DC2626]',
+        text: 'text-[#DC2626]',
         Icon: Trash2,
       };
     default:
       return {
-        iconBg: 'bg-slate-100 border-slate-300 text-slate-700',
-        text: 'text-slate-900',
+        iconBg: 'bg-[#F4F7FA] border-[#D9E2EC] text-[#243B53]',
+        text: 'text-[#102A43]',
         Icon: RefreshCw,
       };
   }
@@ -117,14 +117,14 @@ export function ActivityTimeline({
 }: ActivityTimelineProps) {
   if (entries.length === 0) {
     return (
-      <div className="py-8 px-4 text-center text-xs text-slate-500 border border-dashed border-slate-200 rounded-md bg-slate-50/50">
+      <div className="py-8 px-4 text-center text-xs text-[#627D98] border border-dashed border-[#D9E2EC] rounded-md bg-[#F4F7FA]/60">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <ol className="relative space-y-4 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-px before:bg-slate-200">
+    <ol className="relative space-y-4 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-px before:bg-[#D9E2EC]">
       {entries.map((entry) => {
         const { iconBg, text, Icon } = getActionTone(entry.actionType);
         return (
@@ -136,7 +136,7 @@ export function ActivityTimeline({
               <Icon className="w-3.5 h-3.5" />
             </span>
 
-            <div className="bg-white border border-slate-200 rounded-md p-3 space-y-1.5">
+            <div className="bg-white border border-[#D9E2EC] rounded-md p-3 space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`font-semibold ${text}`}>
@@ -144,73 +144,73 @@ export function ActivityTimeline({
                   </span>
                   {entry.batchRef && (
                     <>
-                      <span className="text-slate-300" aria-hidden="true">·</span>
-                      <span className="font-mono-num text-[11px] text-slate-700 font-medium">
+                      <span className="text-[#D9E2EC]" aria-hidden="true">·</span>
+                      <span className="font-mono-num text-[11px] text-[#243B53] font-medium">
                         {entry.batchRef}
                       </span>
                     </>
                   )}
                   {entry.chequeNumber && (
                     <>
-                      <span className="text-slate-300" aria-hidden="true">·</span>
-                      <span className="font-mono-num text-[11px] text-slate-900 font-semibold">
+                      <span className="text-[#D9E2EC]" aria-hidden="true">·</span>
+                      <span className="font-mono-num text-[11px] text-[#102A43] font-semibold">
                         Chq #{entry.chequeNumber}
                       </span>
                     </>
                   )}
                   {entry.customerName && !entry.chequeNumber && (
                     <>
-                      <span className="text-slate-300" aria-hidden="true">·</span>
-                      <span className="text-[11px] text-slate-700 font-medium">
+                      <span className="text-[#D9E2EC]" aria-hidden="true">·</span>
+                      <span className="text-[11px] text-[#243B53] font-medium">
                         {entry.customerName}
                       </span>
                     </>
                   )}
                   {entry.documentTitle && (
                     <>
-                      <span className="text-slate-300" aria-hidden="true">·</span>
-                      <span className="text-[11px] text-indigo-700 font-medium">
+                      <span className="text-[#D9E2EC]" aria-hidden="true">·</span>
+                      <span className="text-[11px] text-[#176B87] font-medium">
                         {entry.documentTitle}
                       </span>
                     </>
                   )}
                 </div>
 
-                <span className="inline-flex items-center gap-1 text-[11px] font-mono-num text-slate-500">
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono-num text-[#627D98]">
                   <Clock className="w-3 h-3" aria-hidden="true" />
                   <span>{formatAuditTimestamp(entry.timestamp)}</span>
                 </span>
               </div>
 
-              <p className="text-xs text-slate-700 leading-relaxed">
+              <p className="text-xs text-[#243B53] leading-relaxed">
                 {entry.description}
               </p>
 
               {(entry.oldValue || entry.newValue) && (
                 <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] font-mono-num">
                   {entry.oldValue && (
-                    <span className="text-slate-500 line-through">
+                    <span className="text-[#627D98] line-through">
                       {entry.oldValue}
                     </span>
                   )}
                   {entry.oldValue && entry.newValue && (
                     <ArrowRight
-                      className="w-3 h-3 text-slate-400"
+                      className="w-3 h-3 text-[#627D98]"
                       aria-hidden="true"
                     />
                   )}
                   {entry.newValue && (
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-[#102A43]">
                       {entry.newValue}
                     </span>
                   )}
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-[11px] text-slate-500">
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#D9E2EC] text-[11px] text-[#627D98]">
                 <span className="inline-flex items-center gap-1">
                   <User className="w-3 h-3" aria-hidden="true" />
-                  <strong className="font-medium text-slate-700">
+                  <strong className="font-medium text-[#243B53]">
                     {entry.actor}
                   </strong>
                 </span>
@@ -244,23 +244,23 @@ export function ChequeActivityDrawer({
 }: ChequeActivityDrawerProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-slate-950/50"
+      className="fixed inset-0 z-50 flex justify-end bg-[#102A43]/60"
       role="dialog"
       aria-modal="true"
       aria-labelledby="cheque-history-drawer-title"
     >
-      <div className="w-full max-w-xl bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+      <div className="w-full max-w-xl bg-white h-full shadow-2xl border-l border-[#D9E2EC] flex flex-col">
+        <div className="px-6 py-4 border-b border-[#D9E2EC] bg-[#F4F7FA] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <History className="w-4 h-4 text-slate-900" aria-hidden="true" />
+            <History className="w-4 h-4 text-[#176B87]" aria-hidden="true" />
             <div>
               <h3
                 id="cheque-history-drawer-title"
-                className="text-base font-semibold text-slate-900"
+                className="text-base font-semibold text-[#102A43]"
               >
                 Cheque #{cheque.chequeNumber} — Activity History
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#627D98]">
                 {cheque.partyName} · {batch?.batchRef || 'Clearing Batch'}
               </p>
             </div>
@@ -268,7 +268,7 @@ export function ChequeActivityDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-800 rounded hover:bg-slate-200/60"
+            className="p-1.5 text-[#627D98] hover:text-[#102A43] rounded hover:bg-[#D9E2EC]/50 transition-colors"
             aria-label="Close activity drawer"
           >
             <X className="w-4 h-4" />
@@ -277,36 +277,36 @@ export function ChequeActivityDrawer({
 
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
           {/* Cheque Snapshot */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-md text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-[#F4F7FA] border border-[#D9E2EC] rounded-md text-xs">
             <div>
-              <div className="text-slate-500">Amount</div>
-              <div className="font-mono-num font-bold text-slate-950 mt-0.5">
+              <div className="text-[#627D98]">Amount</div>
+              <div className="font-mono-num font-bold text-[#102A43] mt-0.5">
                 {formatINR(cheque.amount)}
               </div>
             </div>
             <div>
-              <div className="text-slate-500">Cheque Date</div>
-              <div className="font-mono-num font-semibold text-slate-900 mt-0.5">
+              <div className="text-[#627D98]">Cheque Date</div>
+              <div className="font-mono-num font-semibold text-[#102A43] mt-0.5">
                 {formatIndianDate(cheque.chequeDate)}
               </div>
             </div>
             <div>
-              <div className="text-slate-500">Current Status</div>
-              <div className="font-semibold text-slate-900 mt-0.5">
+              <div className="text-[#627D98]">Current Status</div>
+              <div className="font-semibold text-[#102A43] mt-0.5">
                 {cheque.status}
               </div>
             </div>
-            <div className="col-span-2 sm:col-span-3 pt-2 border-t border-slate-200 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
+            <div className="col-span-2 sm:col-span-3 pt-2 border-t border-[#D9E2EC] flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#627D98]">
               <span>
-                Drawee: <strong className="text-slate-800">{cheque.draweeBank}</strong> ({cheque.draweeBranch})
+                Drawee: <strong className="text-[#102A43]">{cheque.draweeBank}</strong> ({cheque.draweeBranch})
               </span>
               {cheque.bounceReason && (
-                <span className="text-red-700 font-medium">
+                <span className="text-[#DC2626] font-medium">
                   Return Reason: {cheque.bounceReason}
                 </span>
               )}
               {(cheque.recoveredAmount ?? 0) > 0 && (
-                <span className="text-emerald-700 font-medium font-mono-num">
+                <span className="text-[#16A34A] font-medium font-mono-num">
                   Recovered: {formatINR(cheque.recoveredAmount ?? 0)}
                 </span>
               )}
@@ -315,10 +315,10 @@ export function ChequeActivityDrawer({
 
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-[#102A43]">
                 Chronological Audit Timeline ({logs.length})
               </span>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-[#627D98]">
                 Newest events first
               </span>
             </div>
